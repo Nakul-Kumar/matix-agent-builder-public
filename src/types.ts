@@ -1,0 +1,57 @@
+export interface PublicSourceLink {
+  label: string;
+  url: string;
+  source_kind: string;
+}
+
+export interface PublicArtifact {
+  artifact_ref: string;
+  artifact_kind: string;
+  name: string;
+  description: string;
+  trust: number;
+  popularity: number;
+  match: number;
+  performance: number;
+  source_links: PublicSourceLink[];
+}
+
+export interface RuntimePlacard {
+  platform: "codex" | "claude_code" | "openclaw";
+  label: string;
+  model: string;
+  status: string;
+  accent: string;
+  file_tree: string[];
+  main_files: Record<string, string>;
+  skills: PublicArtifact[];
+  mcps: PublicArtifact[];
+  tools: PublicArtifact[];
+  memory_mode: string;
+  eval_plan: string[];
+  scores: {
+    trust: number;
+    popularity: number;
+    match: number;
+    performance: number;
+  };
+  warnings: string[];
+}
+
+export interface PublicPreview {
+  ok: boolean;
+  prompt_hash: string;
+  normalized_prompt: string;
+  generated_at: string;
+  model: {
+    provider: string;
+    name: string;
+    status: string;
+  };
+  placards: RuntimePlacard[];
+  source_policy: {
+    browser_provider_calls: false;
+    secrets_included: false;
+    allowed_source_hosts: string[];
+  };
+}
