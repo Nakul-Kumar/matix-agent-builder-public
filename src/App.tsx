@@ -23,7 +23,7 @@ const platformTheme: Record<
   },
   openclaw: {
     tone: "openclaw",
-    accent: "#ef4444",
+    accent: "#dc2626",
     tag: "Open source",
     subtitle: "OpenClaw experimental runtime",
   },
