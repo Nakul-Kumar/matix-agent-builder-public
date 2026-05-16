@@ -405,12 +405,12 @@ export default function App() {
         <div className="heroGrid">
           <div className="heroCopy">
             <h1>
-              One prompt. Three production-shaped agent blueprints.
+              One prompt. Three ready-to-use agents.
             </h1>
             <p>
               Describe the agent you need. The Matix cockpit returns
               source-linked skills, MCPs, evaluation plans, and safe example
-              exports for Codex, Claude Code, and OpenClaw — side by side.
+              exports for Codex, Claude Code, and OpenClaw, side by side.
             </p>
           </div>
 
@@ -538,7 +538,7 @@ export default function App() {
 
         {feedbackSent ? (
           <div className="feedbackSuccess" role="status">
-            <strong>Thanks — feedback received.</strong>
+            <strong>Thanks, feedback received.</strong>
             <p>We use this to tune the public templates and scoring.</p>
             <button
               className="ghostButton"
