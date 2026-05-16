@@ -15,7 +15,7 @@ const forbidden = [
   "AIza",
 ];
 
-const ignored = new Set(["node_modules", "dist", "dist-server", ".git"]);
+const ignored = new Set(["node_modules", "dist", "dist-server", ".git", ".local", ".cache", ".agents"]);
 const findings = [];
 
 function walk(dir) {

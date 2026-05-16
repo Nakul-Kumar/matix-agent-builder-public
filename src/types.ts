@@ -16,8 +16,10 @@ export interface PublicArtifact {
   source_links: PublicSourceLink[];
 }
 
+export type RuntimePlatform = "codex" | "claude_code" | "openclaw";
+
 export interface RuntimePlacard {
-  platform: "codex" | "claude_code" | "openclaw";
+  platform: RuntimePlatform;
   label: string;
   model: string;
   status: string;
@@ -54,4 +56,16 @@ export interface PublicPreview {
     secrets_included: false;
     allowed_source_hosts: string[];
   };
+}
+
+export interface PublicExport {
+  files: Record<string, string>;
+  manifest: unknown;
+}
+
+export interface PublicHealth {
+  ok: boolean;
+  app: string;
+  env: string;
+  upstream_configured: boolean;
 }
