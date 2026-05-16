@@ -2,6 +2,12 @@
 
 The browser calls same-origin routes only. The public server forwards those requests to `MATIX_PUBLIC_API_BASE` after checking an allowlist.
 
+For the current Matix cockpit backend, `MATIX_PUBLIC_API_BASE` should point at the versioned FastAPI public base:
+
+```text
+https://cockpit.76.13.118.9.sslip.io/api/v1/public
+```
+
 ## Routes
 
 ### `GET /api/health`
