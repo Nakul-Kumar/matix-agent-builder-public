@@ -99,7 +99,7 @@ function Placard({
   return (
     <article
       className={`placard placard-${theme.tone}`}
-      style={{ "--accent": placard.accent || theme.accent } as React.CSSProperties}
+      style={{ "--accent": theme.accent } as React.CSSProperties}
     >
       <header className="placardTop">
         <div>
