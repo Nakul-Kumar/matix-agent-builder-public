@@ -128,16 +128,15 @@ nav {
   flex-direction: column;
   gap: 36px;
   padding-top: 64px;
-  max-width: 920px;
+  width: 100%;
 }
 
 .heroCopy {
-  max-width: 820px;
+  max-width: 1000px;
 }
 
 .promptBox {
   width: 100%;
-  max-width: 720px;
 }
 
 .heroCopy h1 {
