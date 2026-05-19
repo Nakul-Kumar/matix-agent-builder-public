@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { exportAgent, previewAgent, sendFeedback } from "./lib/publicApi";
 import type {
+  PublicArtifact,
   PublicPreview,
   PublicSourceStatus,
   RuntimePlacard,
@@ -27,7 +28,7 @@ const platformTheme: Record<
     accent: "#3b82f6",
     accentSoft: "rgba(59, 130, 246, 0.16)",
     glow: "rgba(59, 130, 246, 0.32)",
-    tag: "OpenAI · Codex CLI",
+    tag: "OpenAI / Codex CLI",
     subtitle: "Cool, technical, structured exports",
   },
   claude_code: {
@@ -35,7 +36,7 @@ const platformTheme: Record<
     accent: "#cc785c",
     accentSoft: "rgba(204, 120, 92, 0.18)",
     glow: "rgba(204, 120, 92, 0.32)",
-    tag: "Anthropic · Claude Code",
+    tag: "Anthropic / Claude Code",
     subtitle: "Warm, careful, citation-friendly",
   },
   openclaw: {
@@ -43,7 +44,7 @@ const platformTheme: Record<
     accent: "#dc2626",
     accentSoft: "rgba(220, 38, 38, 0.18)",
     glow: "rgba(220, 38, 38, 0.32)",
-    tag: "Open source · OpenClaw",
+    tag: "Open source / OpenClaw",
     subtitle: "Experimental, local-first, opinionated",
   },
 };
@@ -105,6 +106,113 @@ function Section({
   );
 }
 
+const scoreLaneLabels: Record<string, string> = {
+  task_fit: "task fit",
+  source_trust: "source",
+  license_trust: "license",
+  artifact_quality: "quality",
+  runtime_readiness: "runtime",
+  credential_readiness: "creds",
+  category_coverage: "coverage",
+  safety_risk: "risk",
+};
+
+function ArtifactScoreLanes({
+  scoreBreakdown,
+}: {
+  scoreBreakdown?: Record<string, number>;
+}) {
+  const lanes = Object.entries(scoreBreakdown ?? {}).filter(([, value]) =>
+    Number.isFinite(value),
+  );
+  if (lanes.length === 0) return null;
+  return (
+    <div className="laneGrid" aria-label="Score breakdown">
+      {lanes.map(([key, value]) => (
+        <span key={key} className="lane">
+          <span>{scoreLaneLabels[key] ?? pretty(key)}</span>
+          <strong>{Math.round(value)}</strong>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function LicenseBadge({ artifact }: { artifact: PublicArtifact }) {
+  const label = artifact.license?.name || "License pending";
+  const confidence = artifact.license?.confidence ?? "low";
+  if (artifact.license?.url) {
+    return (
+      <a
+        className={`licenseBadge license-${confidence}`}
+        href={artifact.license.url}
+        target="_blank"
+        rel="noreferrer noopener"
+      >
+        {label}
+      </a>
+    );
+  }
+  return <span className={`licenseBadge license-${confidence}`}>{label}</span>;
+}
+
+function ArtifactCard({ artifact }: { artifact: PublicArtifact }) {
+  const credentialStatus = artifact.credential_status
+    ? pretty(artifact.credential_status)
+    : "not required";
+  return (
+    <li className="artifactCard">
+      <div className="artifactTitleRow">
+        <span className="artifactName">{artifact.name}</span>
+        <LicenseBadge artifact={artifact} />
+      </div>
+      {artifact.description && (
+        <span className="artifactDesc">{artifact.description}</span>
+      )}
+      {artifact.why_selected && (
+        <p className="artifactWhy">
+          <strong>Why selected</strong> {artifact.why_selected}
+        </p>
+      )}
+      {artifact.setup_hint && (
+        <p className="artifactSetup">
+          <strong>Setup</strong> {artifact.setup_hint}
+        </p>
+      )}
+      <div className="artifactMetaRow">
+        <span>{pretty(artifact.artifact_kind)}</span>
+        <span>{credentialStatus}</span>
+        <span>{artifact.artifact_ref}</span>
+      </div>
+      <ArtifactScoreLanes scoreBreakdown={artifact.score_breakdown} />
+      {artifact.warnings?.length > 0 && (
+        <ul className="artifactWarnings">
+          {artifact.warnings.map((warning, idx) => (
+            <li key={`${artifact.artifact_ref}-warning-${idx}`}>{warning}</li>
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+}
+
+function ArtifactList({
+  items,
+  empty,
+}: {
+  items: PublicArtifact[];
+  empty: string;
+}) {
+  if (items.length === 0) return <p className="emptyHint">{empty}</p>;
+  return (
+    <ul className="artifactList">
+      {items.map((item) => (
+        <ArtifactCard key={item.artifact_ref} artifact={item} />
+      ))}
+    </ul>
+  );
+}
+
 function Placard({
   placard,
   exporting,
@@ -139,6 +247,33 @@ function Placard({
     }
     return links;
   }, [placard]);
+
+  const artifacts = useMemo(
+    () => [...placard.skills, ...placard.mcps, ...placard.tools],
+    [placard],
+  );
+
+  const licenseSummary = useMemo(() => {
+    const seen = new Set<string>();
+    return artifacts
+      .map((artifact) => artifact.license)
+      .filter((license) => {
+        if (!license?.name || seen.has(`${license.name}:${license.url}`)) {
+          return false;
+        }
+        seen.add(`${license.name}:${license.url}`);
+        return true;
+      })
+      .slice(0, 6);
+  }, [artifacts]);
+
+  const credentialItems = artifacts.filter(
+    (artifact) => artifact.credential_status !== "not_required",
+  );
+
+  const whySelected = artifacts
+    .filter((artifact) => artifact.why_selected)
+    .slice(0, 4);
 
   const tone = statusTone(placard.status);
 
@@ -183,7 +318,7 @@ function Placard({
         <ScoreBar label="Perf" value={placard.scores.performance} />
       </div>
 
-      <Section title="File tree" count={placard.file_tree.length}>
+      <Section title="Export contents preview" count={placard.file_tree.length}>
         {placard.file_tree.length === 0 ? (
           <p className="emptyHint">No files in this template.</p>
         ) : (
@@ -195,47 +330,79 @@ function Placard({
         )}
       </Section>
 
-      <Section title="Skills" count={placard.skills.length}>
-        {placard.skills.length === 0 ? (
-          <p className="emptyHint">No skills attached.</p>
-        ) : (
-          <ul className="artifactList">
-            {placard.skills.map((skill) => (
-              <li key={skill.artifact_ref}>
-                <span className="artifactName">{skill.name}</span>
-                {skill.description && (
-                  <span className="artifactDesc">{skill.description}</span>
-                )}
+      {whySelected.length > 0 && (
+        <Section title="Why selected" count={whySelected.length}>
+          <ul className="rationaleList">
+            {whySelected.map((artifact) => (
+              <li key={`${artifact.artifact_ref}-why`}>
+                <strong>{artifact.name}</strong>
+                <span>{artifact.why_selected}</span>
               </li>
             ))}
           </ul>
-        )}
+        </Section>
+      )}
+
+      <Section title="Skills" count={placard.skills.length}>
+        <ArtifactList items={placard.skills} empty="No skills attached." />
       </Section>
 
       <Section
         title="MCPs & tools"
         count={placard.mcps.length + placard.tools.length}
       >
-        {placard.mcps.length + placard.tools.length === 0 ? (
-          <p className="emptyHint">No MCPs or tools.</p>
-        ) : (
-          <div className="chips">
-            {placard.mcps.map((item) => (
-              <span key={item.artifact_ref} className="chip chip-mcp">
-                <span className="chipDot" />
-                {item.name}
-              </span>
-            ))}
-            {placard.tools.map((item) => (
-              <span
-                key={`${item.artifact_ref}-tool`}
-                className="chip chip-tool"
-              >
-                {item.name}
-              </span>
-            ))}
+        <ArtifactList
+          items={[...placard.mcps, ...placard.tools]}
+          empty="No MCPs or tools."
+        />
+      </Section>
+
+      {licenseSummary.length > 0 && (
+        <Section title="Licenses" count={licenseSummary.length}>
+          <div className="licenseList">
+            {licenseSummary.map((license) =>
+              license.url ? (
+                <a
+                  key={`${license.name}-${license.url}`}
+                  href={license.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  {license.name}
+                  <span>{pretty(license.confidence)}</span>
+                </a>
+              ) : (
+                <span key={license.name}>
+                  {license.name}
+                  <em>{pretty(license.confidence)}</em>
+                </span>
+              ),
+            )}
           </div>
+        </Section>
+      )}
+
+      <Section title="Missing credentials" count={credentialItems.length}>
+        {credentialItems.length === 0 ? (
+          <p className="emptyHint">No credentials are required for the public-safe export.</p>
+        ) : (
+          <ul className="credentialList">
+            {credentialItems.map((artifact) => (
+              <li key={`${artifact.artifact_ref}-credential`}>
+                <strong>{artifact.name}</strong>
+                <span>{pretty(artifact.credential_status)}</span>
+              </li>
+            ))}
+          </ul>
         )}
+      </Section>
+
+      <Section title="Setup instructions">
+        <ul className="setupList">
+          <li>Open <code>START_HERE.md</code> from the exported bundle first.</li>
+          <li>Review <code>LICENSES.md</code> and <code>manifest.json</code> before enabling runtime placeholders.</li>
+          <li>Enable MCP credentials only in the target runtime, never in the browser.</li>
+        </ul>
       </Section>
 
       {placard.eval_plan.length > 0 && (
@@ -279,9 +446,9 @@ function Placard({
         disabled={exporting}
       >
         {exporting
-          ? "Preparing safe bundle…"
+          ? "Preparing safe bundle..."
           : exported
-            ? "Exported · download again"
+            ? "Exported / download again"
             : "Export safe bundle"}
       </button>
     </article>
@@ -351,6 +518,41 @@ function SourceStatusRail({ statuses }: { statuses: PublicSourceStatus[] }) {
           );
         })}
       </div>
+    </section>
+  );
+}
+
+function CalibrationRail({ preview }: { preview: PublicPreview }) {
+  const teacher = preview.calibration?.teacher;
+  const students = preview.calibration?.students ?? [];
+  if (!teacher && students.length === 0) return null;
+  return (
+    <section className="calibrationRail">
+      <div>
+        <p className="platformTag">Recommendation model policy</p>
+        <h3>
+          {teacher
+            ? `${teacher.provider} / ${teacher.model} ranks the quality bundle`
+            : "Backend-controlled model routing"}
+        </h3>
+        {preview.calibration?.public_serving_policy && (
+          <p>{preview.calibration.public_serving_policy}</p>
+        )}
+      </div>
+      {students.length > 0 && (
+        <div className="studentModels">
+          {students.map((student) => (
+            <span
+              key={`${student.provider}-${student.model}`}
+              className={`pill pill-${student.public_eligible ? "ok" : "warn"}`}
+            >
+              <span className="dot" />
+              {student.provider} / {student.model}:{" "}
+              {student.public_eligible ? "public eligible" : pretty(student.role)}
+            </span>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -501,14 +703,14 @@ export default function App() {
           </div>
           <div className="brand">
             <span className="brandName">Matix Agent Builder</span>
-            <span className="brandTag">Public preview · same-origin only</span>
+            <span className="brandTag">Public preview / same-origin only</span>
           </div>
         </div>
         <div className="topbarRight">
           <span className={`pill pill-${backend.state === "ready" ? "ok" : backend.state === "checking" ? "info" : "warn"}`}>
             <span className="dot" />
-            {backend.state === "checking" && "Connecting…"}
-            {backend.state === "ready" && `Backend · ${backend.env}`}
+            {backend.state === "checking" && "Connecting..."}
+            {backend.state === "ready" && `Backend / ${backend.env}`}
             {backend.state === "not_configured" && "Backend not configured"}
             {backend.state === "unreachable" && "Backend unreachable"}
           </span>
@@ -529,7 +731,7 @@ export default function App() {
         <p className="heroLead">
           Describe the agent you need. The Matix cockpit returns source-linked
           skills, MCPs, evaluation plans, and safe example exports for Codex,
-          Claude Code, and OpenClaw — side by side.
+          Claude Code, and OpenClaw - side by side.
         </p>
 
         <div className="promptBox">
@@ -545,7 +747,7 @@ export default function App() {
             maxLength={1000}
             onChange={(event) => setPrompt(event.target.value)}
             onKeyDown={onPromptKeyDown}
-            placeholder="Build a customer support agent that reads our Notion docs and files Linear bugs…"
+            placeholder="Build a customer support agent that reads our Notion docs and files Linear bugs..."
             disabled={backend.state !== "ready"}
           />
           <div className="promptActions">
@@ -555,13 +757,13 @@ export default function App() {
               files with placeholders.
             </p>
             <div className="promptCta">
-              <span className="kbd">⌘/Ctrl + Enter</span>
+              <span className="kbd">Cmd/Ctrl + Enter</span>
               <button
                 className="primaryButton"
                 onClick={build}
                 disabled={!canBuild}
               >
-                {busy ? "Building blueprint…" : "Build agent"}
+                {busy ? "Building blueprint..." : "Build agent"}
               </button>
             </div>
           </div>
@@ -596,7 +798,7 @@ export default function App() {
             <div>
               <p className="platformTag">Backend-approved preview</p>
               <h2 className="loadingTitle">
-                Composing three runtime blueprints…
+                Composing three runtime blueprints...
               </h2>
             </div>
           </div>
@@ -616,7 +818,7 @@ export default function App() {
               <h2>{preview.normalized_prompt}</h2>
               <div className="resultMeta">
                 <span className="resultMetaChip">
-                  {preview.model.provider} · {preview.model.name}
+                  {preview.model.provider} / {preview.model.name}
                 </span>
                 <span className="resultMetaChip">
                   {pretty(preview.selection_source ?? preview.model.status)}
@@ -632,6 +834,7 @@ export default function App() {
           </div>
 
           <SourceStatusRail statuses={preview.source_statuses ?? []} />
+          <CalibrationRail preview={preview} />
 
           <div className="placards">
             {preview.placards.map((placard) => (
@@ -675,7 +878,7 @@ export default function App() {
 
         {feedbackSent ? (
           <div className="feedbackThanks" role="status">
-            <strong>Thanks — that&apos;s in.</strong> Your note went straight to
+            <strong>Thanks - that&apos;s in.</strong> Your note went straight to
             the Matix team.
           </div>
         ) : (
@@ -693,7 +896,7 @@ export default function App() {
                     className={`star ${value <= rating ? "starOn" : ""}`}
                     onClick={() => setRating(value)}
                   >
-                    ★
+                    *
                   </button>
                 ))}
               </div>
@@ -718,16 +921,16 @@ export default function App() {
               onClick={submitFeedback}
               disabled={feedbackBusy || !feedback.trim()}
             >
-              {feedbackBusy ? "Sending…" : "Send feedback"}
+              {feedbackBusy ? "Sending..." : "Send feedback"}
             </button>
           </div>
         )}
       </section>
 
       <footer className="footer">
-        <span>Matix Agent Builder · Public preview</span>
+        <span>Matix Agent Builder / Public preview</span>
         <span className="footerDim">
-          Same-origin /api/public/* only · no provider keys in the browser
+          Same-origin /api/public/* only / no provider keys in the browser
         </span>
       </footer>
     </main>

@@ -4,6 +4,13 @@ export interface PublicSourceLink {
   source_kind: string;
 }
 
+export interface PublicArtifactLicense {
+  name: string;
+  url?: string | null;
+  source: string;
+  confidence: "high" | "medium" | "low" | string;
+}
+
 export interface PublicArtifact {
   artifact_ref: string;
   artifact_kind: string;
@@ -14,6 +21,12 @@ export interface PublicArtifact {
   match: number;
   performance: number;
   source_links: PublicSourceLink[];
+  license: PublicArtifactLicense;
+  score_breakdown: Record<string, number>;
+  why_selected: string;
+  setup_hint: string;
+  credential_status: "not_required" | "optional" | "missing" | "configured" | string;
+  warnings: string[];
 }
 
 export interface RuntimePlacard {
@@ -59,6 +72,22 @@ export interface PublicPreview {
   selection_source?: string;
   placards: RuntimePlacard[];
   source_statuses?: PublicSourceStatus[];
+  calibration?: {
+    teacher?: {
+      provider: string;
+      model: string;
+      role: string;
+    };
+    students?: Array<{
+      provider: string;
+      model: string;
+      role: string;
+      public_eligible: boolean;
+      promotion_gate?: Record<string, number>;
+    }>;
+    latest_eval?: unknown;
+    public_serving_policy?: string;
+  };
   source_policy: {
     browser_provider_calls: false;
     secrets_included: false;
