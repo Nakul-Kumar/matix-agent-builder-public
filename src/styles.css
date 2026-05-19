@@ -168,6 +168,48 @@ button:disabled {
   gap: 18px;
 }
 
+.sourceStatus {
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid rgba(150, 170, 210, 0.16);
+  background: rgba(8, 12, 22, 0.76);
+}
+
+.sourceStatus h3 {
+  margin-bottom: 0;
+}
+
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.statusCell {
+  min-width: 0;
+  border: 1px solid rgba(150, 170, 210, 0.14);
+  background: #060a14;
+  padding: 10px;
+}
+
+.statusCell span,
+.statusCell strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.statusCell span {
+  color: #c8d7f2;
+}
+
+.statusCell strong {
+  margin-top: 5px;
+  color: #77f7d1;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
 .placard {
   padding: 22px;
   border-top: 3px solid var(--accent);
@@ -248,7 +290,8 @@ code {
   }
 
   .heroGrid,
-  .placards {
+  .placards,
+  .statusGrid {
     grid-template-columns: 1fr;
   }
 

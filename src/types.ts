@@ -38,6 +38,14 @@ export interface RuntimePlacard {
   warnings: string[];
 }
 
+export interface PublicSourceStatus {
+  source_id: string;
+  label: string;
+  status: "searched" | "synced" | "degraded" | "auth_required" | "rate_limited" | string;
+  message?: string;
+  quarantine_review_required?: boolean;
+}
+
 export interface PublicPreview {
   ok: boolean;
   prompt_hash: string;
@@ -48,7 +56,9 @@ export interface PublicPreview {
     name: string;
     status: string;
   };
+  selection_source?: string;
   placards: RuntimePlacard[];
+  source_statuses?: PublicSourceStatus[];
   source_policy: {
     browser_provider_calls: false;
     secrets_included: false;

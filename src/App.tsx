@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { exportAgent, previewAgent, sendFeedback } from "./lib/publicApi";
-import type { PublicPreview, RuntimePlacard } from "./types";
+import type { PublicPreview, PublicSourceStatus, RuntimePlacard } from "./types";
 
 const samplePrompt = "Build a software engineer agent for a Next.js app with GitHub, Postgres, and Playwright testing.";
 
@@ -69,6 +69,26 @@ function Placard({ placard, onExport }: { placard: RuntimePlacard; onExport: (pl
         Export safe bundle
       </button>
     </article>
+  );
+}
+
+function SourceStatusRail({ statuses }: { statuses: PublicSourceStatus[] }) {
+  if (statuses.length === 0) return null;
+  return (
+    <section className="sourceStatus">
+      <div>
+        <p className="platform">source search status</p>
+        <h3>Directories and marketplaces checked</h3>
+      </div>
+      <div className="statusGrid">
+        {statuses.map((source) => (
+          <div className="statusCell" key={source.source_id} title={source.message}>
+            <span>{source.label}</span>
+            <strong>{source.status.replace("_", " ")}</strong>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -162,8 +182,11 @@ export default function App() {
               <p className="platform">backend-approved preview</p>
               <h2>{preview.normalized_prompt}</h2>
             </div>
-            <span className="status">{preview.model.name} · {preview.model.status}</span>
+            <span className="status">
+              {preview.model.provider} / {preview.model.name} / {preview.selection_source ?? preview.model.status}
+            </span>
           </div>
+          <SourceStatusRail statuses={preview.source_statuses ?? []} />
           <div className="placards">
             {preview.placards.map((placard) => (
               <Placard key={placard.platform} placard={placard} onExport={handleExport} />
@@ -171,7 +194,7 @@ export default function App() {
           </div>
           {policy && (
             <p className="policy">
-              Secrets included: {String(policy.secrets_included)} · Browser provider calls: {String(policy.browser_provider_calls)}
+              Secrets included: {String(policy.secrets_included)} / Browser provider calls: {String(policy.browser_provider_calls)}
             </p>
           )}
         </section>
