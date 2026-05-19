@@ -19,26 +19,21 @@ const allowedPublicRoutes = new Set([
 
 app.use(express.json({ limit: "32kb" }));
 
-const isProd = process.env.NODE_ENV === "production";
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  if (isProd) {
-    res.setHeader("X-Frame-Options", "DENY");
-    res.setHeader(
-      "Content-Security-Policy",
-      [
-        "default-src 'self'",
-        "img-src 'self' data:",
-        "style-src 'self' 'unsafe-inline'",
-        "script-src 'self'",
-        "connect-src 'self'",
-        "frame-ancestors 'none'",
-      ].join("; "),
-    );
-  } else {
-    res.setHeader("Cache-Control", "no-store");
-  }
+  res.setHeader(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "img-src 'self' data:",
+      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self'",
+      "connect-src 'self'",
+      "frame-ancestors 'none'",
+    ].join("; "),
+  );
   next();
 });
 
