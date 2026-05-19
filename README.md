@@ -36,7 +36,13 @@ npm run dev
 Set `MATIX_PUBLIC_API_BASE` in Replit Secrets or environment to the deployed public API base:
 
 ```text
-https://your-cockpit-domain.example/api/public
+https://your-cockpit-domain.example/api/v1/public
+```
+
+For the current Matix cockpit VPS test backend, use:
+
+```text
+https://cockpit.76.13.118.9.sslip.io/api/v1/public
 ```
 
 `MATIX_PUBLIC_API_BASE` is not a model-provider secret. Still, do not put Gemini/OpenAI/Anthropic keys in this repo or in `VITE_*` variables.
