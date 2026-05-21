@@ -27,6 +27,8 @@ export interface PublicArtifact {
   setup_hint: string;
   credential_status: "not_required" | "optional" | "missing" | "configured" | string;
   warnings: string[];
+  selected_by_model?: boolean;
+  capability_matches?: string[];
 }
 
 export interface RuntimePlacard {
@@ -78,12 +80,29 @@ export interface PublicPreview {
   agent_domain?: string;
   agent_archetype?: string;
   intent_confidence?: number;
+  intent?: {
+    domain_label?: string;
+    agent_archetype?: string;
+    confidence?: number;
+    must_have_capabilities?: string[];
+    nice_to_have_capabilities?: string[];
+    negative_capabilities?: string[];
+    query_expansions?: string[];
+    ambiguity?: string;
+    safety_profile?: string;
+    credential_profile?: string;
+    model_status?: string;
+    cache_status?: string;
+  };
   model_trace_summary?: {
     detected_domain?: string;
     detected_archetype?: string;
     selection_source?: string;
     catalog_candidates_used?: boolean;
     source_queries?: string[];
+    intent_model_status?: string;
+    intent_cache_status?: string;
+    must_have_capabilities?: string[];
     reranker_status?: string;
     reranker_reason?: string;
     summary?: string;

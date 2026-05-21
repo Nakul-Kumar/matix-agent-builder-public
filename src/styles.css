@@ -702,6 +702,8 @@ h1 {
     rgba(45, 212, 191, 0.08),
     rgba(59, 130, 246, 0.06)
   );
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .calibrationRail h3,
@@ -724,6 +726,10 @@ h1 {
   color: #fde68a !important;
 }
 
+.intentSubline {
+  color: var(--text-dim) !important;
+}
+
 .studentModels {
   display: flex;
   flex-wrap: wrap;
@@ -736,6 +742,55 @@ h1 {
   flex-wrap: wrap;
   gap: 6px;
   justify-content: flex-end;
+}
+
+.intentPanel {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-top: 2px;
+}
+
+.intentPanelTitle {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.capabilityMatches,
+.queryChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.capabilityChip,
+.queryChips span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(45, 212, 191, 0.24);
+  color: #ccfbf1;
+  background: rgba(20, 184, 166, 0.08);
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.mutedChip {
+  border-color: rgba(148, 163, 184, 0.22);
+  color: var(--text-dim);
+  background: rgba(148, 163, 184, 0.06);
+}
+
+.modelChip {
+  border-color: rgba(52, 211, 153, 0.28);
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.08);
+  font-weight: 700;
 }
 
 /* ====================== Placards ====================== */

@@ -176,6 +176,18 @@ function ArtifactCard({ artifact }: { artifact: PublicArtifact }) {
       {artifact.description && (
         <span className="artifactDesc">{artifact.description}</span>
       )}
+      {(artifact.capability_matches?.length || artifact.selected_by_model) && (
+        <div className="capabilityMatches" aria-label="Capability matches">
+          {artifact.selected_by_model && (
+            <span className="capabilityChip modelChip">model-selected</span>
+          )}
+          {(artifact.capability_matches ?? []).slice(0, 4).map((capability) => (
+            <span key={`${artifact.artifact_ref}-${capability}`} className="capabilityChip">
+              {pretty(capability)}
+            </span>
+          ))}
+        </div>
+      )}
       {artifact.why_selected && (
         <p className="artifactWhy">
           <strong>Why selected</strong> {artifact.why_selected}
@@ -561,7 +573,11 @@ function SourceStatusRail({ statuses }: { statuses: PublicSourceStatus[] }) {
 function DomainRail({ preview }: { preview: PublicPreview }) {
   const confidence = preview.intent_confidence;
   const trace = preview.model_trace_summary;
-  if (!preview.agent_archetype && !trace?.summary && !preview.fallback_reason) {
+  const intent = preview.intent;
+  const mustHave = intent?.must_have_capabilities ?? trace?.must_have_capabilities ?? [];
+  const niceToHave = intent?.nice_to_have_capabilities ?? [];
+  const queries = intent?.query_expansions ?? trace?.source_queries ?? [];
+  if (!preview.agent_archetype && !intent?.domain_label && !trace?.summary && !preview.fallback_reason) {
     return null;
   }
   return (
@@ -569,11 +585,15 @@ function DomainRail({ preview }: { preview: PublicPreview }) {
       <div>
         <p className="platformTag">Recommendation decision</p>
         <h3>
-          {preview.agent_archetype
-            ? `Detected domain: ${preview.agent_archetype}`
+          {intent?.domain_label || preview.agent_archetype
+            ? `Detected intent: ${intent?.domain_label ?? preview.agent_archetype}`
             : "Backend-selected domain"}
         </h3>
+        {intent?.agent_archetype && intent.agent_archetype !== intent.domain_label && (
+          <p className="intentSubline">Runtime label: {intent.agent_archetype}</p>
+        )}
         {trace?.summary && <p>{trace.summary}</p>}
+        {intent?.ambiguity && <p className="fallbackNote">{intent.ambiguity}</p>}
         {preview.fallback_reason && (
           <p className="fallbackNote">{preview.fallback_reason}</p>
         )}
@@ -598,7 +618,51 @@ function DomainRail({ preview }: { preview: PublicPreview }) {
             <span className="dot" /> {pretty(trace.reranker_status)}
           </span>
         )}
+        {intent?.model_status && (
+          <span className="pill pill-ok">
+            <span className="dot" /> {pretty(intent.model_status)}
+          </span>
+        )}
+        {intent?.cache_status && (
+          <span className={`pill pill-${intent.cache_status === "hit" ? "ok" : "warn"}`}>
+            <span className="dot" /> cache {pretty(intent.cache_status)}
+          </span>
+        )}
       </div>
+      {mustHave.length > 0 && (
+        <div className="intentPanel">
+          <span className="intentPanelTitle">Must-have capabilities</span>
+          <div className="capabilityMatches">
+            {mustHave.slice(0, 10).map((capability) => (
+              <span key={`must-${capability}`} className="capabilityChip">
+                {pretty(capability)}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {niceToHave.length > 0 && (
+        <div className="intentPanel">
+          <span className="intentPanelTitle">Nice-to-have coverage</span>
+          <div className="capabilityMatches">
+            {niceToHave.slice(0, 6).map((capability) => (
+              <span key={`nice-${capability}`} className="capabilityChip mutedChip">
+                {pretty(capability)}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {queries.length > 0 && (
+        <div className="intentPanel">
+          <span className="intentPanelTitle">Source query expansions</span>
+          <div className="queryChips">
+            {queries.slice(0, 8).map((query) => (
+              <span key={`query-${query}`}>{query}</span>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
