@@ -282,6 +282,12 @@ function Placard({
     .filter((artifact) => artifact.why_selected)
     .slice(0, 4);
 
+  const artifactsByRef = useMemo(() => {
+    const map = new Map<string, PublicArtifact>();
+    for (const artifact of artifacts) map.set(artifact.artifact_ref, artifact);
+    return map;
+  }, [artifacts]);
+
   const tone = statusTone(placard.status);
 
   return (
@@ -324,6 +330,29 @@ function Placard({
         <ScoreBar label="Use" value={placard.scores.popularity} />
         <ScoreBar label="Perf" value={placard.scores.performance} />
       </div>
+
+      {placard.bundle_sections && placard.bundle_sections.length > 0 && (
+        <Section title="Recommended bundle" count={placard.bundle_sections.length}>
+          <div className="bundleSectionGrid">
+            {placard.bundle_sections.map((section) => (
+              <div className="bundleSectionCard" key={section.section_id}>
+                <strong>{section.title}</strong>
+                <div>
+                  {section.artifact_refs
+                    .map((ref) => artifactsByRef.get(ref))
+                    .filter((artifact): artifact is PublicArtifact => Boolean(artifact))
+                    .slice(0, 5)
+                    .map((artifact) => (
+                      <span key={`${section.section_id}-${artifact.artifact_ref}`}>
+                        {artifact.name}
+                      </span>
+                    ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Section>
+      )}
 
       <Section title="Export contents preview" count={placard.file_tree.length}>
         {placard.file_tree.length === 0 ? (
@@ -529,18 +558,67 @@ function SourceStatusRail({ statuses }: { statuses: PublicSourceStatus[] }) {
   );
 }
 
+function DomainRail({ preview }: { preview: PublicPreview }) {
+  const confidence = preview.intent_confidence;
+  const trace = preview.model_trace_summary;
+  if (!preview.agent_archetype && !trace?.summary && !preview.fallback_reason) {
+    return null;
+  }
+  return (
+    <section className="domainRail">
+      <div>
+        <p className="platformTag">Recommendation decision</p>
+        <h3>
+          {preview.agent_archetype
+            ? `Detected domain: ${preview.agent_archetype}`
+            : "Backend-selected domain"}
+        </h3>
+        {trace?.summary && <p>{trace.summary}</p>}
+        {preview.fallback_reason && (
+          <p className="fallbackNote">{preview.fallback_reason}</p>
+        )}
+      </div>
+      <div className="domainChips">
+        {preview.agent_domain && (
+          <span className="pill pill-ok">
+            <span className="dot" /> {pretty(preview.agent_domain)}
+          </span>
+        )}
+        {Number.isFinite(confidence) && (
+          <span className="pill pill-ok">
+            <span className="dot" /> {Math.round(confidence ?? 0)}% confidence
+          </span>
+        )}
+        {trace?.reranker_status && (
+          <span
+            className={`pill pill-${
+              trace.reranker_status === "completed" ? "ok" : "warn"
+            }`}
+          >
+            <span className="dot" /> {pretty(trace.reranker_status)}
+          </span>
+        )}
+      </div>
+    </section>
+  );
+}
+
 function CalibrationRail({ preview }: { preview: PublicPreview }) {
   const teacher = preview.calibration?.teacher;
   const students = preview.calibration?.students ?? [];
+  const selectionSource = preview.selection_source ?? preview.model.status;
+  const teacherRanked = selectionSource === "gpt_5_5_rerank";
   if (!teacher && students.length === 0) return null;
   return (
     <section className="calibrationRail">
       <div>
         <p className="platformTag">Recommendation model policy</p>
         <h3>
-          {teacher
+          {teacher && teacherRanked
             ? `${teacher.provider} / ${teacher.model} ranks the quality bundle`
-            : "Backend-controlled model routing"}
+            : selectionSource
+              ? `${pretty(selectionSource)} used for this preview`
+              : "Backend-controlled model routing"}
         </h3>
         {preview.calibration?.public_serving_policy && (
           <p>{preview.calibration.public_serving_policy}</p>
@@ -841,6 +919,7 @@ export default function App() {
           </div>
 
           <SourceStatusRail statuses={preview.source_statuses ?? []} />
+          <DomainRail preview={preview} />
           <CalibrationRail preview={preview} />
 
           <div className="placards">

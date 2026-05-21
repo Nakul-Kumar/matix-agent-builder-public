@@ -40,6 +40,11 @@ export interface RuntimePlacard {
   skills: PublicArtifact[];
   mcps: PublicArtifact[];
   tools: PublicArtifact[];
+  bundle_sections?: Array<{
+    section_id: string;
+    title: string;
+    artifact_refs: string[];
+  }>;
   memory_mode: string;
   eval_plan: string[];
   scores: {
@@ -70,6 +75,20 @@ export interface PublicPreview {
     status: string;
   };
   selection_source?: string;
+  agent_domain?: string;
+  agent_archetype?: string;
+  intent_confidence?: number;
+  model_trace_summary?: {
+    detected_domain?: string;
+    detected_archetype?: string;
+    selection_source?: string;
+    catalog_candidates_used?: boolean;
+    source_queries?: string[];
+    reranker_status?: string;
+    reranker_reason?: string;
+    summary?: string;
+  };
+  fallback_reason?: string;
   placards: RuntimePlacard[];
   source_statuses?: PublicSourceStatus[];
   calibration?: {
