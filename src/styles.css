@@ -1399,6 +1399,23 @@ h1 {
   color: var(--text-faint);
 }
 
+.footerLinks {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.footerLinks a {
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.footerLinks a:hover {
+  color: var(--text);
+}
+
 /* ====================== Skeletons ====================== */
 
 .skeleton {

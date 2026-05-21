@@ -9,6 +9,13 @@ import type {
 
 const samplePrompt =
   "Build a software engineer agent for a Next.js app with GitHub, Postgres, and Playwright testing.";
+const repoUrl = "https://github.com/Nakul-Kumar/matix-agent-builder-public";
+const legalLinks = [
+  { label: "Privacy", href: `${repoUrl}/blob/main/PRIVACY.md` },
+  { label: "Terms", href: `${repoUrl}/blob/main/TERMS.md` },
+  { label: "Security", href: `${repoUrl}/blob/main/SECURITY.md` },
+  { label: "GitHub", href: repoUrl },
+];
 
 type PlatformKey = RuntimePlacard["platform"];
 
@@ -872,7 +879,8 @@ export default function App() {
           <p className="platformTag">Feedback</p>
           <h2>What would make this blueprint better?</h2>
           <p className="feedbackHint">
-            We read every note. Optional email if you&apos;d like a reply.
+            We read every note. Optional email if you&apos;d like a reply;
+            feedback may be stored under the public preview privacy policy.
           </p>
         </header>
 
@@ -929,6 +937,18 @@ export default function App() {
 
       <footer className="footer">
         <span>Matix Agent Builder / Public preview</span>
+        <nav className="footerLinks" aria-label="Public project links">
+          {legalLinks.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
         <span className="footerDim">
           Same-origin /api/public/* only / no provider keys in the browser
         </span>

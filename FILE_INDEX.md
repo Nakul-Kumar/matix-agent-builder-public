@@ -1,12 +1,21 @@
 # File Index
 
-This document is the public repo map. It explains every tracked file and folder so Replit, Codex, and future contributors know what each part owns.
+This document is the public repo map. It explains every tracked file and
+folder so Replit, Codex, and future contributors know what each part owns.
 
 ## Root Files
 
 ### `.env.example`
 
-Documents non-secret environment variables. `MATIX_PUBLIC_API_BASE` points the public server at the deployed public API. It intentionally warns against `VITE_*` provider keys.
+Documents non-secret environment variables. `MATIX_PUBLIC_API_BASE` points the
+public server at the deployed public API. It intentionally warns against
+browser-exposed provider keys.
+
+### `.github/workflows/public-release.yml`
+
+Public repo CI gate for install, build, secret scan, built-asset scan,
+dependency audit, and release-readiness checks. Optional workflow dispatch can
+run live smoke tests.
 
 ### `.gitignore`
 
@@ -14,27 +23,58 @@ Keeps local installs, builds, logs, and real env files out of Git.
 
 ### `API.md`
 
-Public API contract for preview, export, templates, registry summary, and feedback.
+Public API contract for preview, export, templates, registry summary, feedback,
+artifact metadata, calibration, and rate limiting.
+
+### `CODE_OF_CONDUCT.md`
+
+Contributor behavior expectations and reporting path.
+
+### `CONTRIBUTING.md`
+
+Contributor setup, security boundaries, and required checks.
 
 ### `FILE_INDEX.md`
 
-This file. It is the repo map and should be updated when files are added, removed, or renamed.
+This file. It is the repo map and should be updated when files are added,
+removed, or renamed.
+
+### `LICENSE`
+
+Apache-2.0 license for this public repository.
+
+### `NOTICE`
+
+Project notice and third-party attribution guidance.
+
+### `PRIVACY.md`
+
+Public-preview privacy notice covering prompts, feedback, optional email,
+retention, deletion, and backend/model processing.
 
 ### `README.md`
 
-Primary project documentation: purpose, security boundary, Replit setup, commands, and documentation links.
+Primary project documentation: purpose, open-source scope, security boundary,
+setup, commands, release checks, and documentation links.
 
 ### `SECURITY.md`
 
-Security model for the public prompt box, provider-key handling, public server boundary, and export safety.
+Security model for the public prompt box, provider-key handling, public server
+boundary, rate limiting, vulnerability reporting, and export safety.
+
+### `TERMS.md`
+
+Public-preview terms and disclaimer.
 
 ### `index.html`
 
-Vite HTML entrypoint. It contains only the root mount node and loads `src/main.tsx`.
+Vite HTML entrypoint. It contains only the root mount node and loads
+`src/main.tsx`.
 
 ### `package.json`
 
-Defines npm scripts and runtime dependencies. This repo uses npm because it is standalone and public-facing.
+Defines npm scripts and runtime dependencies. This repo uses npm because it is
+standalone and public-facing.
 
 ### `package-lock.json`
 
@@ -46,7 +86,8 @@ TypeScript configuration for the frontend and public server code.
 
 ### `vite.config.ts`
 
-Vite config for React. During local development it proxies `/api` to the local public server on port `8787`.
+Vite config for React. During local development it proxies `/api` to the local
+public server on port `8787`.
 
 ## `server/`
 
@@ -59,18 +100,34 @@ Owns:
 - `/api/health`
 - security headers
 - public route allowlist
+- public API rate limiting
 - same-origin proxy to `MATIX_PUBLIC_API_BASE`
 - static production serving
 
-Important: it does not store provider keys and does not forward private cockpit cookies.
+Important: it does not store provider keys and does not forward private
+cockpit cookies.
 
 ## `scripts/`
 
 Local verification helpers.
 
+### `scripts/check-release-readiness.mjs`
+
+Asserts that legal docs, release docs, footer links, API field docs, CI, and
+rate limiting are present before public release.
+
+### `scripts/scan-built-assets.mjs`
+
+Scans production build output for provider strings, private backend paths, and
+direct marketplace/source-directory URLs.
+
 ### `scripts/scan-secrets.mjs`
 
-Scans source files for forbidden secret-shaped strings. It intentionally ignores docs and `.env.example` because they mention forbidden variable names as warnings.
+Scans source files for forbidden secret-shaped strings.
+
+### `scripts/smoke-live.mjs`
+
+Runs a live preview/export smoke test against the configured public backend.
 
 ## `src/`
 
@@ -87,19 +144,24 @@ Main public page. It owns:
 - prompt textarea
 - build button
 - three runtime placards
-- source links
+- source status rail
+- calibration policy rail
+- license, score, setup, warning, and credential rendering
 - safe export action
 - feedback form
+- public footer links
 
 It calls only helpers from `src/lib/publicApi.ts`.
 
 ### `src/styles.css`
 
-Global visual system for the public page: dark technical layout, prompt box, placards, scores, chips, links, and responsive behavior.
+Global visual system for the public page: dark technical layout, prompt box,
+placards, scores, chips, links, footer, and responsive behavior.
 
 ### `src/types.ts`
 
-Shared TypeScript types for public preview payloads, runtime placards, artifacts, and source links.
+Shared TypeScript types for public preview payloads, runtime placards,
+artifacts, artifact licenses, calibration, and source links.
 
 ## `src/lib/`
 

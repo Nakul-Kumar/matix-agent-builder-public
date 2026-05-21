@@ -1,4 +1,4 @@
-import express from "express";
+import express, { type Request } from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,8 +16,45 @@ const allowedPublicRoutes = new Set([
   "/agent-builder/export",
   "/agent-builder/feedback",
 ]);
+const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS || 60_000);
+const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 60);
+const rateBuckets = new Map<string, { count: number; resetAt: number }>();
+let rateLimitSweeps = 0;
+
+function publicRateLimitKey(req: Request, publicPath: string): string {
+  const forwardedFor = req.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const ip = forwardedFor || req.ip || "unknown";
+  return `${ip}:${req.method}:${publicPath}`;
+}
+
+function checkPublicRateLimit(req: Request, publicPath: string) {
+  const now = Date.now();
+  rateLimitSweeps += 1;
+  if (rateLimitSweeps % 500 === 0) {
+    for (const [key, bucket] of rateBuckets.entries()) {
+      if (bucket.resetAt <= now) rateBuckets.delete(key);
+    }
+  }
+
+  const key = publicRateLimitKey(req, publicPath);
+  const existing = rateBuckets.get(key);
+  if (!existing || existing.resetAt <= now) {
+    rateBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { limited: false, retryAfterSeconds: 0 };
+  }
+
+  existing.count += 1;
+  if (existing.count > RATE_LIMIT_MAX) {
+    return {
+      limited: true,
+      retryAfterSeconds: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
+    };
+  }
+  return { limited: false, retryAfterSeconds: 0 };
+}
 
 app.use(express.json({ limit: "32kb" }));
+app.set("trust proxy", 1);
 
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -57,6 +94,15 @@ app.use("/api/public", async (req, res) => {
   const publicPath = req.originalUrl.replace(/^\/api\/public/, "").split("?")[0] || "/";
   if (!allowedPublicRoutes.has(publicPath)) {
     res.status(404).json({ error: "public_route_not_available" });
+    return;
+  }
+  const rateLimit = checkPublicRateLimit(req, publicPath);
+  if (rateLimit.limited) {
+    res.setHeader("Retry-After", String(rateLimit.retryAfterSeconds));
+    res.status(429).json({
+      error: "rate_limited",
+      detail: "Too many public API requests. Please wait and retry.",
+    });
     return;
   }
   // Browser code talks to this same-origin route; this server performs the

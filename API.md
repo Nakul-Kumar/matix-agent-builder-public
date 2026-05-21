@@ -1,11 +1,13 @@
 # Public API Contract
 
-The browser calls same-origin routes only. The public server forwards those requests to `MATIX_PUBLIC_API_BASE` after checking an allowlist.
+The browser calls same-origin routes only. The public server forwards those
+requests to `MATIX_PUBLIC_API_BASE` after checking an allowlist and rate limit.
 
-For the current Matix cockpit backend, `MATIX_PUBLIC_API_BASE` should point at the versioned FastAPI public base:
+`MATIX_PUBLIC_API_BASE` should point at a compatible versioned public backend,
+for example:
 
 ```text
-https://cockpit.76.13.118.9.sslip.io/api/v1/public
+https://your-cockpit-domain.example/api/v1/public
 ```
 
 ## Routes
@@ -31,7 +33,8 @@ Public-safe registry summary. Used for top-level proof and cache warmup.
 
 ### `GET /api/public/agent-builder/templates`
 
-Returns public-safe runtime template summaries for Codex, Claude Code, and OpenClaw.
+Returns public-safe runtime template summaries for Codex, Claude Code, and
+OpenClaw.
 
 ### `POST /api/public/agent-builder/preview`
 
@@ -47,13 +50,32 @@ Request:
 
 Response includes:
 
-- prompt hash
-- model status
-- three runtime placards
-- source policy
-- safe source links
+- `prompt_hash`
+- `normalized_prompt`
+- `generated_at`
+- `model.provider`, `model.name`, and `model.status`
+- `selection_source`
+- `calibration` with teacher/student model policy when provided
+- `source_statuses`
+- `source_policy`
+- three runtime `placards`
 
-The response must never include provider keys, DB URLs, JWTs, private cockpit IDs, launch roots, or real credential values.
+Each selected artifact in `skills`, `mcps`, and `tools` should include:
+
+- `artifact_ref`
+- `artifact_kind`
+- `name`
+- `description`
+- `source_links`
+- `license` with `name`, `url`, `source`, and `confidence`
+- `score_breakdown`
+- `why_selected`
+- `setup_hint`
+- `credential_status`
+- `warnings`
+
+The response must never include provider keys, database URLs, JWTs, private
+cockpit IDs, launch roots, or real credential values.
 
 ### `POST /api/public/agent-builder/export`
 
@@ -68,15 +90,19 @@ Request:
 }
 ```
 
-Export files may include:
+Exports should include, when supported by the backend:
 
-- `README.md`
-- `AGENTS.md`
-- `config.example.toml`
-- `.mcp.example.json`
+- `START_HERE.md`
+- runtime instructions such as `AGENTS.md` or `CLAUDE.md`
+- runtime config examples such as `config.toml` or `.mcp.example.json`
+- generated `skills/*/SKILL.md` files
+- `context/objective.json`
+- `context/source-links.json`
 - `manifest.json`
+- `LICENSES.md`
 
-Exports must use placeholders only.
+Exports must use placeholders only and should explain optional credentials,
+manual review, and license obligations.
 
 ### `POST /api/public/agent-builder/feedback`
 
@@ -94,7 +120,7 @@ Request:
 }
 ```
 
-Feedback does not call an LLM by default.
+Feedback does not call a model from the browser.
 
 ## Allowlist
 
@@ -107,3 +133,13 @@ The server currently forwards only:
 - `/agent-builder/feedback`
 
 Any other `/api/public/*` path returns `404`.
+
+## Rate Limiting
+
+The public BFF applies lightweight in-memory rate limiting per route, HTTP
+method, and client network key. Configure with:
+
+- `RATE_LIMIT_WINDOW_MS`
+- `RATE_LIMIT_MAX`
+
+When a client exceeds the limit, the BFF returns `429` with `Retry-After`.

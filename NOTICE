@@ -1,0 +1,13 @@
+Matix Agent Builder Public
+Copyright 2026 Matix
+
+This product is licensed under the Apache License, Version 2.0.
+
+This distribution includes third-party npm dependencies. Their license
+metadata is recorded in package-lock.json and in the package metadata installed
+by npm. Generated agent exports may reference external skills, tools, MCP
+servers, or templates; those artifacts keep their own licenses and are listed
+in each export's LICENSES.md when provided by the backend.
+
+No third-party provider key, model credential, marketplace credential, or
+private cockpit credential is included in this public repository.

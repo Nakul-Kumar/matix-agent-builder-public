@@ -1,0 +1,50 @@
+name: Public release checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_live_smoke:
+        description: "Run live preview/export smoke against MATIX_PUBLIC_API_BASE"
+        type: boolean
+        default: false
+
+jobs:
+  release-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Secret scan
+        run: npm run scan:secrets
+
+      - name: Built asset scan
+        run: npm run scan:assets
+
+      - name: Dependency audit
+        run: npm audit --omit=dev --audit-level=moderate
+
+      - name: Release readiness
+        run: npm run check:release
+
+      - name: Live smoke
+        if: github.event_name == 'workflow_dispatch' && inputs.run_live_smoke
+        env:
+          MATIX_PUBLIC_API_BASE: ${{ vars.MATIX_PUBLIC_API_BASE }}
+        run: npm run smoke:live

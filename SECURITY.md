@@ -1,18 +1,24 @@
 # Security Notes
 
+## Reporting
+
+Report vulnerabilities through GitHub Security Advisories when available. Do
+not post secrets, exploit details, or private data in public issues.
+
 ## Public Prompt Box
 
 The browser must never call a model provider directly. The secure pattern is:
 
 ```text
-Browser -> same-origin public server -> deployed public backend -> optional cheap model -> validated JSON -> browser
+Browser -> same-origin public server -> deployed public backend -> validated JSON -> browser
 ```
 
 The frontend renders backend-approved JSON only.
 
 ## Secret Rules
 
-Never add these to browser code, `VITE_*` variables, generated exports, or committed files:
+Never add these to browser code, browser-exposed variables, generated exports,
+or committed files:
 
 - Gemini API keys
 - OpenAI API keys
@@ -26,7 +32,8 @@ Never add these to browser code, `VITE_*` variables, generated exports, or commi
 - connector credentials
 - private launch roots
 
-Vite exposes `VITE_*` values to the browser bundle, so provider secrets must never use that prefix.
+Vite exposes browser-prefixed variables to the client bundle, so provider
+secrets must never use that path.
 
 ## Public Server
 
@@ -34,15 +41,26 @@ Vite exposes `VITE_*` values to the browser bundle, so provider secrets must nev
 
 - serves `/api/health`
 - forwards only allowlisted `/api/public/*` paths
+- applies lightweight rate limiting to public API calls
 - adds security headers
 - never forwards cookies or private cockpit auth
 - does not know model-provider keys
 
-Provider keys belong only in the deployed backend that implements `/api/public/agent-builder/preview`.
+Provider keys belong only in the deployed backend that implements
+`/api/public/agent-builder/preview`.
+
+## Public API Abuse Protection
+
+The public BFF includes per-route rate limiting with configurable window and
+request count. This is a first-line public-preview control, not a substitute
+for upstream CDN, WAF, bot filtering, backend quotas, or provider-side spend
+limits.
 
 ## Exports
 
-Exports are starter examples only. They may include `*.example.*` files and placeholder env names, but must not include real credentials or executable launch instructions against private infrastructure.
+Exports are starter examples only. They may include example files and
+placeholder env names, but must not include real credentials or executable
+launch instructions against private infrastructure.
 
 ## Verification
 
@@ -52,6 +70,10 @@ Before publishing:
 npm run typecheck
 npm run build
 npm run scan:secrets
+npm run scan:assets
+npm run check:release
+npm audit --omit=dev
 ```
 
-Then inspect the built assets for accidental private strings if the API contract changes.
+Run `npm run smoke:live` when intentionally validating the deployed public
+backend preview/export path.
