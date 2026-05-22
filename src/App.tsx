@@ -862,7 +862,7 @@ export default function App() {
               >
                 <feTurbulence
                   type="fractalNoise"
-                  baseFrequency="0.012"
+                  baseFrequency="0.02"
                   numOctaves="2"
                   seed="7"
                   result="noise"
@@ -882,44 +882,38 @@ export default function App() {
                 width="140%"
                 height="140%"
               >
-                <feGaussianBlur in="SourceAlpha" stdDeviation="14" result="blur" />
+                <feGaussianBlur in="SourceAlpha" stdDeviation="12" result="blur" />
+                <feOffset in="blur" dx="2" dy="4" result="offsetBlur" />
                 <feComposite
-                  in="blur"
-                  in2="SourceAlpha"
-                  operator="arithmetic"
-                  k2="-1"
-                  k3="1"
-                  result="innerShadow"
-                />
-                <feColorMatrix
-                  in="innerShadow"
-                  type="matrix"
-                  values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0"
-                  result="innerShadowColored"
-                />
-                <feComposite
-                  in="innerShadowColored"
+                  in="offsetBlur"
                   in2="SourceAlpha"
                   operator="in"
-                  result="clippedShadow"
+                  result="shadowShape"
+                />
+                <feColorMatrix
+                  in="shadowShape"
+                  type="matrix"
+                  values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0"
+                  result="darkShadow"
                 />
                 <feMerge>
                   <feMergeNode in="SourceGraphic" />
-                  <feMergeNode in="clippedShadow" />
+                  <feMergeNode in="darkShadow" />
                 </feMerge>
               </filter>
             </defs>
-            <g filter="url(#blobNoise)">
+            <g filter="url(#blobNoise)" transform="rotate(-4, 200, 200)">
               <path
-                d="M 312 38
-                   C 358 60, 388 110, 376 168
-                   C 368 212, 332 238, 326 286
-                   C 322 322, 348 350, 318 374
-                   C 282 398, 220 386, 174 374
-                   C 122 360, 64 348, 38 304
-                   C 14 262, 38 206, 70 168
-                   C 100 132, 116 92, 156 64
-                   C 198 34, 264 16, 312 38 Z"
+                d="M 268 32
+                   C 318 40, 360 78, 372 132
+                   C 380 172, 358 208, 354 248
+                   C 350 286, 372 320, 348 350
+                   C 320 384, 262 388, 214 380
+                   C 168 372, 122 374, 78 354
+                   C 28 332, 6 280, 14 226
+                   C 20 178, 56 144, 60 96
+                   C 64 56, 96 22, 142 18
+                   C 188 14, 224 26, 268 32 Z"
                 fill="url(#blobGradient)"
                 filter="url(#blobInnerShadow)"
               />
