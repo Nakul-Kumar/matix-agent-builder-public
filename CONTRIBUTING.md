@@ -7,7 +7,12 @@ render-only UI/BFF for public previews and safe exports.
 
 ```bash
 npm ci
+
+# Terminal 1 — public BFF on port 8787
 npm run dev
+
+# Terminal 2 — Vite dev server on port 5173 (HMR; proxies /api to the BFF)
+npm run dev:web
 ```
 
 Set `MATIX_PUBLIC_API_BASE` to a compatible public backend. The frontend and

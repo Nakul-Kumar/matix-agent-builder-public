@@ -22,9 +22,35 @@ const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 let rateLimitSweeps = 0;
 
 function publicRateLimitKey(req: Request, publicPath: string): string {
-  const forwardedFor = req.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ip = forwardedFor || req.ip || "unknown";
+  // Use req.ip rather than the raw X-Forwarded-For. With `trust proxy` set,
+  // req.ip is the client IP attested by the trusted proxy; the leftmost XFF
+  // entry is client-supplied and trivially spoofable to rotate rate buckets.
+  const ip = req.ip || "unknown";
   return `${ip}:${req.method}:${publicPath}`;
+}
+
+const AGENT_KEYWORDS = [
+  "agent", "assistant", "bot", "automation", "workflow",
+  "helper", "tool", "build", "create", "make", "design",
+  "generate", "ai", "llm", "chatbot", "copilot",
+];
+
+const PROMPT_VALIDATED_PATHS = new Set([
+  "/agent-builder/preview",
+  "/agent-builder/export",
+]);
+
+function validatePromptInput(value: unknown): string | null {
+  if (typeof value !== "string") return "Prompt must be a string.";
+  const trimmed = value.trim();
+  if (trimmed.length < 12) {
+    return "Prompt is too short. Describe the agent in at least 12 characters.";
+  }
+  const lower = trimmed.toLowerCase();
+  if (!AGENT_KEYWORDS.some((w) => lower.includes(w))) {
+    return "Prompt does not look like an agent description. Include words like 'agent', 'assistant', 'automation', or 'build/create'.";
+  }
+  return null;
 }
 
 function checkPublicRateLimit(req: Request, publicPath: string) {
@@ -85,16 +111,23 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/public", async (req, res) => {
+  const publicPath = req.originalUrl.replace(/^\/api\/public/, "").split("?")[0] || "/";
+  if (!allowedPublicRoutes.has(publicPath)) {
+    res.status(404).json({ error: "public_route_not_available" });
+    return;
+  }
+  if (req.method === "POST" && PROMPT_VALIDATED_PATHS.has(publicPath)) {
+    const promptError = validatePromptInput((req.body as { prompt?: unknown })?.prompt);
+    if (promptError) {
+      res.status(422).json({ error: "invalid_prompt", detail: promptError });
+      return;
+    }
+  }
   if (!apiBase) {
     res.status(503).json({
       error: "public_api_not_configured",
       detail: "Set MATIX_PUBLIC_API_BASE to the deployed /api/public backend.",
     });
-    return;
-  }
-  const publicPath = req.originalUrl.replace(/^\/api\/public/, "").split("?")[0] || "/";
-  if (!allowedPublicRoutes.has(publicPath)) {
-    res.status(404).json({ error: "public_route_not_available" });
     return;
   }
   const rateLimit = checkPublicRateLimit(req, publicPath);
