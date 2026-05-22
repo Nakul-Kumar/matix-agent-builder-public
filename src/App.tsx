@@ -647,6 +647,7 @@ export default function App() {
   const startStackRef = useRef<HTMLDivElement | null>(null);
   const startThumbRafRef = useRef<number | null>(null);
   const [startScrolledEnd, setStartScrolledEnd] = useState(false);
+  const [promptHasFocused, setPromptHasFocused] = useState(false);
   const [startThumb, setStartThumb] = useState<{ top: number; height: number; visible: boolean }>(
     { top: 0, height: 0, visible: false },
   );
@@ -841,9 +842,13 @@ export default function App() {
   function onPromptKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
       event.preventDefault();
+      if (prompt.trim().length === 0) return;
       void build();
     }
   }
+
+  const promptEmpty = prompt.trim().length === 0;
+  const showEmptyHint = promptEmpty && promptHasFocused && !busy;
 
   const policy = preview?.source_policy;
 
@@ -982,17 +987,28 @@ export default function App() {
             maxLength={1000}
             onChange={(event) => updatePrompt(event.target.value)}
             onKeyDown={onPromptKeyDown}
+            onFocus={() => setPromptHasFocused(true)}
             placeholder="Build a customer support agent that reads our Notion docs and files Linear bugs..."
             disabled={backend.state !== "ready"}
+            readOnly={busy}
+            data-busy={busy ? "true" : undefined}
             aria-invalid={rejection != null}
             aria-describedby={rejection ? "prompt-rejection" : undefined}
           />
           <div className="promptActions">
+            {error && (
+              <p className="promptErrorHint" role="alert">
+                BUILD FAILED — TRY AGAIN
+              </p>
+            )}
             <p className="trustNote">
               No provider keys run in the browser. This page calls only
               same-origin <code>/api/public/*</code>. Exports are safe example
               files with placeholders.
             </p>
+            {showEmptyHint && (
+              <p className="promptEmptyHint">DESCRIBE YOUR AGENT TO BUILD</p>
+            )}
             <div className="promptCta">
               <span className="kbd">Cmd/Ctrl + Enter</span>
               <button
@@ -1002,11 +1018,9 @@ export default function App() {
                 aria-busy={busy}
                 aria-label={busy ? "Building blueprint" : undefined}
               >
-                {busy ? (
-                  <span className="spinner" aria-hidden="true" />
-                ) : (
-                  <span className="primaryButtonLabel">Build agent</span>
-                )}
+                <span className="primaryButtonLabel">
+                  {busy ? "Building…" : "Build agent"}
+                </span>
               </button>
             </div>
           </div>
@@ -1014,7 +1028,7 @@ export default function App() {
         </div>
         <aside className="layoutRight">
           <div className="startFromHeader">—— START FROM</div>
-          <div className="startFromScroll">
+          <div className={`startFromScroll${busy ? " is-busy" : ""}`}>
           <div
             className="startFromStack"
             ref={startStackRef}

@@ -778,17 +778,43 @@ h1 {
 }
 
 .primaryButton:disabled {
-  opacity: 0.5;
+  background-color: #C2674A;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .primaryButton.is-busy {
-  opacity: 0.65;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.primaryButton.is-busy .primaryButtonLabel {
-  display: none;
+textarea[readonly],
+textarea[data-busy="true"] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.startFromScroll.is-busy {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.promptErrorHint {
+  margin: 0 0 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #E08B6B;
+}
+
+.promptEmptyHint {
+  margin: 8px 0 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #6E6359;
 }
 
 .spinner {
