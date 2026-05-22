@@ -303,6 +303,13 @@ h1 {
   font-weight: 400;
 }
 
+@media (min-width: 1024px) {
+  .heroLead {
+    width: calc(134.5% + 62px);
+    max-width: 880px;
+  }
+}
+
 /* ====================== Prompt box ====================== */
 
 .promptBox {
