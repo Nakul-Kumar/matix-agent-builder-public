@@ -109,11 +109,6 @@ main {
   opacity: 1;
 }
 
-.pageDecoration.is-fading {
-  transition: opacity 240ms ease;
-  opacity: 0;
-}
-
 .pageDecoration svg {
   display: block;
   width: 100%;
@@ -126,11 +121,62 @@ main {
   inset: 0;
 }
 
-.pageDecoShape,
-.pageDecoLine {
-  will-change: transform, opacity;
+.pageDecoShape {
   transform-box: fill-box;
   transform-origin: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes pageDecoDrift {
+    0% {
+      transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+    25% {
+      transform: translate(4px, -3px) scale(1.015) rotate(0.6deg);
+    }
+    50% {
+      transform: translate(-3px, 5px) scale(0.99) rotate(-0.8deg);
+    }
+    75% {
+      transform: translate(5px, 3px) scale(1.01) rotate(0.4deg);
+    }
+    100% {
+      transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+  }
+
+  .pageDecoShape {
+    will-change: transform;
+    animation-name: pageDecoDrift;
+    animation-iteration-count: infinite;
+    animation-direction: normal;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+
+  .pageDecoA {
+    animation-duration: 18s;
+    animation-delay: 0s;
+  }
+  .pageDecoB {
+    animation-duration: 22s;
+    animation-delay: -7s;
+  }
+  .pageDecoC {
+    animation-duration: 16s;
+    animation-delay: -3s;
+  }
+  .pageDecoD {
+    animation-duration: 24s;
+    animation-delay: -11s;
+  }
+  .pageDecoE {
+    animation-duration: 20s;
+    animation-delay: -5s;
+  }
+  .pageDecoF {
+    animation-duration: 14s;
+    animation-delay: -2s;
+  }
 }
 
 .pageDecoShapes {
