@@ -162,7 +162,6 @@ main {
   gap: 16px;
   padding: 0 0 16px;
   margin-bottom: 24px;
-  border-bottom: 1px solid var(--border-subtle);
 }
 
 .brandRow {
@@ -229,6 +228,7 @@ main {
 /* ====================== Hero ====================== */
 
 .hero {
+  margin-top: 8px;
   padding: 0 0 40px;
   display: flex;
   flex-direction: column;
