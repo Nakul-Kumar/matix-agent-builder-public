@@ -1866,6 +1866,7 @@ a.resultCard {
   position: sticky;
   top: 96px;
   align-self: flex-start;
+  margin-top: 96px;
   padding: 16px 0;
 }
 
@@ -1972,6 +1973,7 @@ a.resultCard {
   }
   .sectionNav {
     position: static;
+    margin-top: 0;
     padding: 0;
     overflow-x: auto;
   }
