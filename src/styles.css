@@ -530,6 +530,109 @@ h1 {
   background: rgba(248, 113, 113, 0.06);
 }
 
+/* ====================== Prompt rejection card ====================== */
+
+.rejectionCard {
+  margin-top: 18px;
+  padding: 22px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(251, 191, 36, 0.32);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(251, 191, 36, 0.07) 0%,
+      rgba(13, 19, 33, 0.86) 60%,
+      rgba(13, 19, 33, 0.94) 100%
+    );
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.rejectionHead {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.rejectionBadge {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: var(--warn);
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.rejectionCard h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.rejectionMessage {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.55;
+  max-width: 64ch;
+}
+
+.rejectionHint {
+  margin: 0 0 16px;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 64ch;
+}
+
+.rejectionExamplesLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.rejectionExamples {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rejectionExample {
+  text-align: left;
+  border: 1px solid var(--border-strong);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  line-height: 1.45;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.12s ease;
+}
+
+.rejectionExample:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+.rejectionExample:active {
+  transform: translateY(0);
+}
+
 /* ====================== Results ====================== */
 
 .results {

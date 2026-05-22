@@ -1,5 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
-import { exportAgent, previewAgent, sendFeedback } from "./lib/publicApi";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  exportAgent,
+  previewAgent,
+  sendFeedback,
+  PromptRejectedError,
+} from "./lib/publicApi";
+import {
+  classifyPrompt,
+  examplePrompts,
+  localRejection,
+  type PromptRejection,
+} from "./lib/promptIntent";
 import type {
   PublicArtifact,
   PublicPreview,
@@ -575,6 +586,29 @@ export default function App() {
   const [preview, setPreview] = useState<PublicPreview | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rejection, setRejection] = useState<PromptRejection | null>(null);
+  const promptRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const verdict = useMemo(() => classifyPrompt(prompt), [prompt]);
+
+  function updatePrompt(next: string) {
+    setPrompt(next);
+    if (rejection) setRejection(null);
+    if (error) setError(null);
+  }
+
+  function useExamplePrompt(example: string) {
+    setPrompt(example);
+    setRejection(null);
+    setError(null);
+    requestAnimationFrame(() => {
+      const el = promptRef.current;
+      if (el) {
+        el.focus();
+        el.setSelectionRange(example.length, example.length);
+      }
+    });
+  }
   const [exportedPlatforms, setExportedPlatforms] = useState<Set<string>>(
     new Set(),
   );
@@ -616,12 +650,23 @@ export default function App() {
   }, []);
 
   const canBuild =
-    backend.state === "ready" && prompt.trim().length > 4 && !busy;
+    backend.state === "ready" &&
+    prompt.trim().length > 4 &&
+    verdict !== "off_topic" &&
+    !busy;
 
   async function build() {
-    if (!canBuild) return;
+    if (backend.state !== "ready" || busy) return;
+    if (verdict === "off_topic") {
+      setError(null);
+      setPreview(null);
+      setRejection(localRejection(prompt));
+      requestAnimationFrame(() => promptRef.current?.focus());
+      return;
+    }
     setBusy(true);
     setError(null);
+    setRejection(null);
     setPreview(null);
     setExportedPlatforms(new Set());
     setFeedbackSent(false);
@@ -634,7 +679,12 @@ export default function App() {
           ?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Preview failed");
+      if (err instanceof PromptRejectedError) {
+        setRejection(err.rejection);
+        requestAnimationFrame(() => promptRef.current?.focus());
+      } else {
+        setError(err instanceof Error ? err.message : "Preview failed");
+      }
     } finally {
       setBusy(false);
     }
@@ -750,12 +800,15 @@ export default function App() {
           </div>
           <textarea
             id="prompt"
+            ref={promptRef}
             value={prompt}
             maxLength={1000}
-            onChange={(event) => setPrompt(event.target.value)}
+            onChange={(event) => updatePrompt(event.target.value)}
             onKeyDown={onPromptKeyDown}
             placeholder="Build a customer support agent that reads our Notion docs and files Linear bugs..."
             disabled={backend.state !== "ready"}
+            aria-invalid={rejection != null}
+            aria-describedby={rejection ? "prompt-rejection" : undefined}
           />
           <div className="promptActions">
             <p className="trustNote">
@@ -790,6 +843,37 @@ export default function App() {
         <div className="banner banner-error" role="alert">
           <strong>Public server unreachable.</strong>{" "}
           {(backend as { state: "unreachable"; detail: string }).detail}
+        </div>
+      )}
+
+      {rejection && (
+        <div
+          id="prompt-rejection"
+          className="rejectionCard"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="rejectionHead">
+            <span className="rejectionBadge">Not an agent request</span>
+            <h3>{rejection.title}</h3>
+          </div>
+          <p className="rejectionMessage">{rejection.message}</p>
+          {rejection.hint && (
+            <p className="rejectionHint">{rejection.hint}</p>
+          )}
+          <div className="rejectionExamplesLabel">Try one of these:</div>
+          <div className="rejectionExamples">
+            {examplePrompts.map((ex) => (
+              <button
+                key={ex}
+                type="button"
+                className="rejectionExample"
+                onClick={() => useExamplePrompt(ex)}
+              >
+                {ex}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
