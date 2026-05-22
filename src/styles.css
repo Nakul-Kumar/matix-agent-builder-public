@@ -343,8 +343,8 @@ main > .topbar ~ * {
   width: 100%;
   min-height: 120px;
   padding: 14px;
-  background: transparent;
-  border: 1px solid #2A2420;
+  background: #1A211C;
+  border: 1px solid #232A24;
   border-radius: 4px;
   cursor: pointer;
   text-align: left;
