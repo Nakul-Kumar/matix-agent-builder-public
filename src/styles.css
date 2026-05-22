@@ -1564,13 +1564,14 @@ a.resultCard {
 
 .blueprintGrid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
+  width: 100%;
 }
 
 @media (min-width: 1024px) {
   .blueprintGrid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
@@ -1583,6 +1584,11 @@ a.resultCard {
   border-radius: 4px;
   padding: 16px;
   height: 320px;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .blueprintBox::before,
@@ -1646,6 +1652,9 @@ a.resultCard {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .blueprintBoxRail {
@@ -1663,6 +1672,8 @@ a.resultCard {
   flex-direction: column;
   gap: 10px;
   height: 100%;
+  width: 100%;
+  min-width: 0;
   overflow-y: scroll;
   overflow-x: hidden;
   padding-right: 8px;
@@ -1670,6 +1681,21 @@ a.resultCard {
   -ms-overflow-style: none;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
   mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+.blueprintBoxStrip > .resultCard {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.blueprintBoxStrip > .resultCard .resultCardFootnote {
+  flex-wrap: wrap;
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .blueprintBoxStrip::-webkit-scrollbar {

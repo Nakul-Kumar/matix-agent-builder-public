@@ -1,0 +1,55 @@
+On the results page, each runtime's 2x2 sub-section grid (SKILLS / MCPS / FILES / REASONS) currently overflows the page content width on the right side, forcing horizontal scroll to see the right-column boxes. The grid is not matching the width of the runtime header card directly above it. Fix the width and alignment.
+
+Diagnostic check first:
+- Open DevTools and inspect the grid container element.
+- Check its computed width and compare to the runtime header card's computed width directly above.
+- Likely cause: the grid is using fixed pixel widths (e.g. 632px per box) instead of fractional grid columns, and it's not constrained by the same max-width / margin auto wrapper as the header card. Or the grid sits outside the content container that limits everything else.
+
+Fix:
+
+1. The 2x2 grid container must sit inside the SAME content wrapper as the runtime header card. They should both inherit the same max-width and horizontal padding from the page's main content container. No separate width logic for the grid.
+
+2. Replace any fixed pixel widths on the grid or its boxes with CSS Grid using fractional columns:
+   - display: grid
+   - grid-template-columns: 1fr 1fr
+   - gap: 16px
+   - width: 100% (fills the parent's width — no overflow possible)
+   - box-sizing: border-box on the boxes so border + padding count toward the width
+
+3. Each sub-section box (SKILLS / MCPS / FILES / REASONS):
+   - width: auto (controlled by the grid cell, do not set a hard pixel width)
+   - min-width: 0 (so flex/grid children can shrink rather than forcing overflow when content is wider — this is the most common cause of grid blowout)
+   - max-width: 100% so internal content cannot push the box wider than its grid cell
+   - height: stays at 320px as before
+   - box-sizing: border-box
+   - All other styling unchanged
+
+4. Inside each box, the scroll container (the area that scrolls vertically) must also have:
+   - width: 100%
+   - min-width: 0
+   - overflow-x: hidden (kill any horizontal overflow inside the scroll area)
+   - overflow-y: scroll (as before)
+
+5. The Result Cards inside each box:
+   - width: 100% of the box's inner width
+   - The card preview line (single-line ellipsis) must respect the box's width — confirm that white-space: nowrap + overflow: hidden + text-overflow: ellipsis are applied, and that no parent has overflow: visible blowing it out.
+   - If a card's footnote line (e.g. "MATIX_GENERATED_STARTER · TASK FIT 92 · QUALITY 74") is wider than the card's available width, allow it to wrap to a second line — do NOT let the footnote force the card or box wider. Apply flex-wrap: wrap on the footnote container if needed.
+
+6. Below 1024px viewport, the grid collapses to a single column (grid-template-columns: 1fr). The boxes stack vertically.
+
+7. The runtime header card (the one above the 2x2 grid) must remain at full content width — no change needed to it.
+
+8. Verification after the fix:
+   - Open the results page at viewport width 1280px and 1485px.
+   - Confirm no horizontal scrollbar appears on the page (document.documentElement.scrollWidth === document.documentElement.clientWidth).
+   - The 2x2 grid's left edge aligns exactly with the runtime header card's left edge above it.
+   - The 2x2 grid's right edge aligns exactly with the runtime header card's right edge above it.
+   - All four sub-section boxes are visible at once without horizontal scroll.
+   - On a 1024px viewport, the boxes stack into a single column with no horizontal scroll.
+   - Internal vertical scrolling inside each box still works.
+
+9. Do not change:
+   - The box headers (SKILLS / MCPS / FILES / REASONS) typography from the previous prompt.
+   - The Result Card content, hover, or click behavior.
+   - The runtime header card.
+   - The page-level decoration or any other section.
