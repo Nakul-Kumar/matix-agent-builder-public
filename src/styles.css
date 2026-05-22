@@ -1,28 +1,54 @@
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Background — warm near-black earth */
-  --bg-base: #0B0A0A;
-  --bg-surface: #141110;
-  --bg-elevated: #1C1816;
-  --bg-hover: #2A2420;
+  /* Background — warm linen cream (cooler than Anthropic paper) */
+  --bg-base: #ECE6D5;
+  --bg-elevated: #F2EDDD;
+  --bg-recessed: #E2DBC8;
+  --bg-surface: #F4EFE0;
+  --bg-hover: #D8CCB4;
 
-  /* Text — warm off-white → muted clay */
-  --text-primary: #EDE6DE;
-  --text-secondary: #A8998C;
-  --text-muted: #6E6359;
-  --border-subtle: #2A2420;
-  --border-default: #2A2420;
-  --border-strong: #2A2420;
+  /* Surface tokens — cards / panels */
+  --surface-card: #F4EFE0;
+  --surface-card-2: #ECE5D2;
 
-  /* Accent — terracotta only (no other accents in the theme) */
-  --accent-base: #C2674A;
-  --accent-light: #E08B6B;
-  --accent-dim: rgba(194, 103, 74, 0.12);
-  --accent-border: #9A4B33;
-  --accent-glow: rgba(194, 103, 74, 0.18);
+  /* Borders */
+  --border-hairline: #D8CCB4;
+  --border-strong: #BFB29A;
+  --border-inset: #E5DAC2;
+  --border-subtle: #D8CCB4;
+  --border-default: #D8CCB4;
 
-  --status-online: #22C55E;
+  /* Text — warm near-black → faded clay */
+  --text-primary: #2A2014;
+  --text-body: #3D3424;
+  --text-secondary: #7A6F5A;
+  --text-muted: #7A6F5A;
+  --text-faint: #9D9277;
+
+  /* Accent — earthen brick (not coral/peach) */
+  --accent: #A24A26;
+  --accent-hover: #8C3D1C;
+  --accent-soft: #DDB8A0;
+  --accent-on-fill: #F5ECD8;
+  --accent-base: var(--accent);
+  --accent-light: var(--accent-hover);
+  --accent-dim: rgba(162, 74, 38, 0.08);
+  --accent-border: var(--accent-hover);
+  --accent-glow: rgba(162, 74, 38, 0.06);
+
+  /* Status */
+  --status-preview: #4F8A5F;
+  --status-planned: #8C8478;
+  --status-experimental: #C77F3E;
+  --status-online: var(--status-preview);
+
+  /* Decoration — muted, dusty, NOT vibrant */
+  --decor-1: #A89A7A;
+  --decor-2: #C5A89A;
+  --decor-3: #8FA084;
+  --decor-4: #D4B89E;
+  --decor-5: #9C8472;
 
   /* Font families */
   --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
@@ -51,7 +77,7 @@
   --radius-sm: 4px;
   --radius-xs: 3px;
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 2px rgba(42, 32, 20, 0.08);
 
   color: var(--text-primary);
   background: var(--bg-base);
@@ -131,8 +157,8 @@ main {
   background: linear-gradient(
     to bottom,
     var(--bg-base) 0%,
-    rgba(11, 10, 10, 0.85) 30%,
-    rgba(11, 10, 10, 0) 100%
+    rgba(236, 230, 213, 0.85) 30%,
+    rgba(236, 230, 213, 0) 100%
   );
 }
 
@@ -141,8 +167,8 @@ main {
   background: linear-gradient(
     to top,
     var(--bg-base) 0%,
-    rgba(11, 10, 10, 0.85) 30%,
-    rgba(11, 10, 10, 0) 100%
+    rgba(236, 230, 213, 0.85) 30%,
+    rgba(236, 230, 213, 0) 100%
   );
 }
 
@@ -213,6 +239,15 @@ main {
 .pageDecoShapes {
   -webkit-mask-image: radial-gradient(ellipse 70% 70% at center, transparent 0%, transparent 40%, black 100%);
   mask-image: radial-gradient(ellipse 70% 70% at center, transparent 0%, transparent 40%, black 100%);
+}
+
+.pageDecoShape {
+  opacity: 0.22;
+  mix-blend-mode: normal;
+}
+
+.pageDecoLines g {
+  opacity: 0.35 !important;
 }
 
 main > .topbar,
@@ -316,7 +351,7 @@ main > .topbar ~ * {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  color: #6E6359;
+  color: #9D9277;
   margin-bottom: 16px;
   align-self: flex-start;
 }
@@ -366,14 +401,14 @@ main > .topbar ~ * {
   .startFromScroll::before {
     top: -4px;
     left: -4px;
-    border-top: 1px solid #2A2420;
-    border-left: 1px solid #2A2420;
+    border-top: 1px solid #D8CCB4;
+    border-left: 1px solid #D8CCB4;
   }
   .startFromScroll::after {
     bottom: -4px;
     right: -4px;
-    border-bottom: 1px solid #2A2420;
-    border-right: 1px solid #2A2420;
+    border-bottom: 1px solid #D8CCB4;
+    border-right: 1px solid #D8CCB4;
   }
 }
 
@@ -389,14 +424,14 @@ main > .topbar ~ * {
     bottom: 8px;
     right: 2px;
     width: 1px;
-    background: #2A2420;
+    background: #D8CCB4;
     pointer-events: none;
   }
   .startFromThumb {
     position: absolute;
     left: 0;
     width: 1px;
-    background: #C2674A;
+    background: #A24A26;
     transition: top 60ms linear;
   }
 }
@@ -408,7 +443,7 @@ main > .topbar ~ * {
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: #6E6359;
+  color: #9D9277;
   opacity: 0.7;
   transition: opacity 200ms ease;
   align-self: stretch;
@@ -433,8 +468,8 @@ main > .topbar ~ * {
   width: 100%;
   min-height: 120px;
   padding: 14px;
-  background: #14181C;
-  border: 1px solid #1F2429;
+  background: #F4EFE0;
+  border: 1px solid #D8CCB4;
   border-radius: 4px;
   cursor: pointer;
   text-align: left;
@@ -446,8 +481,8 @@ main > .topbar ~ * {
 
 .startFromCard:hover,
 .startFromCard:focus-visible {
-  border-color: #C2674A;
-  box-shadow: inset 2px 0 0 #C2674A;
+  border-color: #A24A26;
+  box-shadow: inset 2px 0 0 #A24A26;
   transform: translateX(2px);
   outline: none;
 }
@@ -457,7 +492,7 @@ main > .topbar ~ * {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #C2674A;
+  color: #A24A26;
 }
 
 .startFromTitle {
@@ -465,7 +500,7 @@ main > .topbar ~ * {
   font-family: var(--font-display);
   font-size: 16px;
   font-weight: 600;
-  color: #EDE6DE;
+  color: #2A2014;
 }
 
 .startFromPreview {
@@ -475,7 +510,7 @@ main > .topbar ~ * {
   text-overflow: ellipsis;
   max-width: 100%;
   font-size: 13px;
-  color: #A8998C;
+  color: #7A6F5A;
   line-height: 1.45;
   margin-top: 4px;
 }
@@ -487,7 +522,7 @@ main > .topbar ~ * {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #6E6359;
+  color: #9D9277;
   text-align: right;
   margin-left: auto;
 }
@@ -535,7 +570,7 @@ main > .topbar ~ * {
   height: 32px;
   border-radius: 6px;
   background: var(--accent-base);
-  color: #F5EAE6;
+  color: #2A2014;
   font-weight: 700;
   font-size: 14px;
   letter-spacing: -0.02em;
@@ -749,7 +784,7 @@ h1 {
   resize: vertical;
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
-  background: #0B0A0A;
+  background: #ECE6D5;
   -webkit-appearance: none;
   appearance: none;
   color: var(--text-primary);
@@ -763,7 +798,7 @@ h1 {
 }
 
 .promptBox textarea::placeholder {
-  color: #6E6359;
+  color: #9D9277;
   font-style: normal;
   opacity: 1;
 }
@@ -819,7 +854,7 @@ h1 {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #6E6359;
+  color: #9D9277;
   border: 0;
   padding: 0;
   background: transparent;
@@ -832,8 +867,8 @@ h1 {
 .primaryButton {
   position: relative;
   border: 0;
-  background-color: #C2674A;
-  color: #0B0A0A;
+  background-color: #A24A26;
+  color: #ECE6D5;
   padding: 12px 24px;
   border-radius: 6px;
   font-weight: 600;
@@ -851,26 +886,26 @@ h1 {
 }
 
 .primaryButton:hover:not(:disabled) {
-  background-color: #9A4B33;
-  color: #0B0A0A;
+  background-color: #8C3D1C;
+  color: #ECE6D5;
   opacity: 1;
   cursor: pointer;
 }
 
 .primaryButton:focus-visible:not(:disabled) {
-  background-color: #9A4B33;
-  color: #0B0A0A;
-  outline: 2px solid #E08B6B;
+  background-color: #8C3D1C;
+  color: #ECE6D5;
+  outline: 2px solid #8C3D1C;
   outline-offset: 2px;
 }
 
 .primaryButton:active:not(:disabled) {
-  background-color: #9A4B33;
+  background-color: #8C3D1C;
   transform: none;
 }
 
 .primaryButton:disabled {
-  background-color: #C2674A;
+  background-color: #A24A26;
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -897,7 +932,7 @@ textarea[data-busy="true"] {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #E08B6B;
+  color: #8C3D1C;
 }
 
 .promptEmptyHint {
@@ -906,7 +941,7 @@ textarea[data-busy="true"] {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #6E6359;
+  color: #9D9277;
 }
 
 .spinner {
@@ -914,8 +949,8 @@ textarea[data-busy="true"] {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 2px solid rgba(245, 234, 230, 0.35);
-  border-top-color: #F5EAE6;
+  border: 2px solid rgba(42, 32, 20, 0.35);
+  border-top-color: #2A2014;
   animation: spinner-rotate 0.65s linear infinite;
 }
 
@@ -965,7 +1000,7 @@ textarea[data-busy="true"] {
 
 .exportButton:hover:not(:disabled) {
   background: var(--accent-base);
-  color: #F5EAE6;
+  color: #2A2014;
 }
 
 .exportButton:disabled {
@@ -1174,7 +1209,7 @@ textarea[data-busy="true"] {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #C2674A;
+  color: #A24A26;
 }
 
 .resultPrompt {
@@ -1184,13 +1219,13 @@ textarea[data-busy="true"] {
   font-weight: 400;
   font-size: 28px;
   line-height: 1.3;
-  color: #EDE6DE;
+  color: #2A2014;
   max-width: 880px;
   letter-spacing: -0.005em;
 }
 
 .resultPromptLoading {
-  color: #A8998C;
+  color: #7A6F5A;
 }
 
 .resultMetaLine {
@@ -1200,7 +1235,7 @@ textarea[data-busy="true"] {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #6E6359;
+  color: #9D9277;
 }
 
 /* ====================== Result section header pattern ====================== */
@@ -1227,12 +1262,12 @@ textarea[data-busy="true"] {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #6E6359;
+  color: #9D9277;
 }
 
 .sectionRule {
   height: 1px;
-  background: #2A2420;
+  background: #D8CCB4;
   width: 100%;
 }
 
@@ -1243,7 +1278,7 @@ textarea[data-busy="true"] {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #6E6359;
+  color: #9D9277;
 }
 
 .anchorHead {
@@ -1261,7 +1296,7 @@ textarea[data-busy="true"] {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #6E6359;
+  color: #9D9277;
 }
 
 .anchorTitle {
@@ -1270,7 +1305,7 @@ textarea[data-busy="true"] {
   font-size: 28px;
   font-weight: 600;
   line-height: 1.2;
-  color: #EDE6DE;
+  color: #2A2014;
   max-width: 720px;
 }
 
@@ -1281,13 +1316,13 @@ textarea[data-busy="true"] {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #6E6359;
+  color: #9D9277;
 }
 
 .anchorRule {
   width: 100%;
   height: 1px;
-  background: #2A2420;
+  background: #D8CCB4;
   margin-top: 24px;
 }
 
@@ -1304,7 +1339,7 @@ textarea[data-busy="true"] {
   font-size: 36px;
   font-weight: 600;
   line-height: 1.15;
-  color: #C2674A;
+  color: #A24A26;
 }
 
 .recommendedModelTag {
@@ -1314,7 +1349,7 @@ textarea[data-busy="true"] {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #A8998C;
+  color: #7A6F5A;
 }
 
 .recommendedModelPolicy {
@@ -1322,7 +1357,7 @@ textarea[data-busy="true"] {
   font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
   font-size: 14px;
   line-height: 1.5;
-  color: #A8998C;
+  color: #7A6F5A;
   max-width: 640px;
 }
 
@@ -1341,7 +1376,7 @@ textarea[data-busy="true"] {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #6E6359;
+  color: #9D9277;
 }
 
 .alternativesRow {
@@ -1358,26 +1393,26 @@ textarea[data-busy="true"] {
   align-items: center;
   gap: 4px;
   padding: 8px 16px;
-  background: #14181C;
-  border: 1px solid #2A2420;
+  background: #F4EFE0;
+  border: 1px solid #D8CCB4;
   border-radius: 4px;
   transition: border-color 160ms ease, color 160ms ease;
 }
 
 .alternativePill:hover {
-  border-color: #C2674A;
+  border-color: #A24A26;
 }
 
 .alternativePillName {
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.08em;
-  color: #A8998C;
+  color: #7A6F5A;
   transition: color 160ms ease;
 }
 
 .alternativePill:hover .alternativePillName {
-  color: #EDE6DE;
+  color: #2A2014;
 }
 
 .alternativePillStatus {
@@ -1386,7 +1421,7 @@ textarea[data-busy="true"] {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #6E6359;
+  color: #9D9277;
 }
 
 .alternativesEmpty {
@@ -1396,7 +1431,7 @@ textarea[data-busy="true"] {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #6E6359;
+  color: #9D9277;
 }
 
 /* ====================== ResultCard component ====================== */
@@ -1404,8 +1439,8 @@ textarea[data-busy="true"] {
 .resultCard {
   display: flex;
   flex-direction: column;
-  background: #14181C;
-  border: 1px solid #1F2429;
+  background: #F4EFE0;
+  border: 1px solid #D8CCB4;
   border-radius: 4px;
   padding: 14px;
   min-height: 120px;
@@ -1437,8 +1472,8 @@ a.resultCard {
 
 .resultCard.is-interactive:hover,
 .resultCard.is-interactive:focus-visible {
-  border-color: #C2674A;
-  box-shadow: inset 2px 0 0 0 #C2674A;
+  border-color: #A24A26;
+  box-shadow: inset 2px 0 0 0 #A24A26;
   transform: translateX(2px);
   outline: none;
 }
@@ -1449,7 +1484,7 @@ a.resultCard {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #C2674A;
+  color: #A24A26;
 }
 
 .resultCardTitle {
@@ -1458,14 +1493,14 @@ a.resultCard {
   font-size: 16px;
   font-weight: 600;
   line-height: 1.25;
-  color: #EDE6DE;
+  color: #2A2014;
 }
 
 .resultCardPreview {
   margin-top: 4px;
   font-size: 13px;
   line-height: 1.5;
-  color: #A8998C;
+  color: #7A6F5A;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1479,7 +1514,7 @@ a.resultCard {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #6E6359;
+  color: #9D9277;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1502,19 +1537,19 @@ a.resultCard {
 }
 
 .resultDot--ok {
-  background: #4ADE80;
+  background: #4F8A5F;
 }
 
 .resultDot--accent {
-  background: #C2674A;
+  background: #A24A26;
 }
 
 .resultDot--warn {
-  background: #E08B6B;
+  background: #8C3D1C;
 }
 
 .resultDot--muted {
-  background: #6E6359;
+  background: #9D9277;
 }
 
 /* ====================== ResultCard grid (3 / 2 / 1) ====================== */
@@ -1559,7 +1594,7 @@ a.resultCard {
   font-style: italic;
   font-weight: 400;
   line-height: 1.4;
-  color: #A8998C;
+  color: #7A6F5A;
 }
 
 .runtimeTabs {
@@ -1621,25 +1656,25 @@ a.resultCard {
 }
 
 .sectionNavItem:hover:not(.sectionNavItemActive) {
-  border-left-color: #2A3036;
+  border-left-color: #BFB29A;
 }
 
 .sectionNavItem:hover:not(.sectionNavItemActive) .sectionNavLabel {
-  color: #F4EBE0;
+  color: #2A2014;
 }
 
 .sectionNavItem:focus-visible {
-  outline: 2px solid #C2674A;
+  outline: 2px solid #A24A26;
   outline-offset: 2px;
 }
 
 .sectionNavItemActive {
-  border-left-color: #C2674A;
-  background: #14181C;
+  border-left-color: #A24A26;
+  background: #F4EFE0;
 }
 
 .sectionNavItemActive .sectionNavLabel {
-  color: #F4EBE0;
+  color: #2A2014;
 }
 
 .sectionNavIndex {
@@ -1648,7 +1683,7 @@ a.resultCard {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #C2674A;
+  color: #A24A26;
   flex: 0 0 auto;
 }
 
@@ -1656,7 +1691,7 @@ a.resultCard {
   font-family: "Fraunces", Georgia, serif;
   font-size: 14px;
   font-weight: 500;
-  color: #A89D8F;
+  color: #7A6F5A;
   line-height: 1.3;
   transition: color 150ms ease;
 }
@@ -1681,19 +1716,19 @@ a.resultCard {
     border-bottom: 2px solid transparent;
     padding: 8px 14px;
     border-radius: 999px;
-    background: #14181C;
+    background: #F4EFE0;
     white-space: nowrap;
     flex: 0 0 auto;
   }
   .sectionNavItem:hover:not(.sectionNavItemActive) {
     border-bottom-color: transparent;
-    background: #1F2429;
+    background: #D8CCB4;
   }
   .sectionNavItemActive {
     border-left: none;
     border-bottom: 2px solid transparent;
-    background: #1F2429;
-    box-shadow: inset 0 0 0 1px #C2674A;
+    background: #D8CCB4;
+    box-shadow: inset 0 0 0 1px #A24A26;
   }
 }
 
@@ -1708,8 +1743,8 @@ a.resultCard {
   min-width: 0;
   min-height: 76px;
   padding: 14px 18px;
-  background: #14181C;
-  border: 1px solid #1F2429;
+  background: #F4EFE0;
+  border: 1px solid #D8CCB4;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
@@ -1729,22 +1764,22 @@ a.resultCard {
 }
 
 .runtimeTab:hover:not(.runtimeTabActive) {
-  border-color: #2A3036;
+  border-color: #BFB29A;
 }
 
 .runtimeTab:hover:not(.runtimeTabActive) .runtimeTabTitle {
-  color: #EDE6DE;
+  color: #2A2014;
 }
 
 .runtimeTab:focus-visible {
   outline: none;
-  border-color: #C2674A;
+  border-color: #A24A26;
 }
 
 .runtimeTabActive {
-  border-color: #C2674A;
-  background: #181C20;
-  box-shadow: inset 2px 0 0 0 #C2674A;
+  border-color: #A24A26;
+  background: #F4EFE0;
+  box-shadow: inset 2px 0 0 0 #A24A26;
 }
 
 .runtimeTabTitle {
@@ -1752,12 +1787,12 @@ a.resultCard {
   font-size: 18px;
   font-weight: 600;
   line-height: 1.2;
-  color: #A8998C;
+  color: #7A6F5A;
   transition: color 150ms ease;
 }
 
 .runtimeTabActive .runtimeTabTitle {
-  color: #EDE6DE;
+  color: #2A2014;
 }
 
 .runtimeTabFootnote {
@@ -1775,15 +1810,15 @@ a.resultCard {
 }
 
 .runtimeTabFootnoteLabel {
-  color: #A8998C;
+  color: #7A6F5A;
 }
 
 .runtimeTabFootnoteSep {
-  color: #6E6359;
+  color: #9D9277;
 }
 
 .runtimeTabFootnoteValue {
-  color: #C2674A;
+  color: #A24A26;
 }
 
 .activeBlueprintHead {
@@ -1800,7 +1835,7 @@ a.resultCard {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #C2674A;
+  color: #A24A26;
 }
 
 .activeBlueprintTitle {
@@ -1809,7 +1844,7 @@ a.resultCard {
   font-size: 22px;
   font-weight: 600;
   line-height: 1.2;
-  color: #EDE6DE;
+  color: #2A2014;
 }
 
 @media (max-width: 1023px) {
@@ -1855,8 +1890,8 @@ a.resultCard {
   position: relative;
   display: flex;
   flex-direction: column;
-  background: #14181C;
-  border: 1px solid #1F2429;
+  background: #F4EFE0;
+  border: 1px solid #D8CCB4;
   border-radius: 4px;
   padding: 16px;
   height: 320px;
@@ -1879,15 +1914,15 @@ a.resultCard {
 .blueprintBox::before {
   top: -1px;
   left: -1px;
-  border-top: 1px solid #C2674A;
-  border-left: 1px solid #C2674A;
+  border-top: 1px solid #A24A26;
+  border-left: 1px solid #A24A26;
 }
 
 .blueprintBox::after {
   bottom: -1px;
   right: -1px;
-  border-bottom: 1px solid #C2674A;
-  border-right: 1px solid #C2674A;
+  border-bottom: 1px solid #A24A26;
+  border-right: 1px solid #A24A26;
 }
 
 .blueprintBoxHead {
@@ -1904,7 +1939,7 @@ a.resultCard {
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #EDE6DE;
+  color: #2A2014;
 }
 
 .blueprintBoxCount {
@@ -1914,14 +1949,14 @@ a.resultCard {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #6E6359;
+  color: #9D9277;
 }
 
 .blueprintBoxRule {
   margin-top: 8px;
   width: 100%;
   height: 1px;
-  background: #2A2420;
+  background: #D8CCB4;
 }
 
 .blueprintBoxScroll {
@@ -1939,7 +1974,7 @@ a.resultCard {
   bottom: 4px;
   right: 2px;
   width: 1px;
-  background: #2A2420;
+  background: #D8CCB4;
   pointer-events: none;
 }
 
@@ -2960,8 +2995,8 @@ a.resultCard {
   flex-wrap: wrap;
   padding: 14px 0;
   margin-top: 16px;
-  border-top: 1px solid #1F2429;
-  border-bottom: 1px solid #1F2429;
+  border-top: 1px solid #D8CCB4;
+  border-bottom: 1px solid #D8CCB4;
   background: transparent;
 }
 
@@ -2983,16 +3018,16 @@ a.resultCard {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #A8998C;
+  color: #7A6F5A;
   animation: exportActionMetaFade 200ms ease both;
 }
 
 .exportActionProvider {
-  color: #EDE6DE;
+  color: #2A2014;
 }
 
 .exportActionSep {
-  color: #6E6359;
+  color: #9D9277;
 }
 
 .exportActionControls {
@@ -3005,7 +3040,7 @@ a.resultCard {
 .exportActionInspect {
   background: transparent;
   border: none;
-  color: #A8998C;
+  color: #7A6F5A;
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
@@ -3014,19 +3049,19 @@ a.resultCard {
   padding: 6px 4px;
   cursor: pointer;
   text-decoration: underline;
-  text-decoration-color: #6E6359;
+  text-decoration-color: #9D9277;
   text-underline-offset: 3px;
   transition: color 150ms ease, text-decoration-color 150ms ease;
 }
 
 .exportActionInspect:hover:not(:disabled),
 .exportActionInspect:focus-visible:not(:disabled) {
-  color: #EDE6DE;
-  text-decoration-color: #C2674A;
+  color: #2A2014;
+  text-decoration-color: #A24A26;
 }
 
 .exportActionInspect:focus-visible {
-  outline: 2px solid #C2674A;
+  outline: 2px solid #A24A26;
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -3038,9 +3073,9 @@ a.resultCard {
 
 .exportActionButton {
   flex: 0 0 auto;
-  background: #C2674A;
-  color: #1A1410;
-  border: 1px solid #C2674A;
+  background: #A24A26;
+  color: #F5ECD8;
+  border: 1px solid #A24A26;
   border-radius: 6px;
   padding: 12px 22px;
   font-family: var(--font-mono);
@@ -3056,13 +3091,13 @@ a.resultCard {
 
 .exportActionButton:hover:not(:disabled),
 .exportActionButton:focus-visible:not(:disabled) {
-  background: #C2674A;
-  color: #1A1410;
+  background: #A24A26;
+  color: #F5ECD8;
   filter: brightness(1.05);
 }
 
 .exportActionButton:focus-visible {
-  outline: 2px solid #C2674A;
+  outline: 2px solid #A24A26;
   outline-offset: 2px;
 }
 
@@ -3089,8 +3124,8 @@ a.resultCard {
 }
 
 .exportBundle {
-  background: #14181C;
-  border: 1px solid #1F2429;
+  background: #F4EFE0;
+  border: 1px solid #D8CCB4;
   border-radius: 14px;
   padding: 24px;
   display: flex;
@@ -3101,7 +3136,7 @@ a.resultCard {
 .exportTabs {
   display: flex;
   gap: 4px;
-  border-bottom: 1px solid #1F2429;
+  border-bottom: 1px solid #D8CCB4;
   padding-bottom: 0;
   margin-bottom: 4px;
 }
@@ -3111,7 +3146,7 @@ a.resultCard {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: rgba(245, 230, 211, 0.5);
+  color: rgba(42, 32, 20, 0.5);
   font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.14em;
@@ -3121,12 +3156,12 @@ a.resultCard {
 }
 
 .exportTab:hover {
-  color: rgba(245, 230, 211, 0.85);
+  color: rgba(42, 32, 20, 0.85);
 }
 
 .exportTabActive {
-  color: #E07A5F;
-  border-bottom-color: #E07A5F;
+  color: #A24A26;
+  border-bottom-color: #A24A26;
 }
 
 .exportTabDot {
@@ -3134,7 +3169,7 @@ a.resultCard {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #4ADE80;
+  background: #4F8A5F;
   margin-left: 8px;
   vertical-align: middle;
 }
@@ -3160,7 +3195,7 @@ a.resultCard {
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(245, 230, 211, 0.55);
+  color: rgba(42, 32, 20, 0.55);
   margin: 0;
 }
 
@@ -3176,22 +3211,22 @@ a.resultCard {
 .exportPolicy li {
   font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace;
   font-size: 12px;
-  color: rgba(245, 230, 211, 0.78);
+  color: rgba(42, 32, 20, 0.78);
 }
 
 .exportCaveat {
   font-family: 'Fraunces', serif;
   font-style: italic;
   font-size: 13px;
-  color: rgba(245, 230, 211, 0.55);
+  color: rgba(42, 32, 20, 0.55);
   margin: 0;
   max-width: 52ch;
   line-height: 1.5;
 }
 
 .exportButtonNew {
-  background: #E07A5F;
-  color: #14181C;
+  background: #A24A26;
+  color: #F4EFE0;
   border: none;
   border-radius: 10px;
   padding: 14px 22px;
@@ -3205,7 +3240,7 @@ a.resultCard {
 }
 
 .exportButtonNew:hover:not(:disabled) {
-  background: #EC8B71;
+  background: #A24A26;
 }
 
 .exportButtonNew:active:not(:disabled) {

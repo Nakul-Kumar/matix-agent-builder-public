@@ -1,0 +1,139 @@
+SCOPE: Full color scheme overhaul. Convert the entire site from warm-dark theme to a warm-light cream/beige theme. The terracotta accent stays as the primary highlight but gets re-tuned for legibility on light backgrounds. Abstract decoration blobs shift to muted, low-saturation colors so they add vibrance without competing with content.
+
+This change applies EVERYWHERE — landing page, results page, tab strip, blueprint sections, side nav, export row, footer, every component. No exceptions.
+
+THE NEW PALETTE — define these as CSS variables (or update your existing token file) so the whole site picks them up from one place:
+
+   Background tokens
+   --bg-base:        #F1E8D8   /* warm cream — the dominant page background */
+   --bg-elevated:    #F8F1E2   /* slightly lighter cream — for surfaces that need to sit ABOVE the base, e.g. the textarea, cards */
+   --bg-recessed:    #E8DFCD   /* slightly deeper cream — for surfaces that need to sit BELOW the base, e.g. inset panels */
+
+   Surface / card tokens (replaces the previous #14181C slate-charcoal)
+   --surface-card:   #FAF4E4   /* primary card surface — Skills/MCPs/Files/Reasons boxes, prompt cards, blueprint panels */
+   --surface-card-2: #F5ECD8   /* secondary card surface — nested cards inside the 2×2 grid items */
+
+   Hairline / border tokens (replaces #1F2429)
+   --border-hairline: #D8CCB4   /* default muted warm border */
+   --border-strong:   #BFB29A   /* hover / emphasis border */
+   --border-inset:    #E5DAC2   /* very soft inset divider — used for tab strip underline, sidenav left rail track */
+
+   Text tokens
+   --text-primary:   #2A2014   /* warm near-black — headings, primary body text */
+   --text-body:      #3D3424   /* warm dark brown — paragraph text */
+   --text-muted:     #7A6F5A   /* muted warm gray — meta labels, footnotes, mono caps */
+   --text-faint:     #9D9277   /* very muted — placeholder text, disabled */
+
+   Accent tokens — TERRACOTTA STAYS but tuned for light bg
+   --accent:          #B8542E   /* primary terracotta, slightly deeper than the dark-theme version for AA contrast on cream */
+   --accent-hover:    #A4471F
+   --accent-soft:     #E8C9B6   /* tinted terracotta for soft fills, e.g. tag backgrounds */
+   --accent-on-fill:  #FAF4E4   /* text color when sitting ON a terracotta fill — keep cream/light, not white */
+
+   Status dot colors (keep the existing semantics, retune for cream bg)
+   --status-preview:      #4F8A5F   /* deeper green — was too bright on dark */
+   --status-planned:      #8C8478   /* neutral warm gray */
+   --status-experimental: #C77F3E   /* amber-terracotta */
+
+   Decoration / blob tokens — MUTED, dusty, NOT vibrant
+   --decor-1: #BFB29A   /* warm taupe */
+   --decor-2: #C5A89A   /* dusty rose-clay */
+   --decor-3: #A8B19E   /* sage-olive */
+   --decor-4: #D4B89E   /* soft pale clay */
+   --decor-5: #B8A89A   /* warm dusty mauve */
+   Apply these at opacity 0.18–0.28 — never higher. They should feel like watermarks behind the content, not competing layers.
+
+GLOBAL APPLICATION
+
+1. Set <body> background to var(--bg-base). Remove any dark image / dark gradient backgrounds that override it.
+2. Replace every reference to the old palette across CSS, Tailwind config, inline styles, and component files:
+   - #0E0E10 / #14181C / #1A1410 / any near-black → use --bg-base / --surface-card depending on role
+   - #F4EBE0 / #FAF5EC / any cream-on-dark text color → use --text-primary or --text-body
+   - #A89D8F / muted warm gray text → use --text-muted
+   - #1F2429 / dark hairlines → use --border-hairline
+   - #C2674A old terracotta → use --accent
+3. Anywhere a color was hardcoded (not via a token), refactor it to a token. The point of this change is one-place control.
+
+COMPONENT-LEVEL ADJUSTMENTS — verify each of these reads correctly on cream:
+
+Textarea (Describe your agent)
+- Background: --bg-elevated
+- Border: 1px solid --border-hairline; on focus, 1px solid --accent + 2px terracotta outline at 2px offset
+- Placeholder text: --text-faint
+- Typed text: --text-primary
+
+Build Agent button
+- Background: --accent
+- Text: --accent-on-fill (cream, not white — pure white on terracotta looks harsh)
+- Hover: --accent-hover, NO opacity change (you've had hover-disappear bugs before; verify explicit base + hover + focus + active states)
+- Disabled state: --bg-recessed background, --text-faint text
+
+Quick-start prompt cards (the scrollable START FROM container)
+- Card background: --surface-card
+- Card border: 1px solid --border-hairline; hover lifts to --border-strong + subtle terracotta inset
+- Category label (ENGINEER, RESEARCH, etc.): mono caps 10px, --accent
+- Card title: Fraunces 16px weight 600, --text-primary
+- Card preview: --text-muted
+- Card footnote: mono caps 10px, --text-muted
+- Scroll container hairline rail: --border-inset; scroll-position thumb: --accent
+- L-shaped corner brackets: --border-strong
+
+Runtime tab strip (Codex / Claude Code / OpenClaw)
+- Tab container background: transparent (lets --bg-base show)
+- Inactive tab: 1px solid --border-hairline border, runtime name in --text-muted
+- Active tab: 1px solid --accent border + subtle terracotta inset (use rgba(184, 84, 46, 0.08) for the inset on light bg, NOT the dark-theme glow value)
+- Hover on inactive: border --border-strong, runtime name --text-primary
+- Status dot colors: use the new --status-* tokens
+
+Export row (between tab strip and blueprint)
+- Top + bottom hairline: --border-hairline
+- Metadata text: mono caps 10px, --text-muted; numeric values keep --accent
+- EXPORT SAFE BUNDLE button: --accent background, --accent-on-fill text, same hover rules as Build Agent button
+
+Side section navigator (Blueprint / License / Eval plan / Source link)
+- Item label: Fraunces 14px, --text-muted by default
+- Active item: left border 2px --accent, label --text-primary, background rgba(184, 84, 46, 0.06)
+- Hover: border --border-strong, label --text-primary
+- Numeric index: mono caps 10px, --accent
+
+2×2 grid boxes (Skills / MCPs / Files / Reasons)
+- Box background: --surface-card
+- Box border: 1px solid --border-hairline
+- Box header (-- SKILLS, -- MCPS, etc.): white was used on dark; on cream, switch to --text-primary, keep the existing 16px weight and the "-- " prefix.
+- Inner item cards: --surface-card-2 background, --border-hairline border
+- Item title: Fraunces, --text-primary
+- Item description: --text-body
+- Tag/badge labels (SKILL, MCP, etc.): mono caps 10px, --accent
+
+Blueprint header (CODEX label + agent title)
+- Category label (CODEX / CLAUDE CODE / OPENCLAW): mono caps 10px, --accent
+- Agent title: Fraunces weight 600, --text-primary
+
+Footer
+- Background: --bg-recessed
+- Top hairline: --border-hairline
+- Link text: --text-muted; hover --accent
+
+ABSTRACT DECORATION (the blob shapes / line streaks across the bg)
+
+Replace the current dark-theme decoration colors with the --decor-* tokens. Specifically:
+- The large amorphous blobs: pick 3 of the 5 decor colors, fill at opacity 0.18–0.22.
+- The thin terracotta line streaks: keep them but reduce opacity to ~0.35 (they were near full opacity on dark — they'll look way too punchy on cream).
+- Any feTurbulence / feDisplacementMap noise filter: lower the displacementScale by ~30% so the edges feel softer on light bg.
+- mask-image central-clearance: keep the existing radial-gradient mask so the center stays clean and the decoration lives only at the edges.
+- Do NOT use mix-blend-mode: multiply or screen on cream — it'll muddy the colors. Use plain alpha compositing.
+
+The decoration should feel like dried watercolor stains on warm paper, not the bold dark-theme silhouettes you had before.
+
+VERIFICATION — run all of these
+
+1. Page-wide: every visible surface is some flavor of cream. No leftover black, dark gray, or charcoal anywhere. Search the codebase for hex values starting with #0, #1, #2 — anything that survived needs to be either a token or intentionally retained (e.g. text-primary).
+2. Contrast: run any heading + body text against the cream bg through a contrast checker. --text-primary on --bg-base must hit AA at 4.5:1 minimum. If it doesn't, deepen --text-primary further.
+3. Terracotta button: confirm the cream-on-terracotta text reads cleanly. If --accent-on-fill at #FAF4E4 looks washed out, drop it to #FFFFFF — but verify in a screenshot first.
+4. Hover states: hover every interactive element. No button background should disappear or invert. No text should vanish into the background.
+5. Decoration: take a full-page screenshot. The blobs should be visible but unobtrusive — you should be able to read every word of body text without the decoration competing for attention.
+6. Status dots: confirm green (preview), neutral (planned), amber (experimental) are all distinguishable on cream. Bump deeper if any feels washed out.
+7. Tab strip + side nav: confirm the terracotta active-state is visible without being aggressive. The left-rail accent on the side nav should read as a clean stripe, not a glow.
+8. Mobile / < 1024px: same checks apply at narrow widths. No accidental dark surfaces remain.
+9. prefers-color-scheme: dark — if you have a dark-mode media query active, decide whether to keep a dark variant or drop it. For this redesign, default to light and either remove the dark variant or make it opt-in.
+10. Inspect a few computed styles in DevTools to confirm tokens are resolving, not falling back to a default.
