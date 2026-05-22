@@ -679,7 +679,9 @@ h1 {
 }
 
 .promptBox textarea::placeholder {
-  color: var(--text-muted);
+  color: #6E6359;
+  font-style: normal;
+  opacity: 1;
 }
 
 .promptBox textarea:focus {

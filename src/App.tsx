@@ -638,7 +638,7 @@ const QUICK_START_CARDS = [
 ];
 
 export default function App() {
-  const [prompt, setPrompt] = useState(samplePrompt);
+  const [prompt, setPrompt] = useState("");
   const [preview, setPreview] = useState<PublicPreview | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -991,7 +991,7 @@ export default function App() {
             onChange={(event) => updatePrompt(event.target.value)}
             onKeyDown={onPromptKeyDown}
             onFocus={() => setPromptHasFocused(true)}
-            placeholder="Build a customer support agent that reads our Notion docs and files Linear bugs..."
+            placeholder={samplePrompt}
             disabled={backend.state !== "ready"}
             readOnly={busy}
             data-busy={busy ? "true" : undefined}
