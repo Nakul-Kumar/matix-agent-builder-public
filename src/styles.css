@@ -2861,6 +2861,47 @@ a.resultCard {
   color: #6E6359;
 }
 
+.exportActionControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
+}
+
+.exportActionInspect {
+  background: transparent;
+  border: none;
+  color: #A8998C;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 6px 4px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-color: #6E6359;
+  text-underline-offset: 3px;
+  transition: color 150ms ease, text-decoration-color 150ms ease;
+}
+
+.exportActionInspect:hover:not(:disabled),
+.exportActionInspect:focus-visible:not(:disabled) {
+  color: #EDE6DE;
+  text-decoration-color: #C2674A;
+}
+
+.exportActionInspect:focus-visible {
+  outline: 2px solid #C2674A;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.exportActionInspect:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
 .exportActionButton {
   flex: 0 0 auto;
   background: #C2674A;
@@ -2904,8 +2945,12 @@ a.resultCard {
   .exportActionRow {
     align-items: stretch;
   }
-  .exportActionButton {
+  .exportActionControls {
     width: 100%;
+    justify-content: space-between;
+  }
+  .exportActionButton {
+    flex: 1 1 auto;
   }
 }
 

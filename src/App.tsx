@@ -174,6 +174,8 @@ function BlueprintsSection({
   exportingPlatform,
   exportedPlatforms,
   onExport,
+  inspectingPlatform,
+  onInspect,
 }: {
   placards: RuntimePlacard[];
   activeRuntime: PlatformKey;
@@ -182,6 +184,8 @@ function BlueprintsSection({
   exportingPlatform: string | null;
   exportedPlatforms: Set<string>;
   onExport: (platform: string) => void;
+  inspectingPlatform: string | null;
+  onInspect: (platform: string) => void;
 }) {
   if (placards.length === 0) return null;
 
@@ -297,19 +301,30 @@ function BlueprintsSection({
             </>
           )}
         </p>
-        <button
-          type="button"
-          className="exportActionButton"
-          onClick={() => onExport(activeKey)}
-          disabled={exportingPlatform === activeKey}
-          title="Bundle is a signed JSON manifest. No secrets, no provider calls, source hosts allow-listed."
-        >
-          {exportingPlatform === activeKey
-            ? "PREPARING SAFE BUNDLE…"
-            : exportedPlatforms.has(activeKey)
-              ? "EXPORTED — DOWNLOAD AGAIN"
-              : "EXPORT SAFE BUNDLE"}
-        </button>
+        <div className="exportActionControls">
+          <button
+            type="button"
+            className="exportActionInspect"
+            onClick={() => onInspect(activeKey)}
+            disabled={inspectingPlatform === activeKey}
+            title="Open the raw JSON manifest in a new tab without downloading."
+          >
+            {inspectingPlatform === activeKey ? "OPENING…" : "VIEW JSON"}
+          </button>
+          <button
+            type="button"
+            className="exportActionButton"
+            onClick={() => onExport(activeKey)}
+            disabled={exportingPlatform === activeKey}
+            title="Bundle is a signed JSON manifest. No secrets, no provider calls, source hosts allow-listed."
+          >
+            {exportingPlatform === activeKey
+              ? "PREPARING SAFE BUNDLE…"
+              : exportedPlatforms.has(activeKey)
+                ? "EXPORTED — DOWNLOAD AGAIN"
+                : "EXPORT SAFE BUNDLE"}
+          </button>
+        </div>
       </div>
 
       <div
@@ -789,6 +804,9 @@ export default function App() {
   const [exportedPlatforms, setExportedPlatforms] = useState<Set<string>>(
     new Set(),
   );
+  const [inspectingPlatform, setInspectingPlatform] = useState<string | null>(
+    null,
+  );
   const [exportingPlatform, setExportingPlatform] = useState<string | null>(
     null,
   );
@@ -865,6 +883,25 @@ export default function App() {
       }
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleInspect(platform: string) {
+    if (inspectingPlatform) return;
+    setError(null);
+    setInspectingPlatform(platform);
+    try {
+      const payload = await exportAgent(prompt.trim(), platform);
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Inspect failed");
+    } finally {
+      setInspectingPlatform(null);
     }
   }
 
@@ -1254,6 +1291,8 @@ export default function App() {
             exportingPlatform={exportingPlatform}
             exportedPlatforms={exportedPlatforms}
             onExport={handleExport}
+            inspectingPlatform={inspectingPlatform}
+            onInspect={handleInspect}
           />
           <LicensesSection placards={preview.placards} />
           <EvalPlanSection placards={preview.placards} />
