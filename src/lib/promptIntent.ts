@@ -50,6 +50,15 @@ const AGENT_NOUNS = [
   "scrapers",
   "service",
   "services",
+  "ai",
+  "llm",
+  "llms",
+  "chatbot",
+  "chatbots",
+  "model",
+  "models",
+  "api",
+  "apis",
 ];
 
 const AGENT_VERBS = [
