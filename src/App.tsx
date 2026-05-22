@@ -742,10 +742,13 @@ function ModelPolicySection({ preview }: { preview: PublicPreview }) {
     "Use the teacher/default model or deterministic fallback until a student model passes the latest golden prompt calibration run.";
 
   return (
-    <section className="resultSection">
-      <header className="anchorHead">
-        <p className="anchorKicker">—— II. RECOMMENDED MODEL</p>
-        <div className="anchorRule" aria-hidden="true" />
+    <section className="resultSection resultSection--model">
+      <header className="modelSectionHead">
+        <div className="modelSectionLockup">
+          <span className="modelSectionKicker">II</span>
+          <h2 className="modelSectionTitle">Recommended model</h2>
+        </div>
+        <div className="modelSectionRule" aria-hidden="true" />
       </header>
 
       <div className="recommendedModel">
