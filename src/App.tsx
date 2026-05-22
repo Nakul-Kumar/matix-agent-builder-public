@@ -70,410 +70,8 @@ const platformTheme: Record<
   },
 };
 
-const statusToneMap: Record<string, string> = {
-  ok: "ok",
-  ready: "ok",
-  preview: "ok",
-  synced: "ok",
-  planned: "info",
-  searched: "info",
-  experimental: "warn",
-  degraded: "warn",
-  auth_required: "warn",
-  rate_limited: "danger",
-  error: "danger",
-};
-
-function statusTone(value: string): string {
-  return statusToneMap[value.toLowerCase()] ?? "info";
-}
-
 function pretty(value: string): string {
   return value.replace(/_/g, " ");
-}
-
-function ScoreBar({ label, value }: { label: string; value: number }) {
-  const pct = Math.max(0, Math.min(100, Math.round(value)));
-  return (
-    <div className="score">
-      <div className="scoreRow">
-        <span>{label}</span>
-        <strong>{pct}</strong>
-      </div>
-      <div className="scoreTrack" aria-hidden="true">
-        <div className="scoreFill" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count?: number;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="placardSection">
-      <header>
-        <h3>{title}</h3>
-        {typeof count === "number" && <span className="count">{count}</span>}
-      </header>
-      {children}
-    </section>
-  );
-}
-
-const scoreLaneLabels: Record<string, string> = {
-  task_fit: "task fit",
-  source_trust: "source",
-  license_trust: "license",
-  artifact_quality: "quality",
-  runtime_readiness: "runtime",
-  credential_readiness: "creds",
-  category_coverage: "coverage",
-  safety_risk: "risk",
-};
-
-function ArtifactScoreLanes({
-  scoreBreakdown,
-}: {
-  scoreBreakdown?: Record<string, number>;
-}) {
-  const lanes = Object.entries(scoreBreakdown ?? {}).filter(([, value]) =>
-    Number.isFinite(value),
-  );
-  if (lanes.length === 0) return null;
-  return (
-    <div className="laneGrid" aria-label="Score breakdown">
-      {lanes.map(([key, value]) => (
-        <span key={key} className="lane">
-          <span>{scoreLaneLabels[key] ?? pretty(key)}</span>
-          <strong>{Math.round(value)}</strong>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function LicenseBadge({ artifact }: { artifact: PublicArtifact }) {
-  const label = artifact.license?.name || "License pending";
-  const confidence = artifact.license?.confidence ?? "low";
-  if (artifact.license?.url) {
-    return (
-      <a
-        className={`licenseBadge license-${confidence}`}
-        href={artifact.license.url}
-        target="_blank"
-        rel="noreferrer noopener"
-      >
-        {label}
-      </a>
-    );
-  }
-  return <span className={`licenseBadge license-${confidence}`}>{label}</span>;
-}
-
-function ArtifactCard({ artifact }: { artifact: PublicArtifact }) {
-  const credentialStatus = artifact.credential_status
-    ? pretty(artifact.credential_status)
-    : "not required";
-  return (
-    <li className="artifactCard">
-      <div className="artifactTitleRow">
-        <span className="artifactName">{artifact.name}</span>
-        <LicenseBadge artifact={artifact} />
-      </div>
-      {artifact.description && (
-        <span className="artifactDesc">{artifact.description}</span>
-      )}
-      {artifact.why_selected && (
-        <p className="artifactWhy">
-          <strong>Why selected</strong> {artifact.why_selected}
-        </p>
-      )}
-      {artifact.setup_hint && (
-        <p className="artifactSetup">
-          <strong>Setup</strong> {artifact.setup_hint}
-        </p>
-      )}
-      <div className="artifactMetaRow">
-        <span>{pretty(artifact.artifact_kind)}</span>
-        <span>{credentialStatus}</span>
-        <span>{artifact.artifact_ref}</span>
-      </div>
-      <ArtifactScoreLanes scoreBreakdown={artifact.score_breakdown} />
-      {artifact.warnings?.length > 0 && (
-        <ul className="artifactWarnings">
-          {artifact.warnings.map((warning, idx) => (
-            <li key={`${artifact.artifact_ref}-warning-${idx}`}>{warning}</li>
-          ))}
-        </ul>
-      )}
-    </li>
-  );
-}
-
-function ArtifactList({
-  items,
-  empty,
-}: {
-  items: PublicArtifact[];
-  empty: string;
-}) {
-  if (items.length === 0) return <p className="emptyHint">{empty}</p>;
-  return (
-    <ul className="artifactList">
-      {items.map((item) => (
-        <ArtifactCard key={item.artifact_ref} artifact={item} />
-      ))}
-    </ul>
-  );
-}
-
-function Placard({
-  placard,
-  exporting,
-  exported,
-  onExport,
-}: {
-  placard: RuntimePlacard;
-  exporting: boolean;
-  exported: boolean;
-  onExport: (platform: PlatformKey) => void;
-}) {
-  const theme = platformTheme[placard.platform] ?? {
-    tone: "codex",
-    accent: "#C2674A",
-    accentSoft: "rgba(194, 103, 74, 0.12)",
-    glow: "rgba(194, 103, 74, 0.18)",
-    tag: "Runtime",
-    subtitle: placard.label,
-  };
-
-  const sourceLinks = useMemo(() => {
-    const seen = new Set<string>();
-    const links: { label: string; url: string }[] = [];
-    for (const item of [...placard.skills, ...placard.mcps, ...placard.tools]) {
-      for (const link of item.source_links ?? []) {
-        if (!link?.url || seen.has(link.url)) continue;
-        seen.add(link.url);
-        links.push({ label: link.label || link.url, url: link.url });
-        if (links.length >= 6) break;
-      }
-      if (links.length >= 6) break;
-    }
-    return links;
-  }, [placard]);
-
-  const artifacts = useMemo(
-    () => [...placard.skills, ...placard.mcps, ...placard.tools],
-    [placard],
-  );
-
-  const licenseSummary = useMemo(() => {
-    const seen = new Set<string>();
-    return artifacts
-      .map((artifact) => artifact.license)
-      .filter((license) => {
-        if (!license?.name || seen.has(`${license.name}:${license.url}`)) {
-          return false;
-        }
-        seen.add(`${license.name}:${license.url}`);
-        return true;
-      })
-      .slice(0, 6);
-  }, [artifacts]);
-
-  const credentialItems = artifacts.filter(
-    (artifact) => artifact.credential_status !== "not_required",
-  );
-
-  const whySelected = artifacts
-    .filter((artifact) => artifact.why_selected)
-    .slice(0, 4);
-
-  const tone = statusTone(placard.status);
-
-  return (
-    <article
-      className={`placard placard-${theme.tone}`}
-      style={
-        {
-          "--accent": theme.accent,
-          "--accent-soft": theme.accentSoft,
-          "--accent-glow": theme.glow,
-        } as React.CSSProperties
-      }
-    >
-      <div className="placardGlow" aria-hidden="true" />
-      <header className="placardTop">
-        <div>
-          <p className="platformTag">{theme.tag}</p>
-          <h2>{placard.label}</h2>
-          <p className="placardSubtitle">{theme.subtitle}</p>
-        </div>
-        <span className={`pill pill-${tone}`}>
-          <span className="dot" /> {pretty(placard.status)}
-        </span>
-      </header>
-
-      <div className="placardMeta">
-        <span className="metaChip" title="Model">
-          <span className="metaLabel">model</span>
-          <span className="metaValue">{placard.model}</span>
-        </span>
-        <span className="metaChip" title="Memory mode">
-          <span className="metaLabel">memory</span>
-          <span className="metaValue">{pretty(placard.memory_mode)}</span>
-        </span>
-      </div>
-
-      <div className="scores">
-        <ScoreBar label="Trust" value={placard.scores.trust} />
-        <ScoreBar label="Match" value={placard.scores.match} />
-        <ScoreBar label="Use" value={placard.scores.popularity} />
-        <ScoreBar label="Perf" value={placard.scores.performance} />
-      </div>
-
-      <Section title="Export contents preview" count={placard.file_tree.length}>
-        {placard.file_tree.length === 0 ? (
-          <p className="emptyHint">No files in this template.</p>
-        ) : (
-          <div className="fileTree">
-            {placard.file_tree.map((file) => (
-              <code key={file}>{file}</code>
-            ))}
-          </div>
-        )}
-      </Section>
-
-      {whySelected.length > 0 && (
-        <Section title="Why selected" count={whySelected.length}>
-          <ul className="rationaleList">
-            {whySelected.map((artifact) => (
-              <li key={`${artifact.artifact_ref}-why`}>
-                <strong>{artifact.name}</strong>
-                <span>{artifact.why_selected}</span>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      <Section title="Skills" count={placard.skills.length}>
-        <ArtifactList items={placard.skills} empty="No skills attached." />
-      </Section>
-
-      <Section
-        title="MCPs & tools"
-        count={placard.mcps.length + placard.tools.length}
-      >
-        <ArtifactList
-          items={[...placard.mcps, ...placard.tools]}
-          empty="No MCPs or tools."
-        />
-      </Section>
-
-      {licenseSummary.length > 0 && (
-        <Section title="Licenses" count={licenseSummary.length}>
-          <div className="licenseList">
-            {licenseSummary.map((license) =>
-              license.url ? (
-                <a
-                  key={`${license.name}-${license.url}`}
-                  href={license.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  {license.name}
-                  <span>{pretty(license.confidence)}</span>
-                </a>
-              ) : (
-                <span key={license.name}>
-                  {license.name}
-                  <em>{pretty(license.confidence)}</em>
-                </span>
-              ),
-            )}
-          </div>
-        </Section>
-      )}
-
-      <Section title="Missing credentials" count={credentialItems.length}>
-        {credentialItems.length === 0 ? (
-          <p className="emptyHint">No credentials are required for the public-safe export.</p>
-        ) : (
-          <ul className="credentialList">
-            {credentialItems.map((artifact) => (
-              <li key={`${artifact.artifact_ref}-credential`}>
-                <strong>{artifact.name}</strong>
-                <span>{pretty(artifact.credential_status)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <Section title="Setup instructions">
-        <ul className="setupList">
-          <li>Open <code>START_HERE.md</code> from the exported bundle first.</li>
-          <li>Review <code>LICENSES.md</code> and <code>manifest.json</code> before enabling runtime placeholders.</li>
-          <li>Enable MCP credentials only in the target runtime, never in the browser.</li>
-        </ul>
-      </Section>
-
-      {placard.eval_plan.length > 0 && (
-        <Section title="Eval plan" count={placard.eval_plan.length}>
-          <ol className="evalList">
-            {placard.eval_plan.map((step, idx) => (
-              <li key={`${placard.platform}-eval-${idx}`}>{step}</li>
-            ))}
-          </ol>
-        </Section>
-      )}
-
-      {sourceLinks.length > 0 && (
-        <Section title="Source links" count={sourceLinks.length}>
-          <div className="links">
-            {sourceLinks.map((link) => (
-              <a
-                key={link.url}
-                href={link.url}
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {placard.warnings.length > 0 && (
-        <ul className="warnings">
-          {placard.warnings.map((warning, idx) => (
-            <li key={`${placard.platform}-w-${idx}`}>{warning}</li>
-          ))}
-        </ul>
-      )}
-
-      <button
-        className="exportButton"
-        onClick={() => onExport(placard.platform)}
-        disabled={exporting}
-      >
-        {exporting
-          ? "Preparing safe bundle..."
-          : exported
-            ? "Exported / download again"
-            : "Export safe bundle"}
-      </button>
-    </article>
-  );
 }
 
 function PlacardSkeleton({ tone }: { tone: PlatformKey }) {
@@ -799,6 +397,107 @@ function SourceLinksSection({ placards }: { placards: RuntimePlacard[] }) {
         ))}
       </div>
     </section>
+  );
+}
+
+const EXPORT_PLATFORMS: Array<{ key: string; label: string }> = [
+  { key: "codex", label: "CODEX" },
+  { key: "claude_code", label: "CLAUDE CODE" },
+  { key: "openclaw", label: "OPENCLAW" },
+];
+
+function ExportBundleSection({
+  placards,
+  policy,
+  exportingPlatform,
+  exportedPlatforms,
+  onExport,
+}: {
+  placards: RuntimePlacard[];
+  policy: PublicPreview["source_policy"] | null | undefined;
+  exportingPlatform: string | null;
+  exportedPlatforms: Set<string>;
+  onExport: (platform: string) => void;
+}) {
+  const availableKeys = new Set<string>(placards.map((p) => p.platform));
+  const tabs = EXPORT_PLATFORMS.filter((t) => availableKeys.has(t.key));
+  const initial = tabs[0]?.key ?? "codex";
+  const [active, setActive] = useState<string>(initial);
+  const activeKey = availableKeys.has(active) ? active : initial;
+  const placard = placards.find((p) => p.platform === activeKey);
+  const exporting = exportingPlatform === activeKey;
+  const exported = exportedPlatforms.has(activeKey);
+  if (tabs.length === 0) return null;
+
+  const policyLines: string[] = [];
+  if (policy) {
+    policyLines.push(
+      `Browser provider calls ${policy.browser_provider_calls ? "yes" : "no"}`,
+    );
+    policyLines.push(
+      `Secrets included ${policy.secrets_included ? "yes" : "no"}`,
+    );
+    policyLines.push(
+      `Allowed source hosts ${policy.allowed_source_hosts.length}`,
+    );
+  }
+
+  return (
+    <div className="section">
+      <header className="section-header">
+        <h3 className="section-title">EXPORT SAFE BUNDLE</h3>
+        <span className="section-count">{tabs.length}</span>
+      </header>
+      <div className="exportBundle">
+        <div className="exportTabs" role="tablist" aria-label="Export platform">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={tab.key === activeKey}
+              className={`exportTab ${tab.key === activeKey ? "exportTabActive" : ""}`}
+              onClick={() => setActive(tab.key)}
+            >
+              {tab.label}
+              {exportedPlatforms.has(tab.key) && (
+                <span className="exportTabDot" aria-hidden="true" />
+              )}
+            </button>
+          ))}
+        </div>
+        <div className="exportBody">
+          <div className="exportMeta">
+            <p className="exportRuntime">
+              {placard ? platformTheme[placard.platform as PlatformKey]?.tag ?? placard.label : ""}
+            </p>
+            {policyLines.length > 0 && (
+              <ul className="exportPolicy">
+                {policyLines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            )}
+            <p className="exportCaveat">
+              Bundle is a signed JSON manifest. No secrets, no provider calls,
+              source hosts allow-listed.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="exportButtonNew"
+            onClick={() => onExport(activeKey)}
+            disabled={exporting}
+          >
+            {exporting
+              ? "PREPARING SAFE BUNDLE…"
+              : exported
+                ? "EXPORTED — DOWNLOAD AGAIN"
+                : "EXPORT SAFE BUNDLE"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1433,22 +1132,13 @@ export default function App() {
           <EvalPlanSection placards={preview.placards} />
           <SourceLinksSection placards={preview.placards} />
 
-          {policy && (
-            <div className="policy">
-              <span>
-                <strong>Browser provider calls</strong>{" "}
-                {policy.browser_provider_calls ? "yes" : "no"}
-              </span>
-              <span>
-                <strong>Secrets included</strong>{" "}
-                {policy.secrets_included ? "yes" : "no"}
-              </span>
-              <span>
-                <strong>Allowed source hosts</strong>{" "}
-                {policy.allowed_source_hosts.length}
-              </span>
-            </div>
-          )}
+          <ExportBundleSection
+            placards={preview.placards}
+            policy={policy}
+            exportingPlatform={exportingPlatform}
+            exportedPlatforms={exportedPlatforms}
+            onExport={handleExport}
+          />
         </section>
       )}
 

@@ -1,0 +1,72 @@
+Undo the previous change that hid the decoration shapes on the results route, then replace it with a scroll-linked parallax effect that moves each shape horizontally off the viewport as the user scrolls down. Left-anchored shapes drift LEFT (off the left edge) and right-anchored shapes drift RIGHT (off the right edge). By the time the user has scrolled past ~1.5 viewport heights, the decoration is gone from view, but the top of the results page still has the full decoration framing.
+
+Section 1 — Undo the hide-on-results behavior.
+
+If a previous change set opacity: 0 or display: none on the decoration layer when the agent is built, remove that behavior. The decoration layer must remain rendered and visible at the top of the results page, exactly as it appears on the landing hero. Same six shapes, same three line accents, same mask fade keeping the center clear.
+
+Section 2 — Add scroll-linked horizontal parallax.
+
+Each of the six shapes (A through F) and three line accents gets a translateX value tied to window scrollY. As scrollY increases, each element shifts horizontally toward its nearest viewport edge.
+
+Anchor side mapping (the side each shape exits toward):
+- Shape A (top-left corner): exits LEFT
+- Shape B (top-right corner): exits RIGHT
+- Shape C (mid-left edge): exits LEFT
+- Shape D (bottom-right corner): exits RIGHT
+- Shape E (bottom-left corner): exits LEFT
+- Shape F (top-center accent): exits UP (vertical translate, drifts upward off the top edge)
+- Line 1 (sweep upper-right to mid-left): drifts LEFT (follows its primary anchor)
+- Line 2 (top arc left to right): drifts UP slightly
+- Line 3 (lower-left curl): drifts LEFT
+
+Translation formula for each shape:
+- Let scrollProgress = Math.min(scrollY / (window.innerHeight * 1.5), 1) — clamped 0 to 1 across the first 1.5 viewport heights of scroll.
+- Translation distance: each shape needs to move enough to fully clear the viewport. Use 60vw as the maximum displacement for shapes A, B, D, E. Use 40vw for shapes C and Shape F (smaller / centered shapes).
+- For LEFT-exiting shapes (A, C, E): translateX = -(scrollProgress * maxDisplacement)
+- For RIGHT-exiting shapes (B, D): translateX = scrollProgress * maxDisplacement
+- For UP-exiting shape F: translateY = -(scrollProgress * 30vh)
+- Lines follow their assigned direction with maxDisplacement 50vw (lines 1 and 3) or 25vh (line 2).
+
+Implementation specifics:
+- Use a single scroll event listener on window, wrapped in requestAnimationFrame to avoid layout thrash. Inside the rAF callback, compute scrollProgress once, then update each shape's transform.
+- Apply transforms via element.style.transform or via a CSS custom property (--shape-tx) per shape, e.g. shape.style.transform = `translate3d(${tx}vw, ${ty}vh, 0)`. translate3d forces hardware acceleration.
+- Add will-change: transform to each shape and each line element so the browser pre-promotes them to their own layer.
+- Do NOT animate via JS keyframes on every scroll event without rAF — that will jank.
+
+Subtle additional polish:
+- As each shape drifts, very slightly fade it. Opacity at scrollProgress 0 stays at its current value (0.32 for primary shapes, 0.22-0.30 for accents). Opacity at scrollProgress 1 drops to 0. Linear interpolation between.
+- Rotation: each shape gains a small rotation as it drifts to suggest momentum. For LEFT exits, rotate by -6deg * scrollProgress. For RIGHT exits, rotate by +6deg * scrollProgress. For UP exit, rotate -3deg * scrollProgress. Subtle, not gimmicky.
+
+Section 3 — Reduced-motion fallback.
+
+Wrap the entire parallax effect in a feature check:
+- If window.matchMedia('(prefers-reduced-motion: reduce)').matches is true, do NOT attach the scroll listener and do NOT apply any transforms. The decoration stays static at its at-rest position regardless of scroll.
+- In reduced-motion mode, optionally fade the entire decoration layer to opacity 0 once scrollY exceeds window.innerHeight, with a simple opacity transition rather than the per-shape parallax. This way reduced-motion users still get the "decoration is for the hero" feeling without horizontal motion.
+
+Section 4 — Both routes.
+
+The parallax effect runs on BOTH the landing page and the results page — the same single scroll listener applies wherever the decoration is rendered. On the landing page, scrolling past the textarea section will start the drift; the decoration clears as the user scrolls toward the footer.
+
+Section 5 — Performance budget.
+
+- The scroll handler must complete in under 2ms per frame on a 60fps target.
+- Do not animate any property other than transform and opacity. No top/left/width/height changes.
+- Do not animate the SVG paths themselves (no shape-morphing during scroll).
+- The mask fade on the decoration container stays applied — it does not move with scroll.
+
+Section 6 — Z-index discipline.
+
+Decoration layer stays at z-index 0. Content stays at z-index 10. The fixed top-right BACKEND/DEVELOPMENT indicator stays at its existing z-index. The parallax moves only the shapes inside the decoration layer, not the layer's container itself.
+
+Section 7 — Cleanup.
+
+Remove any leftover code from the previous "hide on results" approach: opacity:0 set on the decoration container, display:none toggles tied to the results state, route-aware conditional renders of the decoration, etc. The decoration is now route-independent — its visibility is purely a function of scroll position.
+
+Verification after change:
+- Reload the landing page. The full decoration is visible at the top.
+- Scroll downward. The four corner shapes (A, B, D, E) visibly drift toward their respective edges. C drifts left. F drifts up. The three line accents drift in their assigned directions.
+- By the time scrollY equals window.innerHeight * 1.5, the decoration is essentially off-screen (translated past the viewport edges) and faded to opacity 0.
+- Scroll back up. The shapes return to their at-rest positions smoothly (no jank, no popping).
+- Build an agent and observe the results page. The top of the results page shows the decoration (because scrollY is near 0 after route transition). As the user scrolls through the results, the decoration drifts off in the same direction pattern. The deep parts of the results page (skills, MCPs, licenses) are decoration-free.
+- Open DevTools Performance tab, record a scroll session, and confirm no long frames (>16ms) and no layout shift warnings.
+- Toggle the OS's "Reduce motion" setting and reload. The parallax is disabled; the decoration either stays static or fades simply.
