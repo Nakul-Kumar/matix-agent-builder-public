@@ -304,9 +304,28 @@ h1 {
 }
 
 @media (min-width: 1024px) {
+  .layoutGrid {
+    row-gap: 24px;
+  }
+  .layoutLeft {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .layoutRight {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
   .heroLead {
-    width: calc(134.5% + 62px);
+    grid-column: 1 / -1;
+    grid-row: 2;
     max-width: 880px;
+    width: auto;
+    padding-right: 0;
+  }
+  .layoutLeftBottom {
+    grid-column: 1;
+    grid-row: 3;
+    min-width: 0;
   }
 }
 

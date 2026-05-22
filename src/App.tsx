@@ -784,12 +784,14 @@ export default function App() {
           <br />
           Three ready-to-use agents.
         </h1>
+      </section>
+        </div>
         <p className="heroLead">
           Describe the agent you need. The Matix cockpit returns source-linked
           skills, MCPs, evaluation plans, and safe example exports for Codex,
           Claude Code, and OpenClaw - side by side.
         </p>
-
+        <div className="layoutLeftBottom">
         <div className="promptBox">
           <div className="promptHeader">
             <label htmlFor="prompt" className="promptLabel">
@@ -833,7 +835,6 @@ export default function App() {
             </div>
           </div>
         </div>
-      </section>
         </div>
         <aside className="layoutRight" aria-hidden="true">
           <svg
