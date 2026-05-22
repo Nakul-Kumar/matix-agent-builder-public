@@ -778,15 +778,11 @@ export default function App() {
           </div>
 
           <section className="hero">
-        <div className="heroBadges">
-          <span className="badge">Codex</span>
-          <span className="badge">Claude Code</span>
-          <span className="badge">OpenClaw</span>
-        </div>
+        <div className="heroBadges">Codex · Claude Code · OpenClaw</div>
         <h1>
           One prompt.
           <br />
-          <span className="heroAccent">Three ready-to-use agents.</span>
+          Three ready-to-use agents.
         </h1>
         <p className="heroLead">
           Describe the agent you need. The Matix cockpit returns source-linked
