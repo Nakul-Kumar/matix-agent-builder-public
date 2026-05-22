@@ -2200,35 +2200,6 @@ a.resultCard {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--text-muted, #9D9277);
-  display: inline-flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0;
-}
-
-.blueprintBoxCountSep {
-  margin: 0 6px;
-  color: var(--text-muted, #9D9277);
-}
-
-.blueprintBoxMore {
-  appearance: none;
-  background: none;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  color: var(--text-muted, #9D9277);
-  cursor: pointer;
-  transition: color 160ms ease;
-}
-
-.blueprintBoxMore:hover,
-.blueprintBoxMore:focus-visible {
-  color: var(--accent-brick, #A24A26);
-  outline: none;
 }
 
 .blueprintBoxRule {

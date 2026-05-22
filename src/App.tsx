@@ -1,4 +1,4 @@
-import { Children, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ResultCard, type ResultCardDotTone } from "./components/ResultCard";
 import {
   exportAgent,
@@ -544,9 +544,6 @@ function BlueprintSubBox({
   const railRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
   const [maskState, setMaskState] = useState<"top" | "middle" | "bottom" | "none">("none");
-  const [hiddenCount, setHiddenCount] = useState(0);
-  const [hasOverflow, setHasOverflow] = useState(false);
-  const totalItems = Children.count(children);
 
   const update = useCallback(() => {
     const strip = stripRef.current;
@@ -556,11 +553,9 @@ function BlueprintSubBox({
 
     const { scrollTop, scrollHeight, clientHeight } = strip;
     const overflow = scrollHeight > clientHeight + 1;
-    setHasOverflow(overflow);
 
     if (!overflow) {
       setMaskState("none");
-      setHiddenCount(0);
       if (thumb) thumb.style.opacity = "0";
       return;
     }
@@ -568,15 +563,6 @@ function BlueprintSubBox({
     const atTop = scrollTop <= 2;
     const atBottom = scrollTop + clientHeight >= scrollHeight - 2;
     setMaskState(atTop ? "bottom" : atBottom ? "top" : "middle");
-
-    const items = strip.children;
-    const stripRect = strip.getBoundingClientRect();
-    let visible = 0;
-    for (let i = 0; i < items.length; i++) {
-      const r = (items[i] as HTMLElement).getBoundingClientRect();
-      if (r.top >= stripRect.top - 1 && r.bottom <= stripRect.bottom + 1) visible++;
-    }
-    setHiddenCount(Math.max(0, totalItems - visible));
 
     if (rail && thumb) {
       const railH = rail.clientHeight;
@@ -588,7 +574,7 @@ function BlueprintSubBox({
       thumb.style.transform = `translateY(${thumbTop}px)`;
       thumb.style.opacity = "1";
     }
-  }, [totalItems]);
+  }, []);
 
   useEffect(() => {
     update();
@@ -612,38 +598,11 @@ function BlueprintSubBox({
     };
   }, [update]);
 
-  function handleMoreClick() {
-    const strip = stripRef.current;
-    if (!strip) return;
-    const prefersReduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    strip.scrollTo({
-      top: strip.scrollHeight,
-      behavior: prefersReduced ? "auto" : "smooth",
-    });
-  }
-
   return (
     <div className="blueprintBox">
       <div className="blueprintBoxHead">
         <p className="blueprintBoxKicker">{label}</p>
-        <p className="blueprintBoxCount">
-          <span>{count} ITEMS</span>
-          {hasOverflow && hiddenCount > 0 && (
-            <>
-              <span className="blueprintBoxCountSep" aria-hidden="true"> · </span>
-              <button
-                type="button"
-                className="blueprintBoxMore"
-                onClick={handleMoreClick}
-                aria-label={`Scroll to see ${hiddenCount} more ${label.toLowerCase()}`}
-              >
-                {hiddenCount} MORE ↓
-              </button>
-            </>
-          )}
-        </p>
+        <p className="blueprintBoxCount">{count} ITEMS</p>
         <div className="blueprintBoxRule" aria-hidden="true" />
       </div>
       <div className="blueprintBoxScroll">
