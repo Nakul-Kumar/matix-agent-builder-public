@@ -386,8 +386,8 @@ main > .topbar ~ * {
 
 @media (min-width: 1024px) {
   .startFromStack {
-    height: 440px;
-    max-height: 440px;
+    height: 300px;
+    max-height: 300px;
     overflow-y: scroll;
     overflow-x: hidden;
     padding-right: 8px;
