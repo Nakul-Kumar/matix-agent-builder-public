@@ -131,12 +131,16 @@ function SourceStatusSection({
   if (filtered.length === 0) return null;
   return (
     <section className="resultSection">
-      <header className="sectionHead">
-        <p className="sectionKicker">—— I. SOURCE SEARCH STATUS</p>
-        <div className="sectionRule" aria-hidden="true" />
-        <p className="sectionSubtitle">
-          —— {filtered.length} {filtered.length === 1 ? "DIRECTORY" : "DIRECTORIES"} SEARCHED
+      <header className="anchorHead">
+        <p className="anchorKicker">—— I. SOURCE SEARCH STATUS</p>
+        <h2 className="anchorTitle">
+          Directories and marketplaces checked
+        </h2>
+        <p className="anchorCount">
+          —— {filtered.length}{" "}
+          {filtered.length === 1 ? "DIRECTORY" : "DIRECTORIES"}
         </p>
+        <div className="anchorRule" aria-hidden="true" />
       </header>
       <div className="resultCardGrid">
         {filtered.map((source) => (
