@@ -1257,6 +1257,8 @@ textarea[data-busy="true"] {
 
 .resultSection {
   margin-top: 64px;
+  position: relative;
+  z-index: 1;
 }
 
 .resultSection:first-of-type {
@@ -1602,7 +1604,9 @@ a.resultCard {
 }
 
 .runtimeTabsHint {
-  margin: 24px 0 12px;
+  margin: 24px 0 16px;
+  position: relative;
+  z-index: 1;
   text-align: center;
   font-family: "Fraunces", Georgia, serif;
   font-size: 14px;
@@ -1617,6 +1621,8 @@ a.resultCard {
   gap: 12px;
   justify-content: center;
   width: 100%;
+  position: relative;
+  z-index: 1;
 }
 
 .bpNavGrid {
@@ -1758,10 +1764,12 @@ a.resultCard {
   min-width: 0;
   min-height: 76px;
   padding: 14px 18px;
-  background: #F4EFE0;
+  background: var(--surface-card);
   border: 1px solid #D8CCB4;
   border-radius: 4px;
   cursor: pointer;
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
