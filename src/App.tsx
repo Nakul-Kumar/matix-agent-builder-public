@@ -581,6 +581,44 @@ type BackendStatus =
   | { state: "not_configured" }
   | { state: "unreachable"; detail: string };
 
+const QUICK_START_CARDS = [
+  {
+    category: "ENGINEER",
+    title: "Next.js engineer",
+    preview: "Ships features end-to-end with GitHub PRs and Playwright tests.",
+    footnote: "4 TOOLS · GITHUB · POSTGRES",
+    prompt:
+      "Build a software engineer agent for a Next.js app with GitHub, Postgres, and Playwright testing.",
+  },
+  {
+    category: "RESEARCH",
+    title: "Paper analyst",
+    preview:
+      "Summarises PubMed papers, tracks citations, exports annotated PDFs.",
+    footnote: "3 TOOLS · PUBMED · PDF",
+    prompt:
+      "Build a research assistant agent that summarises academic papers from PubMed, tracks citations across publications, and exports findings as annotated PDFs.",
+  },
+  {
+    category: "SUPPORT",
+    title: "Docs triager",
+    preview:
+      "Reads Notion runbooks and files Linear bugs from customer tickets.",
+    footnote: "3 TOOLS · NOTION · LINEAR",
+    prompt:
+      "Build a customer support agent that reads our Notion docs, classifies inbound tickets, and files Linear bugs with reproduction steps.",
+  },
+  {
+    category: "DATA",
+    title: "Metric scout",
+    preview:
+      "Queries BigQuery, drafts weekly digests, flags anomalies in Slack.",
+    footnote: "3 TOOLS · BIGQUERY · SLACK",
+    prompt:
+      "Build a data analyst agent that queries BigQuery for product metrics, writes a weekly Slack digest, and flags anomalies for review.",
+  },
+];
+
 export default function App() {
   const [prompt, setPrompt] = useState(samplePrompt);
   const [preview, setPreview] = useState<PublicPreview | null>(null);
@@ -916,7 +954,24 @@ export default function App() {
           </div>
         </div>
         </div>
-        <aside className="layoutRight" aria-hidden="true" />
+        <aside className="layoutRight">
+          <div className="startFromHeader">—— START FROM</div>
+          <div className="startFromStack">
+            {QUICK_START_CARDS.map((card) => (
+              <button
+                key={card.category}
+                type="button"
+                className="startFromCard"
+                onClick={() => useExamplePrompt(card.prompt)}
+              >
+                <span className="startFromCategory">{card.category}</span>
+                <span className="startFromTitle">{card.title}</span>
+                <span className="startFromPreview">{card.preview}</span>
+                <span className="startFromFootnote">{card.footnote}</span>
+              </button>
+            ))}
+          </div>
+        </aside>
       </div>
 
       {backend.state === "not_configured" && (

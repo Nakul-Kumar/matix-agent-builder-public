@@ -213,8 +213,111 @@ main > .topbar ~ * {
     grid-template-columns: 1fr;
     gap: 0;
   }
+}
+
+/* ====================== Start-from quick cards ====================== */
+
+.layoutRight {
+  z-index: 10;
+}
+
+.startFromHeader {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #6E6359;
+  margin-bottom: 24px;
+  align-self: flex-start;
+}
+
+.startFromStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  align-self: stretch;
+}
+
+.startFromCard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 110px;
+  padding: 20px;
+  background: transparent;
+  border: 1px solid #2A2420;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  pointer-events: auto;
+  font: inherit;
+  color: inherit;
+}
+
+.startFromCard:hover,
+.startFromCard:focus-visible {
+  border-color: #C2674A;
+  box-shadow: inset 2px 0 0 #C2674A;
+  transform: translateX(2px);
+  outline: none;
+}
+
+.startFromCategory {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #C2674A;
+}
+
+.startFromTitle {
+  margin-top: 8px;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+  color: #EDE6DE;
+}
+
+.startFromPreview {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #A8998C;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.startFromFootnote {
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #6E6359;
+  text-align: right;
+  margin-left: auto;
+}
+
+@media (max-width: 1023px) {
   .layoutRight {
-    display: none;
+    margin-top: 32px;
+    align-items: stretch;
+  }
+  .startFromStack {
+    flex-direction: row;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 12px;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .startFromCard {
+    flex: 0 0 280px;
+    scroll-snap-align: start;
   }
 }
 
