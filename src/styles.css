@@ -346,6 +346,24 @@ h1 {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+  position: relative;
+}
+
+@media (min-width: 1024px) {
+  .promptHeader {
+    padding-top: 24px;
+  }
+  .promptHeader::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 880px;
+    max-width: calc(100vw - 128px);
+    height: 1px;
+    background: var(--border-subtle);
+    pointer-events: none;
+  }
 }
 
 .promptLabel {
