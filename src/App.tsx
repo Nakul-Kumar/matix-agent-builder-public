@@ -1027,12 +1027,12 @@ export default function App() {
   const canBuild =
     backend.state === "ready" &&
     prompt.trim().length > 4 &&
-    verdict !== "off_topic" &&
+    verdict === "agent" &&
     !busy;
 
   async function build() {
     if (backend.state !== "ready" || busy) return;
-    if (verdict === "off_topic") {
+    if (verdict !== "agent") {
       setError(null);
       setPreview(null);
       setRejection(localRejection(prompt));
