@@ -122,13 +122,47 @@ function sourceStatusDotTone(status: string): ResultCardDotTone {
 
 function SourceStatusSection({
   statuses,
+  preview,
 }: {
   statuses: PublicSourceStatus[];
+  preview: PublicPreview;
 }) {
   const filtered = statuses.filter(
     (s) => !/^search:/i.test(s.label.trim()),
   );
   if (filtered.length === 0) return null;
+
+  const recommended = preview.model;
+  const recKey = `${recommended.provider.toLowerCase()}/${recommended.name.toLowerCase()}`;
+  const teacher = preview.calibration?.teacher;
+  const students = preview.calibration?.students ?? [];
+  type Fallback = { provider: string; model: string; status: string };
+  let fallback: Fallback | null = null;
+  const seen = new Set<string>([recKey]);
+  if (teacher) {
+    const key = `${teacher.provider.toLowerCase()}/${teacher.model.toLowerCase()}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      fallback = {
+        provider: teacher.provider,
+        model: teacher.model,
+        status: "SHADOW ONLY",
+      };
+    }
+  }
+  if (!fallback) {
+    for (const s of students) {
+      const key = `${s.provider.toLowerCase()}/${s.model.toLowerCase()}`;
+      if (seen.has(key)) continue;
+      fallback = {
+        provider: s.provider,
+        model: s.model,
+        status: s.public_eligible ? "FALLBACK" : "SHADOW ONLY",
+      };
+      break;
+    }
+  }
+
   return (
     <section className="resultSection">
       <header className="anchorHead">
@@ -153,6 +187,24 @@ function SourceStatusSection({
             dotTone={sourceStatusDotTone(source.status)}
           />
         ))}
+      </div>
+      <div className="modelStrip">
+        <span className="modelStripLabel">MODEL</span>
+        <span className="modelStripValue modelStripValue--primary">
+          {recommended.provider.toLowerCase()} / {recommended.name.toLowerCase()}
+        </span>
+        <span className="modelStripSep" aria-hidden="true">·</span>
+        <span className="modelStripLabel">RECOMMENDED</span>
+        {fallback && (
+          <>
+            <span className="modelStripSep" aria-hidden="true">·</span>
+            <span className="modelStripLabel">FALLBACK</span>
+            <span className="modelStripValue">
+              {fallback.provider.toLowerCase()} / {fallback.model.toLowerCase()}
+            </span>
+            <span className="modelStripNote">({fallback.status})</span>
+          </>
+        )}
       </div>
     </section>
   );
@@ -341,7 +393,7 @@ function BlueprintsSection({
   return (
     <section className="resultSection" id="section-blueprint">
       <header className="anchorHead">
-        <p className="anchorKicker">III. BLUEPRINTS</p>
+        <p className="anchorKicker">II. BLUEPRINTS</p>
         <h2 className="anchorTitle">Three runtimes ready to export</h2>
         <p className="anchorCount">{placards.length} RUNTIMES</p>
         <div className="anchorRule" aria-hidden="true" />
@@ -1449,8 +1501,10 @@ export default function App() {
             </p>
           </header>
 
-          <SourceStatusSection statuses={preview.source_statuses ?? []} />
-          <ModelPolicySection preview={preview} />
+          <SourceStatusSection
+            statuses={preview.source_statuses ?? []}
+            preview={preview}
+          />
 
           <div className={`bpNavGrid${activeRuntime !== null ? "" : " bpNavGrid--solo"}`}>
             <SectionNav
