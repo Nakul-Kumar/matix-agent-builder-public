@@ -554,37 +554,38 @@ function SourceStatusSection({
   );
 }
 
-function CalibrationRail({ preview }: { preview: PublicPreview }) {
+function ModelPolicySection({ preview }: { preview: PublicPreview }) {
   const teacher = preview.calibration?.teacher;
   const students = preview.calibration?.students ?? [];
   if (!teacher && students.length === 0) return null;
+
+  const title = teacher
+    ? `${teacher.provider} / ${teacher.model} ranks the quality bundle`
+    : "Backend-controlled model routing";
+  const preview_text =
+    preview.calibration?.public_serving_policy ??
+    "Public preview routing controlled by backend policy.";
+
+  const shadow = students.find((s) => !s.public_eligible) ?? students[0];
+  const footnote = shadow
+    ? `${shadow.provider} / ${shadow.model} ${
+        shadow.public_eligible ? "PUBLIC ELIGIBLE" : "SHADOW ONLY"
+      }`.toUpperCase()
+    : undefined;
+
   return (
-    <section className="calibrationRail">
-      <div>
-        <p className="platformTag">Recommendation model policy</p>
-        <h3>
-          {teacher
-            ? `${teacher.provider} / ${teacher.model} ranks the quality bundle`
-            : "Backend-controlled model routing"}
-        </h3>
-        {preview.calibration?.public_serving_policy && (
-          <p>{preview.calibration.public_serving_policy}</p>
-        )}
-      </div>
-      {students.length > 0 && (
-        <div className="studentModels">
-          {students.map((student) => (
-            <span
-              key={`${student.provider}-${student.model}`}
-              className={`pill pill-${student.public_eligible ? "ok" : "warn"}`}
-            >
-              <span className="dot" />
-              {student.provider} / {student.model}:{" "}
-              {student.public_eligible ? "public eligible" : pretty(student.role)}
-            </span>
-          ))}
-        </div>
-      )}
+    <section className="resultSection">
+      <header className="sectionHead">
+        <p className="sectionKicker">—— II. RECOMMENDATION MODEL POLICY</p>
+        <div className="sectionRule" aria-hidden="true" />
+      </header>
+      <ResultCard
+        category="MODEL"
+        title={title}
+        preview={preview_text}
+        footnote={footnote}
+        dotTone={shadow ? (shadow.public_eligible ? "ok" : "muted") : "none"}
+      />
     </section>
   );
 }
@@ -1177,7 +1178,7 @@ export default function App() {
           </header>
 
           <SourceStatusSection statuses={preview.source_statuses ?? []} />
-          <CalibrationRail preview={preview} />
+          <ModelPolicySection preview={preview} />
 
           <div className="placards">
             {preview.placards.map((placard) => (
