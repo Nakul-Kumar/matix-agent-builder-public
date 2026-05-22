@@ -554,6 +554,103 @@ function SourceStatusSection({
   );
 }
 
+function placardStatusDotTone(status: string): ResultCardDotTone {
+  const s = status.toLowerCase();
+  if (s === "preview" || s === "synced" || s === "ok" || s === "ready")
+    return "ok";
+  if (s === "experimental" || s === "warn") return "accent";
+  return "muted";
+}
+
+function BlueprintsSection({ placards }: { placards: RuntimePlacard[] }) {
+  if (placards.length === 0) return null;
+  return (
+    <section className="resultSection">
+      <header className="sectionHead">
+        <p className="sectionKicker">—— III. BLUEPRINTS</p>
+        <div className="sectionRule" aria-hidden="true" />
+        <p className="sectionSubtitle">—— {placards.length} RUNTIMES</p>
+      </header>
+      <div className="blueprintList">
+        {placards.map((placard) => (
+          <BlueprintGroup key={placard.platform} placard={placard} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
+  const theme = platformTheme[placard.platform] ?? {
+    tag: "Runtime",
+    subtitle: placard.label,
+  };
+
+  const runtimeName = placard.label.replace(/\s+blueprint\s*$/i, "");
+  const headerTitle = `${runtimeName} blueprint`;
+  const headerFootnote = `${pretty(placard.status).toUpperCase()} · TRUST ${Math.round(placard.scores.trust)} · MATCH ${Math.round(placard.scores.match)}`;
+
+  const tools = [...placard.mcps, ...placard.tools];
+  const whySelected = [...placard.skills, ...tools].filter(
+    (a) => a.why_selected,
+  );
+
+  return (
+    <div className="blueprintGroup">
+      <ResultCard
+        category="BLUEPRINT"
+        title={headerTitle}
+        preview={theme.subtitle}
+        footnote={headerFootnote}
+        dotTone={placardStatusDotTone(placard.status)}
+      />
+      <div className="blueprintScroll">
+        <div className="blueprintRail" aria-hidden="true" />
+        <div className="blueprintStrip">
+          {placard.skills.map((a) => (
+            <ResultCard
+              key={`${placard.platform}-skill-${a.artifact_ref}`}
+              category="SKILL"
+              title={a.name}
+              preview={a.description}
+              footnote={`${(a.license?.source ?? "SOURCE").toUpperCase()} · TASK FIT ${Math.round(a.match)} · QUALITY ${Math.round(a.performance)}`}
+            />
+          ))}
+          {tools.map((a) => (
+            <ResultCard
+              key={`${placard.platform}-mcp-${a.artifact_ref}`}
+              category="MCP"
+              title={a.name}
+              preview={a.description}
+              footnote={`${(a.license?.source ?? "SOURCE").toUpperCase()} · TRUST ${Math.round(a.trust)} · QUALITY ${Math.round(a.performance)}`}
+            />
+          ))}
+          {placard.file_tree.map((file) => (
+            <ResultCard
+              key={`${placard.platform}-file-${file}`}
+              category="FILE"
+              title={file}
+              preview={`Included in the ${runtimeName} bundle`}
+              footnote="EXPORTED"
+              dotTone="muted"
+            />
+          ))}
+          {whySelected.map((a) => (
+            <ResultCard
+              key={`${placard.platform}-why-${a.artifact_ref}`}
+              category="REASON"
+              title={a.name}
+              preview={a.why_selected}
+              footnote="MATCHED"
+              dotTone="accent"
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ModelPolicySection({ preview }: { preview: PublicPreview }) {
   const teacher = preview.calibration?.teacher;
   const students = preview.calibration?.students ?? [];
@@ -1180,17 +1277,7 @@ export default function App() {
           <SourceStatusSection statuses={preview.source_statuses ?? []} />
           <ModelPolicySection preview={preview} />
 
-          <div className="placards">
-            {preview.placards.map((placard) => (
-              <Placard
-                key={placard.platform}
-                placard={placard}
-                exporting={exportingPlatform === placard.platform}
-                exported={exportedPlatforms.has(placard.platform)}
-                onExport={handleExport}
-              />
-            ))}
-          </div>
+          <BlueprintsSection placards={preview.placards} />
 
           {policy && (
             <div className="policy">

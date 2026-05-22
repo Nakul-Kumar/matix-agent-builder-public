@@ -1300,6 +1300,93 @@ a.resultCard {
   }
 }
 
+/* ====================== Blueprint runtime groups ====================== */
+
+.blueprintList {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.blueprintGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.blueprintScroll {
+  position: relative;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .blueprintScroll::before,
+  .blueprintScroll::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+  }
+  .blueprintScroll::before {
+    top: -4px;
+    left: -4px;
+    border-top: 1px solid #2A2420;
+    border-left: 1px solid #2A2420;
+  }
+  .blueprintScroll::after {
+    bottom: -4px;
+    right: -4px;
+    border-bottom: 1px solid #2A2420;
+    border-right: 1px solid #2A2420;
+  }
+  .blueprintRail {
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    right: 2px;
+    width: 1px;
+    background: #2A2420;
+    pointer-events: none;
+  }
+}
+
+.blueprintRail {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .blueprintRail {
+    display: block;
+  }
+}
+
+.blueprintStrip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .blueprintStrip {
+    height: 440px;
+    max-height: 440px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding-right: 8px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+  }
+  .blueprintStrip::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
+
 .platformTag {
   margin: 0 0 8px;
   font-size: 11px;
