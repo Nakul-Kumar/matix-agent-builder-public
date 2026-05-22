@@ -239,6 +239,45 @@ main > .topbar ~ * {
   align-self: stretch;
 }
 
+@media (min-width: 1024px) {
+  .startFromStack {
+    max-height: 460px;
+    overflow-y: auto;
+    padding-right: 8px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+  }
+  .startFromStack::-webkit-scrollbar {
+    width: 0;
+    display: none;
+  }
+}
+
+.startFromHint {
+  margin-top: 16px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #6E6359;
+  opacity: 0.7;
+  transition: opacity 200ms ease;
+  align-self: stretch;
+}
+
+.startFromHint.is-end {
+  opacity: 0;
+}
+
+@media (max-width: 1023px) {
+  .startFromHint {
+    display: none;
+  }
+}
+
 .startFromCard {
   display: flex;
   flex-direction: column;

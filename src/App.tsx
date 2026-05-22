@@ -626,6 +626,14 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [rejection, setRejection] = useState<PromptRejection | null>(null);
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
+  const startStackRef = useRef<HTMLDivElement | null>(null);
+  const [startScrolledEnd, setStartScrolledEnd] = useState(false);
+
+  function onStartStackScroll() {
+    const el = startStackRef.current;
+    if (!el) return;
+    setStartScrolledEnd(el.scrollTop + el.clientHeight >= el.scrollHeight - 4);
+  }
 
   const verdict = useMemo(() => classifyPrompt(prompt), [prompt]);
 
@@ -956,7 +964,11 @@ export default function App() {
         </div>
         <aside className="layoutRight">
           <div className="startFromHeader">—— START FROM</div>
-          <div className="startFromStack">
+          <div
+            className="startFromStack"
+            ref={startStackRef}
+            onScroll={onStartStackScroll}
+          >
             {QUICK_START_CARDS.map((card) => (
               <button
                 key={card.category}
@@ -970,6 +982,12 @@ export default function App() {
                 <span className="startFromFootnote">{card.footnote}</span>
               </button>
             ))}
+          </div>
+          <div
+            className={`startFromHint${startScrolledEnd ? " is-end" : ""}`}
+            aria-hidden="true"
+          >
+            —— SCROLL FOR MORE
           </div>
         </aside>
       </div>
