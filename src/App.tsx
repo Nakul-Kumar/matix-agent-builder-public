@@ -43,25 +43,25 @@ const platformTheme: Record<
 > = {
   codex: {
     tone: "codex",
-    accent: "#6366F1",
-    accentSoft: "#2D2B7A",
-    glow: "rgba(99, 102, 241, 0.15)",
+    accent: "#B54030",
+    accentSoft: "rgba(181, 64, 48, 0.12)",
+    glow: "rgba(181, 64, 48, 0.18)",
     tag: "OpenAI / Codex CLI",
     subtitle: "Cool, technical, structured exports",
   },
   claude_code: {
     tone: "claude",
-    accent: "#6366F1",
-    accentSoft: "#2D2B7A",
-    glow: "rgba(99, 102, 241, 0.15)",
+    accent: "#B54030",
+    accentSoft: "rgba(181, 64, 48, 0.12)",
+    glow: "rgba(181, 64, 48, 0.18)",
     tag: "Anthropic / Claude Code",
     subtitle: "Warm, careful, citation-friendly",
   },
   openclaw: {
     tone: "openclaw",
-    accent: "#6366F1",
-    accentSoft: "#2D2B7A",
-    glow: "rgba(99, 102, 241, 0.15)",
+    accent: "#B54030",
+    accentSoft: "rgba(181, 64, 48, 0.12)",
+    glow: "rgba(181, 64, 48, 0.18)",
     tag: "Open source / OpenClaw",
     subtitle: "Experimental, local-first, opinionated",
   },
@@ -244,9 +244,9 @@ function Placard({
 }) {
   const theme = platformTheme[placard.platform] ?? {
     tone: "codex",
-    accent: "#6366F1",
-    accentSoft: "#2D2B7A",
-    glow: "rgba(99, 102, 241, 0.15)",
+    accent: "#B54030",
+    accentSoft: "rgba(181, 64, 48, 0.12)",
+    glow: "rgba(181, 64, 48, 0.18)",
     tag: "Runtime",
     subtitle: placard.label,
   };
@@ -823,9 +823,13 @@ export default function App() {
                 onClick={build}
                 disabled={!canBuild}
                 aria-busy={busy}
+                aria-label={busy ? "Building blueprint" : undefined}
               >
-                {busy && <span className="spinner" aria-hidden="true" />}
-                {busy ? "Building blueprint..." : "Build agent"}
+                {busy ? (
+                  <span className="spinner" aria-hidden="true" />
+                ) : (
+                  <span className="primaryButtonLabel">Build agent</span>
+                )}
               </button>
             </div>
           </div>
