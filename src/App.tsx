@@ -835,7 +835,98 @@ export default function App() {
         </div>
       </section>
         </div>
-        <aside className="layoutRight" aria-hidden="true" />
+        <aside className="layoutRight" aria-hidden="true">
+          <svg
+            className="rightBlob"
+            viewBox="0 0 400 400"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="xMaxYMin meet"
+          >
+            <defs>
+              <linearGradient
+                id="blobGradient"
+                x1="0%"
+                y1="0%"
+                x2="100%"
+                y2="100%"
+              >
+                <stop offset="0%" stopColor="#9A4B33" />
+                <stop offset="100%" stopColor="#C2674A" />
+              </linearGradient>
+              <filter
+                id="blobNoise"
+                x="-10%"
+                y="-10%"
+                width="120%"
+                height="120%"
+              >
+                <feTurbulence
+                  type="fractalNoise"
+                  baseFrequency="0.012"
+                  numOctaves="2"
+                  seed="7"
+                  result="noise"
+                />
+                <feDisplacementMap
+                  in="SourceGraphic"
+                  in2="noise"
+                  scale="6"
+                  xChannelSelector="R"
+                  yChannelSelector="G"
+                />
+              </filter>
+              <filter
+                id="blobInnerShadow"
+                x="-20%"
+                y="-20%"
+                width="140%"
+                height="140%"
+              >
+                <feGaussianBlur in="SourceAlpha" stdDeviation="14" result="blur" />
+                <feComposite
+                  in="blur"
+                  in2="SourceAlpha"
+                  operator="arithmetic"
+                  k2="-1"
+                  k3="1"
+                  result="innerShadow"
+                />
+                <feColorMatrix
+                  in="innerShadow"
+                  type="matrix"
+                  values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.55 0"
+                  result="innerShadowColored"
+                />
+                <feComposite
+                  in="innerShadowColored"
+                  in2="SourceAlpha"
+                  operator="in"
+                  result="clippedShadow"
+                />
+                <feMerge>
+                  <feMergeNode in="SourceGraphic" />
+                  <feMergeNode in="clippedShadow" />
+                </feMerge>
+              </filter>
+            </defs>
+            <g filter="url(#blobNoise)">
+              <path
+                d="M 312 38
+                   C 358 60, 388 110, 376 168
+                   C 368 212, 332 238, 326 286
+                   C 322 322, 348 350, 318 374
+                   C 282 398, 220 386, 174 374
+                   C 122 360, 64 348, 38 304
+                   C 14 262, 38 206, 70 168
+                   C 100 132, 116 92, 156 64
+                   C 198 34, 264 16, 312 38 Z"
+                fill="url(#blobGradient)"
+                filter="url(#blobInnerShadow)"
+              />
+            </g>
+          </svg>
+          <div className="rightCaption">MATIX · COCKPIT · v0.1</div>
+        </aside>
       </div>
 
       {backend.state === "not_configured" && (
