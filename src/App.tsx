@@ -754,15 +754,6 @@ export default function App() {
   return (
     <main>
       <header className="topbar">
-        <div className="brandRow">
-          <div className="mark" aria-hidden="true">
-            M
-          </div>
-          <div className="brand">
-            <span className="brandName">Matix Agent Builder</span>
-            <span className="brandTag">Public preview / same-origin only</span>
-          </div>
-        </div>
         <div className="topbarRight">
           <span className={`pill pill-${backend.state === "ready" ? "ok" : backend.state === "checking" ? "info" : "warn"}`}>
             <span className="dot" />
@@ -774,7 +765,19 @@ export default function App() {
         </div>
       </header>
 
-      <section className="hero">
+      <div className="layoutGrid">
+        <div className="layoutLeft">
+          <div className="brandRow">
+            <div className="mark" aria-hidden="true">
+              M
+            </div>
+            <div className="brand">
+              <span className="brandName">Matix Agent Builder</span>
+              <span className="brandTag">Public preview / same-origin only</span>
+            </div>
+          </div>
+
+          <section className="hero">
         <div className="heroBadges">
           <span className="badge">Codex</span>
           <span className="badge">Claude Code</span>
@@ -835,6 +838,9 @@ export default function App() {
           </div>
         </div>
       </section>
+        </div>
+        <aside className="layoutRight" aria-hidden="true" />
+      </div>
 
       {backend.state === "not_configured" && (
         <div className="banner banner-warn" role="status">
