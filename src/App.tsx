@@ -753,6 +753,74 @@ export default function App() {
 
   return (
     <main>
+      <div className="pageDecoration" aria-hidden="true">
+        <svg
+          viewBox="0 0 1600 900"
+          preserveAspectRatio="xMidYMid slice"
+          xmlns="http://www.w3.org/2000/svg"
+          width="100%"
+          height="100%"
+        >
+          <defs>
+            <filter id="pageDecoTexture" x="-5%" y="-5%" width="110%" height="110%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves={2} seed={5} />
+              <feDisplacementMap in="SourceGraphic" scale={4} />
+            </filter>
+          </defs>
+          <g filter="url(#pageDecoTexture)">
+            <path
+              className="pageDecoShape pageDecoA"
+              d="M -100 80 C -50 -60, 100 -100, 250 -80 C 380 -60, 480 30, 450 130 C 430 200, 380 250, 300 280 C 220 290, 130 270, 60 240 C -10 200, -80 160, -100 80 Z"
+              fill="#9A4B33"
+              opacity="0.85"
+            />
+            <path
+              className="pageDecoShape pageDecoB"
+              d="M 1150 -50 C 1280 -80, 1420 -40, 1500 30 C 1580 80, 1700 120, 1650 220 C 1610 300, 1450 280, 1330 250 C 1240 220, 1180 160, 1130 100 C 1100 50, 1110 0, 1150 -50 Z"
+              fill="#C2674A"
+              opacity="0.9"
+            />
+            <path
+              className="pageDecoShape pageDecoC"
+              d="M -50 380 C 30 360, 120 370, 180 410 C 220 440, 230 480, 200 520 C 170 555, 90 565, 30 540 C -30 520, -60 480, -50 440 C -60 420, -55 400, -50 380 Z"
+              fill="#E08B6B"
+              opacity="0.75"
+            />
+            <path
+              className="pageDecoShape pageDecoD"
+              d="M 1180 700 C 1280 660, 1420 660, 1500 700 C 1580 730, 1680 760, 1700 820 C 1700 880, 1620 940, 1500 960 C 1380 980, 1250 970, 1180 920 C 1120 870, 1100 800, 1130 760 C 1140 730, 1160 710, 1180 700 Z"
+              fill="#9A4B33"
+              opacity="0.85"
+            />
+            <path
+              className="pageDecoShape pageDecoE"
+              d="M -50 720 C 50 680, 180 670, 280 700 C 360 730, 420 800, 380 860 C 340 920, 220 940, 100 920 C 0 900, -80 860, -100 800 C -100 760, -80 730, -50 720 Z"
+              fill="#C2674A"
+              opacity="0.9"
+            />
+            <path
+              className="pageDecoShape pageDecoF"
+              d="M 820 40 C 850 20, 900 15, 940 30 C 970 45, 985 70, 970 95 C 955 115, 920 125, 880 120 C 840 115, 815 100, 810 80 C 805 65, 810 50, 820 40 Z"
+              fill="#E08B6B"
+              opacity="0.7"
+            />
+          </g>
+          <g fill="none" stroke="#E08B6B" strokeWidth={2} opacity="0.55">
+            <path
+              className="pageDecoLine pageDecoLine1"
+              d="M 1500 50 C 1300 200, 1100 350, 800 400 C 500 450, 200 550, -50 600"
+            />
+            <path
+              className="pageDecoLine pageDecoLine2"
+              d="M -50 120 C 200 60, 600 90, 880 100 C 1180 110, 1400 180, 1700 100"
+            />
+            <path
+              className="pageDecoLine pageDecoLine3"
+              d="M 100 780 C 150 750, 220 770, 240 820 C 250 850, 230 880, 200 870"
+            />
+          </g>
+        </svg>
+      </div>
       <header className="topbar">
         <div className="topbarRight">
           <span className={`pill pill-${backend.state === "ready" ? "ok" : backend.state === "checking" ? "info" : "warn"}`}>
@@ -836,63 +904,7 @@ export default function App() {
           </div>
         </div>
         </div>
-        <aside className="layoutRight" aria-hidden="true">
-          <svg
-            className="rightBlob"
-            viewBox="0 0 600 600"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="xMaxYMin meet"
-          >
-            <defs>
-              <linearGradient
-                id="blobGradient"
-                x1="0%"
-                y1="0%"
-                x2="100%"
-                y2="100%"
-              >
-                <stop offset="0%" stopColor="#9A4B33" />
-                <stop offset="100%" stopColor="#C2674A" />
-              </linearGradient>
-              <filter id="blobNoise">
-                <feTurbulence
-                  type="fractalNoise"
-                  baseFrequency="0.025"
-                  numOctaves={2}
-                  seed={3}
-                />
-                <feDisplacementMap in="SourceGraphic" scale={8} />
-              </filter>
-              <filter
-                id="blobInnerShadow"
-                x="-20%"
-                y="-20%"
-                width="140%"
-                height="140%"
-              >
-                <feGaussianBlur in="SourceAlpha" stdDeviation="12" />
-                <feOffset dx="0" dy="6" result="offsetblur" />
-                <feFlood floodColor="#5A2A1C" floodOpacity="0.55" />
-                <feComposite in2="offsetblur" operator="in" />
-                <feComposite in2="SourceGraphic" operator="over" />
-              </filter>
-            </defs>
-            <path
-              d="M 320 60 C 440 50, 540 140, 530 270 C 545 380, 470 480, 350 510 C 240 535, 110 470, 90 360 C 70 250, 130 140, 220 100 C 260 80, 290 65, 320 60 Z"
-              fill="url(#blobGradient)"
-              filter="url(#blobNoise)"
-              transform="rotate(-4 300 300)"
-            />
-            <path
-              d="M 320 60 C 440 50, 540 140, 530 270 C 545 380, 470 480, 350 510 C 240 535, 110 470, 90 360 C 70 250, 130 140, 220 100 C 260 80, 290 65, 320 60 Z"
-              fill="url(#blobGradient)"
-              filter="url(#blobInnerShadow)"
-              transform="rotate(-4 300 300)"
-              opacity="0.6"
-            />
-          </svg>
-          <div className="rightCaption">MATIX · COCKPIT · v0.1</div>
-        </aside>
+        <aside className="layoutRight" aria-hidden="true" />
       </div>
 
       {backend.state === "not_configured" && (
