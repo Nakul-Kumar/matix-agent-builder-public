@@ -843,6 +843,8 @@ h1 {
 
 .promptBox {
   width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
   padding: 0;
   border: 0;
   border-radius: 0;
