@@ -1452,32 +1452,34 @@ export default function App() {
           <SourceStatusSection statuses={preview.source_statuses ?? []} />
           <ModelPolicySection preview={preview} />
 
-          <div className="bpNavGrid">
-            <SectionNav
-              items={[
-                { id: "section-blueprint", index: "01", label: "Blueprint" },
-                { id: "section-license", index: "02", label: "License" },
-                { id: "section-eval-plan", index: "03", label: "Eval plan" },
-                { id: "section-source-link", index: "04", label: "Source link" },
-              ]}
-            />
-            <div className="bpNavContent">
-              <BlueprintsSection
-                placards={preview.placards}
-                activeRuntime={activeRuntime}
-                onActiveRuntimeChange={setActiveRuntime}
-                policy={policy}
-                exportingPlatform={exportingPlatform}
-                exportedPlatforms={exportedPlatforms}
-                onExport={handleExport}
-                inspectingPlatform={inspectingPlatform}
-                onInspect={handleInspect}
+          <BlueprintsSection
+            placards={preview.placards}
+            activeRuntime={activeRuntime}
+            onActiveRuntimeChange={setActiveRuntime}
+            policy={policy}
+            exportingPlatform={exportingPlatform}
+            exportedPlatforms={exportedPlatforms}
+            onExport={handleExport}
+            inspectingPlatform={inspectingPlatform}
+            onInspect={handleInspect}
+          />
+          {activeRuntime !== null && (
+            <div className="bpNavGrid">
+              <SectionNav
+                items={[
+                  { id: "section-blueprint", index: "01", label: "Blueprint" },
+                  { id: "section-license", index: "02", label: "License" },
+                  { id: "section-eval-plan", index: "03", label: "Eval plan" },
+                  { id: "section-source-link", index: "04", label: "Source link" },
+                ]}
               />
-              <LicensesSection placards={preview.placards} />
-              <EvalPlanSection placards={preview.placards} />
-              <SourceLinksSection placards={preview.placards} />
+              <div className="bpNavContent">
+                <LicensesSection placards={preview.placards} />
+                <EvalPlanSection placards={preview.placards} />
+                <SourceLinksSection placards={preview.placards} />
+              </div>
             </div>
-          </div>
+          )}
         </section>
       )}
 
