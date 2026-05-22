@@ -1119,6 +1119,187 @@ textarea[data-busy="true"] {
   color: #6E6359;
 }
 
+/* ====================== Result section header pattern ====================== */
+
+.resultSection {
+  margin-top: 64px;
+}
+
+.resultSection:first-of-type {
+  margin-top: 48px;
+}
+
+.sectionHead {
+  margin: 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionKicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #6E6359;
+}
+
+.sectionRule {
+  height: 1px;
+  background: #2A2420;
+  width: 100%;
+}
+
+.sectionSubtitle {
+  margin: 16px 0 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6E6359;
+}
+
+/* ====================== ResultCard component ====================== */
+
+.resultCard {
+  display: flex;
+  flex-direction: column;
+  background: #14181C;
+  border: 1px solid #1F2429;
+  border-radius: 4px;
+  padding: 14px;
+  min-height: 120px;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  font-family: inherit;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+  position: relative;
+  box-shadow: inset 0 0 0 0 transparent;
+}
+
+.resultCard.is-compact {
+  min-height: 80px;
+}
+
+button.resultCard {
+  cursor: pointer;
+  appearance: none;
+  width: 100%;
+}
+
+a.resultCard {
+  cursor: pointer;
+}
+
+.resultCard.is-interactive:hover,
+.resultCard.is-interactive:focus-visible {
+  border-color: #C2674A;
+  box-shadow: inset 2px 0 0 0 #C2674A;
+  transform: translateX(2px);
+  outline: none;
+}
+
+.resultCardCategory {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #C2674A;
+}
+
+.resultCardTitle {
+  margin-top: 4px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: #EDE6DE;
+}
+
+.resultCardPreview {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #A8998C;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resultCardFootnote {
+  margin-top: auto;
+  padding-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6E6359;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.resultCardFootnote--right {
+  align-self: flex-end;
+}
+
+.resultCardFootnote--left {
+  align-self: flex-start;
+}
+
+.resultDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.resultDot--ok {
+  background: #4ADE80;
+}
+
+.resultDot--accent {
+  background: #C2674A;
+}
+
+.resultDot--warn {
+  background: #E08B6B;
+}
+
+.resultDot--muted {
+  background: #6E6359;
+}
+
+/* ====================== ResultCard grid (3 / 2 / 1) ====================== */
+
+.resultCardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 1279px) {
+  .resultCardGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .resultCardGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .platformTag {
   margin: 0 0 8px;
   font-size: 11px;

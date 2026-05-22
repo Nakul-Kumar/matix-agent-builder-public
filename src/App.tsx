@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ResultCard, type ResultCardDotTone } from "./components/ResultCard";
 import {
   exportAgent,
   previewAgent,
@@ -504,37 +505,50 @@ function PlacardSkeleton({ tone }: { tone: PlatformKey }) {
   );
 }
 
-function SourceStatusRail({ statuses }: { statuses: PublicSourceStatus[] }) {
-  if (statuses.length === 0) return null;
+function deriveSourceKind(source: PublicSourceStatus): string {
+  const haystack = `${source.source_id} ${source.label}`.toLowerCase();
+  if (/registry/.test(haystack)) return "REGISTRY";
+  if (/market|marketplace|store/.test(haystack)) return "MARKET";
+  if (/mirror|cache/.test(haystack)) return "MIRROR";
+  return "DIRECTORY";
+}
+
+function sourceStatusDotTone(status: string): ResultCardDotTone {
+  const s = status.toLowerCase();
+  if (s === "synced" || s === "searched" || s === "ok") return "ok";
+  if (s === "auth_required" || s === "rate_limited") return "accent";
+  return "muted";
+}
+
+function SourceStatusSection({
+  statuses,
+}: {
+  statuses: PublicSourceStatus[];
+}) {
+  const filtered = statuses.filter(
+    (s) => !/^search:/i.test(s.label.trim()),
+  );
+  if (filtered.length === 0) return null;
   return (
-    <section className="sourceStatus">
-      <header className="sourceStatusHead">
-        <p className="platformTag">Source search status</p>
-        <h3>Directories and marketplaces checked</h3>
+    <section className="resultSection">
+      <header className="sectionHead">
+        <p className="sectionKicker">—— I. SOURCE SEARCH STATUS</p>
+        <div className="sectionRule" aria-hidden="true" />
+        <p className="sectionSubtitle">
+          —— {filtered.length} {filtered.length === 1 ? "DIRECTORY" : "DIRECTORIES"} SEARCHED
+        </p>
       </header>
-      <div className="statusGrid">
-        {statuses.map((source) => {
-          const tone = statusTone(source.status);
-          return (
-            <div
-              className={`statusCell statusCell-${tone}`}
-              key={source.source_id}
-            >
-              <div className="statusCellTop">
-                <span className="statusCellLabel">{source.label}</span>
-                <span className={`pill pill-${tone}`}>
-                  <span className="dot" /> {pretty(source.status)}
-                </span>
-              </div>
-              {source.message && (
-                <p className="statusCellMsg">{source.message}</p>
-              )}
-              {source.quarantine_review_required && (
-                <span className="quarantineFlag">Manual review required</span>
-              )}
-            </div>
-          );
-        })}
+      <div className="resultCardGrid">
+        {filtered.map((source) => (
+          <ResultCard
+            key={source.source_id}
+            category={deriveSourceKind(source)}
+            title={source.label}
+            preview={source.message ?? ""}
+            footnote={pretty(source.status).toUpperCase()}
+            dotTone={sourceStatusDotTone(source.status)}
+          />
+        ))}
       </div>
     </section>
   );
@@ -1162,7 +1176,7 @@ export default function App() {
             </p>
           </header>
 
-          <SourceStatusRail statuses={preview.source_statuses ?? []} />
+          <SourceStatusSection statuses={preview.source_statuses ?? []} />
           <CalibrationRail preview={preview} />
 
           <div className="placards">
