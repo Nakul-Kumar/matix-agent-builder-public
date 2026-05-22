@@ -1,26 +1,26 @@
 :root {
   color-scheme: dark;
 
-  /* 60% — DOMINANT — Steel blue */
-  --bg-base: #08121C;
-  --bg-surface: #0E1C2C;
-  --bg-elevated: #16283C;
-  --bg-hover: #1E3250;
+  /* Background — warm near-black earth */
+  --bg-base: #0B0A0A;
+  --bg-surface: #141110;
+  --bg-elevated: #1C1816;
+  --bg-hover: #2A2420;
 
-  /* 30% — SECONDARY — Dusty blush */
-  --text-primary: #D4B0A4;
-  --text-secondary: #C49282;
-  --text-muted: #7A5E56;
-  --border-subtle: #102030;
-  --border-default: #182E44;
-  --border-strong: #2D4E6E;
+  /* Text — warm off-white → muted clay */
+  --text-primary: #EDE6DE;
+  --text-secondary: #A8998C;
+  --text-muted: #6E6359;
+  --border-subtle: #2A2420;
+  --border-default: #2A2420;
+  --border-strong: #2A2420;
 
-  /* 10% — ACCENT — Terracotta */
-  --accent-base: #B54030;
-  --accent-light: #C85848;
-  --accent-dim: rgba(181, 64, 48, 0.12);
-  --accent-border: #8A3020;
-  --accent-glow: rgba(181, 64, 48, 0.18);
+  /* Accent — terracotta only (no other accents in the theme) */
+  --accent-base: #C2674A;
+  --accent-light: #E08B6B;
+  --accent-dim: rgba(194, 103, 74, 0.12);
+  --accent-border: #9A4B33;
+  --accent-glow: rgba(194, 103, 74, 0.18);
 
   --status-online: #22C55E;
 
