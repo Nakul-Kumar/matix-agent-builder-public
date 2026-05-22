@@ -22,8 +22,10 @@ const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 let rateLimitSweeps = 0;
 
 function publicRateLimitKey(req: Request, publicPath: string): string {
-  const forwardedFor = req.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const ip = forwardedFor || req.ip || "unknown";
+  // Use req.ip rather than the raw X-Forwarded-For. With `trust proxy` set,
+  // req.ip is the client IP attested by the trusted proxy; the leftmost XFF
+  // entry is client-supplied and trivially spoofable to rotate rate buckets.
+  const ip = req.ip || "unknown";
   return `${ip}:${req.method}:${publicPath}`;
 }
 
