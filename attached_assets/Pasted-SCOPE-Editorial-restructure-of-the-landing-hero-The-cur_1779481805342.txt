@@ -1,0 +1,71 @@
+SCOPE: Editorial restructure of the landing hero. The current hero reads as templated AI-SaaS: oversized headline, decorative-only top label, no supporting structure. The fix is to shrink the headline, add real editorial metadata, add a specific dek, and break the layout into an asymmetric two-column lockup. No changes to functionality, the textarea below, or any data — this is hero presentation only.
+
+FOUR CHANGES — apply all four together
+
+1) SHRINK THE HEADLINE
+The current headline is sized so large it consumes the viewport. Drop the size by roughly 35–45%:
+   - From whatever clamp/font-size it currently uses to: clamp(48px, 5.5vw, 84px)
+   - Keep Fraunces, weight 600, line-height 1.05.
+   - The headline should now occupy roughly the upper-left half of the viewport, NOT the full width.
+
+2) REPLACE THE PHRASING
+"One prompt. Three ready-to-use agents." reads as generic. Replace with something more editorial and specific:
+
+   Describe your agent once.
+   Get three runtimes worth keeping.
+
+Two lines. Same Fraunces serif. The second line in slightly muted color (--text-body instead of --text-primary) so the first line lands harder. This still says the same thing but doesn't pattern-match the "X. Y." pitch-deck cliché.
+
+3) REPLACE THE TOP "CODEX · CLAUDE CODE · OPENCLAW" STRIP WITH REAL EDITORIAL METADATA
+The runtime list at the top is decoration. Replace it with a small editorial metadata block — same mono caps 10px treatment, but actual signal:
+
+   ISSUE 001 · MAY 2026 · MATIX AGENT BUILDER
+
+(Or, more specifically: a build-counter if you have one — "BUILD 0142 · MAY 2026 · MATIX". A real-feeling number, even if it's a fixed string, looks publication-like rather than feature-list-like.)
+
+Position: top-left, above the headline. Followed by a 1px hairline (--border-hairline, 64px wide, NOT full-width) sitting 12px below it. The hairline is a strong editorial signal — magazines use it constantly, SaaS heros don't.
+
+4) ADD AN ASYMMETRIC TWO-COLUMN LOCKUP
+
+Restructure the hero as a 12-column grid:
+
+   Left column (8/12): the editorial metadata strip, the hairline, the two-line headline, and a one-paragraph dek BELOW the headline.
+
+   Right column (3/12, with 1/12 gap): a small vertical metadata stack — three to five micro-lines, each on its own row, mono caps 10px --text-muted, separated by 12px vertical gaps:
+
+      RUNTIME TARGETS — 03
+      AVG BUILD TIME — 7s
+      EXPORT FORMAT — JSON
+      LICENSE — MIT
+      VERSION — 0.4.1-preview
+
+   (Use real values if you have them; otherwise these are fine as static editorial scaffolding. The POINT is the format — a publication-style sidebar reads as intentional design, not generated copy.)
+
+   Right column also has a left hairline (1px solid --border-hairline) running vertically, separating the sidebar from the headline column. 32px padding to the left of the sidebar content.
+
+THE DEK (the supporting paragraph below the headline)
+Add a single paragraph under the two-line headline, ~480px max-width, Fraunces italic 17px, --text-body color, line-height 1.5. Content:
+
+   A prompt becomes a Codex bundle, a Claude Code workspace, and an OpenClaw runtime — each signed, scoped, and ready to ship. Pick one, or take all three.
+
+Specific, concrete, names the actual outputs. This sentence does the work the bare headline can't.
+
+LAYOUT MECHANICS
+- Hero container: max-width matches your existing content container, padding-top: ~80px, padding-bottom: ~64px before the textarea section begins.
+- Below the entire hero block (both columns), the existing "Describe your agent" textarea sits where it already does — do NOT move it. The hero is everything ABOVE the textarea only.
+- Below 1024px viewport: collapse to a single column. Sidebar metadata stacks BELOW the headline + dek, in a horizontal row of three items rather than a vertical stack of five.
+
+WHAT NOT TO TOUCH
+- Don't change the abstract decoration blobs — they stay where they are.
+- Don't change the textarea, the Build Agent button, or the START FROM scroll container below the hero.
+- Don't change any colors — use existing tokens.
+- Don't add any icons. The editorial restraint is what makes this feel un-templated.
+
+VERIFICATION
+1. Reload the landing page. Confirm the headline is visibly smaller (roughly 60% of its previous size), readable in one glance without scrolling.
+2. Confirm the editorial metadata strip ("ISSUE 001 · MAY 2026 · MATIX AGENT BUILDER") sits at the top with the short hairline rule below it.
+3. Confirm the two-line headline reads as "Describe your agent once." / "Get three runtimes worth keeping." with the second line slightly muted.
+4. Confirm the dek paragraph appears in italic Fraunces below the headline, naming Codex / Claude Code / OpenClaw in body sentence form.
+5. Confirm the right sidebar column shows five mono caps metadata lines, vertical hairline on its left edge separating it from the headline column.
+6. Resize below 1024px. Confirm the sidebar collapses below the headline as a horizontal three-item row.
+7. Take a screenshot. The hero should now feel like the opening spread of a design magazine — asymmetric, structured, specific — not a SaaS landing template.

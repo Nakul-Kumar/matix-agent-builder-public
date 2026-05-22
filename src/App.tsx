@@ -1179,32 +1179,60 @@ export default function App() {
         </div>
       </header>
 
-      <div className="layoutGrid">
-        <div className="layoutLeft">
-          <div className="brandRow">
-            <div className="mark" aria-hidden="true">
-              M
-            </div>
-            <div className="brand">
-              <span className="brandName">Matix Agent Builder</span>
-              <span className="brandTag">Public preview / same-origin only</span>
-            </div>
-          </div>
-
-          <section className="hero">
-        <div className="heroBadges">Codex · Claude Code · OpenClaw</div>
-        <h1>
-          One prompt.
-          <br />
-          Three ready-to-use agents.
-        </h1>
-      </section>
+      <div className="brandRow">
+        <div className="mark" aria-hidden="true">
+          M
         </div>
-        <p className="heroLead">
-          Describe the agent you need. The Matix cockpit returns source-linked
-          skills, MCPs, evaluation plans, and safe example exports for Codex,
-          Claude Code, and OpenClaw - side by side.
-        </p>
+        <div className="brand">
+          <span className="brandName">Matix Agent Builder</span>
+          <span className="brandTag">Public preview / same-origin only</span>
+        </div>
+      </div>
+
+      <section className="hero">
+        <div className="heroMain">
+          <p className="heroMeta">BUILD 0142 · MAY 2026 · MATIX</p>
+          <div className="heroMetaRule" aria-hidden="true" />
+          <h1>
+            Describe your agent once.
+            <br />
+            <span className="heroHeadingMuted">
+              Get three runtimes worth keeping.
+            </span>
+          </h1>
+          <p className="heroDek">
+            A prompt becomes a Codex bundle, a Claude Code workspace, and an
+            OpenClaw runtime — each signed, scoped, and ready to ship. Pick
+            one, or take all three.
+          </p>
+        </div>
+        <aside className="heroSidebar" aria-label="Build details">
+          <dl className="heroSidebarList">
+            <div className="heroSidebarItem">
+              <dt>Runtime targets</dt>
+              <dd>03</dd>
+            </div>
+            <div className="heroSidebarItem">
+              <dt>Avg build time</dt>
+              <dd>7s</dd>
+            </div>
+            <div className="heroSidebarItem">
+              <dt>Export format</dt>
+              <dd>JSON</dd>
+            </div>
+            <div className="heroSidebarItem">
+              <dt>License</dt>
+              <dd>MIT</dd>
+            </div>
+            <div className="heroSidebarItem">
+              <dt>Version</dt>
+              <dd>0.4.1-preview</dd>
+            </div>
+          </dl>
+        </aside>
+      </section>
+
+      <div className="layoutGrid">
         <div className="layoutLeftBottom">
         <div className="promptBox">
           <div className="promptHeader">
