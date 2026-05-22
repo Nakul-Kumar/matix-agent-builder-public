@@ -114,8 +114,15 @@ main {
   height: 100%;
 }
 
-.pageDecoration .pageDecoShape {
-  mix-blend-mode: multiply;
+.pageDecoShapes,
+.pageDecoLines {
+  position: absolute;
+  inset: 0;
+}
+
+.pageDecoShapes {
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at center, transparent 0%, transparent 40%, black 100%);
+  mask-image: radial-gradient(ellipse 70% 70% at center, transparent 0%, transparent 40%, black 100%);
 }
 
 main > .topbar,
