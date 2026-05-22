@@ -107,10 +107,10 @@ main {
   pointer-events: none;
   overflow: hidden;
   opacity: 1;
-  transition: opacity 200ms ease;
 }
 
-.pageDecoration.is-hidden {
+.pageDecoration.is-fading {
+  transition: opacity 240ms ease;
   opacity: 0;
 }
 
@@ -124,6 +124,13 @@ main {
 .pageDecoLines {
   position: absolute;
   inset: 0;
+}
+
+.pageDecoShape,
+.pageDecoLine {
+  will-change: transform, opacity;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 .pageDecoShapes {

@@ -708,6 +708,126 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const decoEl = document.querySelector<HTMLElement>(".pageDecoration");
+    if (!decoEl) return;
+
+    const reduceMql = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    let cleanup: (() => void) | null = null;
+
+    const attach = () => {
+      cleanup?.();
+      cleanup = null;
+
+      if (reduceMql.matches) {
+        let ticking = false;
+        const onScroll = () => {
+          if (ticking) return;
+          ticking = true;
+          requestAnimationFrame(() => {
+            decoEl.classList.toggle(
+              "is-fading",
+              window.scrollY > window.innerHeight,
+            );
+            ticking = false;
+          });
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        onScroll();
+        cleanup = () => {
+          window.removeEventListener("scroll", onScroll);
+          decoEl.classList.remove("is-fading");
+        };
+        return;
+      }
+
+      type Cfg = {
+        dir: "left" | "right" | "up";
+        maxX: number;
+        maxY: number;
+        baseOpacity: number;
+        rot: number;
+      };
+      const config: Record<string, Cfg> = {
+        pageDecoA: { dir: "left", maxX: 0.6, maxY: 0, baseOpacity: 0.32, rot: -6 },
+        pageDecoB: { dir: "right", maxX: 0.6, maxY: 0, baseOpacity: 0.30, rot: 6 },
+        pageDecoC: { dir: "left", maxX: 0.4, maxY: 0, baseOpacity: 0.22, rot: -6 },
+        pageDecoD: { dir: "right", maxX: 0.6, maxY: 0, baseOpacity: 0.32, rot: 6 },
+        pageDecoE: { dir: "left", maxX: 0.6, maxY: 0, baseOpacity: 0.30, rot: -6 },
+        pageDecoF: { dir: "up", maxX: 0, maxY: 0.3, baseOpacity: 0.18, rot: -3 },
+        pageDecoLine1: { dir: "left", maxX: 0.5, maxY: 0, baseOpacity: 0.55, rot: -6 },
+        pageDecoLine2: { dir: "up", maxX: 0, maxY: 0.25, baseOpacity: 0.55, rot: -3 },
+        pageDecoLine3: { dir: "left", maxX: 0.5, maxY: 0, baseOpacity: 0.55, rot: -6 },
+      };
+
+      const elements: Array<{ el: SVGElement; cfg: Cfg }> = [];
+      decoEl
+        .querySelectorAll<SVGElement>(".pageDecoShape, .pageDecoLine")
+        .forEach((el) => {
+          for (const cls of Array.from(el.classList)) {
+            const cfg = config[cls];
+            if (cfg) {
+              elements.push({ el, cfg });
+              break;
+            }
+          }
+        });
+
+      let ticking = false;
+      const update = () => {
+        ticking = false;
+        const vh = window.innerHeight;
+        const vw = window.innerWidth;
+        const progress = Math.min(window.scrollY / (vh * 1.5), 1);
+        for (const { el, cfg } of elements) {
+          let tx = 0;
+          let ty = 0;
+          if (cfg.dir === "left") tx = -progress * cfg.maxX * vw;
+          else if (cfg.dir === "right") tx = progress * cfg.maxX * vw;
+          else if (cfg.dir === "up") ty = -progress * cfg.maxY * vh;
+          const rot = cfg.rot * progress;
+          const op = cfg.baseOpacity * (1 - progress);
+          el.style.transform = `translate3d(${tx}px, ${ty}px, 0) rotate(${rot}deg)`;
+          el.style.opacity = String(op);
+        }
+      };
+      const onScroll = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(update);
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("resize", onScroll, { passive: true });
+      update();
+      cleanup = () => {
+        window.removeEventListener("scroll", onScroll);
+        window.removeEventListener("resize", onScroll);
+        for (const { el } of elements) {
+          el.style.transform = "";
+          el.style.opacity = "";
+        }
+      };
+    };
+
+    attach();
+    const onMqlChange = () => attach();
+    if (reduceMql.addEventListener) {
+      reduceMql.addEventListener("change", onMqlChange);
+    } else {
+      reduceMql.addListener(onMqlChange);
+    }
+
+    return () => {
+      cleanup?.();
+      if (reduceMql.removeEventListener) {
+        reduceMql.removeEventListener("change", onMqlChange);
+      } else {
+        reduceMql.removeListener(onMqlChange);
+      }
+    };
+  }, []);
+
   const canBuild =
     backend.state === "ready" &&
     prompt.trim().length > 4 &&
@@ -817,7 +937,7 @@ export default function App() {
   return (
     <main>
       <div
-        className={`pageDecoration${preview ? " is-hidden" : ""}`}
+        className="pageDecoration"
         aria-hidden="true"
       >
         <div className="pageDecoShapes">
