@@ -220,7 +220,6 @@ function BlueprintsSection({
       >
         {placards.map((p) => {
           const isActive = p.platform === activeKey;
-          const runtimeName = p.label.replace(/\s+blueprint\s*$/i, "");
           const tabId = `runtime-tab-${p.platform}`;
           return (
             <button
@@ -238,21 +237,27 @@ function BlueprintsSection({
               onClick={() => onActiveRuntimeChange(p.platform)}
               onKeyDown={(e) => handleKeyDown(e, p.platform)}
             >
-              <span className="runtimeTabKicker">
-                {(EXPORT_PLATFORMS.find((t) => t.key === p.platform)?.label ??
-                  p.platform.toUpperCase())}
+              <span className="runtimeTabTitle">
+                {RUNTIME_DISPLAY_NAME[p.platform] ?? p.platform}
               </span>
-              <span className="runtimeTabTitle">{runtimeName}</span>
               <span className="runtimeTabFootnote">
                 <span
-                  className={`resultDot resultDot--${
-                    isActive
-                      ? placardStatusDotTone(p.status)
-                      : "muted"
-                  }`}
+                  className={`resultDot resultDot--${placardStatusDotTone(p.status)}`}
                   aria-hidden="true"
                 />
-                {`${pretty(p.status).toUpperCase()} · TRUST ${Math.round(p.scores.trust)} · MATCH ${Math.round(p.scores.match)}`}
+                <span className="runtimeTabFootnoteLabel">
+                  {pretty(p.status).toUpperCase()}
+                </span>
+                <span className="runtimeTabFootnoteSep">·</span>
+                <span className="runtimeTabFootnoteLabel">TRUST</span>
+                <span className="runtimeTabFootnoteValue">
+                  {Math.round(p.scores.trust)}
+                </span>
+                <span className="runtimeTabFootnoteSep">·</span>
+                <span className="runtimeTabFootnoteLabel">MATCH</span>
+                <span className="runtimeTabFootnoteValue">
+                  {Math.round(p.scores.match)}
+                </span>
               </span>
             </button>
           );
@@ -297,29 +302,21 @@ function BlueprintSubBox({
 }
 
 function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
-  const theme = platformTheme[placard.platform] ?? {
-    tag: "Runtime",
-    subtitle: placard.label,
-  };
-
-  const runtimeName = placard.label.replace(/\s+blueprint\s*$/i, "");
-  const headerTitle = `${runtimeName} blueprint`;
-  const headerFootnote = `${pretty(placard.status).toUpperCase()} · TRUST ${Math.round(placard.scores.trust)} · MATCH ${Math.round(placard.scores.match)}`;
-
   const tools = [...placard.mcps, ...placard.tools];
   const whySelected = [...placard.skills, ...tools].filter(
     (a) => a.why_selected,
   );
+  const categoryLabel =
+    EXPORT_PLATFORMS.find((t) => t.key === placard.platform)?.label ??
+    placard.platform.toUpperCase();
+  const agentTitle = placard.label.replace(/\s+blueprint\s*$/i, "");
 
   return (
     <div className="blueprintGroup">
-      <ResultCard
-        category="BLUEPRINT"
-        title={headerTitle}
-        preview={theme.subtitle}
-        footnote={headerFootnote}
-        dotTone={placardStatusDotTone(placard.status)}
-      />
+      <header className="activeBlueprintHead">
+        <p className="activeBlueprintCategory">{categoryLabel}</p>
+        <h3 className="activeBlueprintTitle">{agentTitle}</h3>
+      </header>
       <div className="blueprintGrid">
         <BlueprintSubBox label="SKILLS" count={placard.skills.length}>
           {placard.skills.map((a) => (
@@ -349,7 +346,7 @@ function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
               key={`${placard.platform}-file-${file}`}
               category="FILE"
               title={file}
-              preview={`Included in the ${runtimeName} bundle`}
+              preview={`Included in the ${agentTitle} bundle`}
               footnote="EXPORTED"
               dotTone="muted"
             />
@@ -526,6 +523,12 @@ const EXPORT_PLATFORMS: Array<{ key: string; label: string }> = [
   { key: "claude_code", label: "CLAUDE CODE" },
   { key: "openclaw", label: "OPENCLAW" },
 ];
+
+const RUNTIME_DISPLAY_NAME: Record<PlatformKey, string> = {
+  codex: "Codex",
+  claude_code: "Claude Code",
+  openclaw: "OpenClaw",
+};
 
 function ExportBundleSection({
   placards,

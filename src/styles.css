@@ -1562,24 +1562,26 @@ a.resultCard {
 .runtimeTab {
   flex: 1 1 0;
   min-width: 0;
-  height: 100px;
-  padding: 14px;
+  min-height: 76px;
+  padding: 14px 18px;
   background: #14181C;
   border: 1px solid #1F2429;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  gap: 6px;
   text-align: left;
   font-family: inherit;
   color: inherit;
   appearance: none;
   box-sizing: border-box;
   transition:
-    border-color 160ms ease,
-    background 160ms ease,
-    box-shadow 160ms ease,
-    color 160ms ease;
+    border-color 150ms ease,
+    background 150ms ease,
+    box-shadow 150ms ease,
+    color 150ms ease;
 }
 
 .runtimeTab:hover:not(.runtimeTabActive) {
@@ -1601,28 +1603,13 @@ a.resultCard {
   box-shadow: inset 2px 0 0 0 #C2674A;
 }
 
-.runtimeTabKicker {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: #6E6359;
-  transition: color 160ms ease;
-}
-
-.runtimeTabActive .runtimeTabKicker {
-  color: #C2674A;
-}
-
 .runtimeTabTitle {
-  margin-top: 8px;
   font-family: "Fraunces", Georgia, serif;
   font-size: 18px;
   font-weight: 600;
   line-height: 1.2;
   color: #A8998C;
-  transition: color 160ms ease;
+  transition: color 150ms ease;
 }
 
 .runtimeTabActive .runtimeTabTitle {
@@ -1630,25 +1617,55 @@ a.resultCard {
 }
 
 .runtimeTabFootnote {
-  margin-top: auto;
-  align-self: flex-end;
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #6E6359;
-  transition: color 160ms ease;
-  text-align: right;
   max-width: 100%;
   min-width: 0;
 }
 
-.runtimeTabActive .runtimeTabFootnote {
+.runtimeTabFootnoteLabel {
   color: #A8998C;
+}
+
+.runtimeTabFootnoteSep {
+  color: #6E6359;
+}
+
+.runtimeTabFootnoteValue {
+  color: #C2674A;
+}
+
+.activeBlueprintHead {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 8px;
+}
+
+.activeBlueprintCategory {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #C2674A;
+}
+
+.activeBlueprintTitle {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #EDE6DE;
 }
 
 @media (max-width: 1023px) {
