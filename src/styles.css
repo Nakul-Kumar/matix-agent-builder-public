@@ -115,6 +115,37 @@ main {
   height: 100%;
 }
 
+.pageDecoration::before,
+.pageDecoration::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 140px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pageDecoration::before {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--bg-base) 0%,
+    rgba(11, 10, 10, 0.85) 30%,
+    rgba(11, 10, 10, 0) 100%
+  );
+}
+
+.pageDecoration::after {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    var(--bg-base) 0%,
+    rgba(11, 10, 10, 0.85) 30%,
+    rgba(11, 10, 10, 0) 100%
+  );
+}
+
 .pageDecoShapes,
 .pageDecoLines {
   position: absolute;
