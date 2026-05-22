@@ -1,0 +1,42 @@
+The prompt cards now appear inside the scroll container, but the preview description line on each card is being CLIPPED vertically — only a partial sliver of the description text is visible (you can see fragments of "Ships features..." faded out behind the title, but the full single-line preview is cut off because the card height is too short). The line-clamp/ellipsis styles aren't the problem; the card height is.
+
+Fix:
+
+1. Increase the card min-height from 88px to 120px. The four rows (category label / title / preview / footnote) plus 14px vertical padding plus internal row gaps need approximately 120px to fit without clipping. Apply min-height: 120px to each card.
+
+2. Ensure the card layout actually distributes its rows correctly. Apply to each card:
+   display: flex;
+   flex-direction: column;
+   justify-content: flex-start;
+   gap: 0;
+   (the existing 4px / 4px / 8px row spacing should be implemented as margin-top on each subsequent row, not as gap, because gap will not work cleanly with the truncation styles)
+
+3. Inside the card, ensure each row's overflow is not hiding the preview row:
+   - The CARD itself: overflow: visible (NOT hidden) — the card must not clip its own children.
+   - The PREVIEW element keeps its existing single-line truncation:
+     display: block;
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     max-width: 100%;
+     font-size: 13px;
+     color: #A8998C;
+     margin-top: 4px;
+   - The TITLE element: margin-top: 4px (separation from category label).
+   - The FOOTNOTE element: margin-top: 8px (separation from preview), text-align: right.
+
+4. The scroll container's height stays at 440px. With four cards at 120px each plus three 10px gaps, the inner content height is 480 + 30 = 510px, which is comfortably greater than the 440px container — so scrolling still works. Verify in DevTools that the container's scrollHeight is approximately 510px and overflow scrolling is functional.
+
+5. After the change, every card must show four fully legible rows:
+   - The mono caps category label (ENGINEER / RESEARCH / SUPPORT / DATA) at full height, no clipping.
+   - The Fraunces title at full height, no clipping.
+   - The single-line preview description, ending with ellipsis if it overflows the available width — but NOT clipped vertically.
+   - The mono caps footnote (n TOOLS · TAG · TAG), right-aligned, no clipping.
+
+6. Verification:
+   - Take a screenshot of the right column at viewport width 1485px.
+   - Confirm that for each of the four cards, the preview description text is visible as a single complete line (or single line with trailing ellipsis), NOT a vertically-cut fragment.
+   - Confirm scrollHeight of the container is greater than 440 so scrolling still works.
+   - Confirm the visible scrollbar is still hidden.
+
+Do not change: scroll container height, mask fade, hover behavior, click behavior, card content, or anything in the left column.
