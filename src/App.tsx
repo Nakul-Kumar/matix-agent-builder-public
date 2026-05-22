@@ -1453,16 +1453,14 @@ export default function App() {
           <ModelPolicySection preview={preview} />
 
           <div className={`bpNavGrid${activeRuntime !== null ? "" : " bpNavGrid--solo"}`}>
-            {activeRuntime !== null && (
-              <SectionNav
-                items={[
-                  { id: "section-blueprint", index: "01", label: "Blueprint" },
-                  { id: "section-license", index: "02", label: "License" },
-                  { id: "section-eval-plan", index: "03", label: "Eval plan" },
-                  { id: "section-source-link", index: "04", label: "Source link" },
-                ]}
-              />
-            )}
+            <SectionNav
+              items={[
+                { id: "section-blueprint", index: "01", label: "Blueprint" },
+                { id: "section-license", index: "02", label: "License" },
+                { id: "section-eval-plan", index: "03", label: "Eval plan" },
+                { id: "section-source-link", index: "04", label: "Source link" },
+              ]}
+            />
             <div className="bpNavContent">
               <BlueprintsSection
                 placards={preview.placards}

@@ -1843,14 +1843,36 @@ a.resultCard {
 .bpNavGrid {
   display: grid;
   grid-template-columns: 140px 1fr;
-  gap: 24px;
+  gap: 32px;
   align-items: start;
-  margin-left: -56px;
+  margin-left: -120px;
+  transition: grid-template-columns 320ms ease, margin-left 320ms ease, gap 320ms ease;
 }
 
 .bpNavGrid--solo {
-  grid-template-columns: 1fr;
+  grid-template-columns: 0fr 1fr;
+  gap: 0;
   margin-left: 0;
+}
+
+.bpNavGrid .sectionNav {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 280ms ease 80ms, transform 280ms ease 80ms;
+}
+
+.bpNavGrid--solo .sectionNav {
+  opacity: 0;
+  transform: translateX(-16px);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bpNavGrid,
+  .bpNavGrid .sectionNav {
+    transition: none;
+  }
 }
 
 .bpNavContent {
