@@ -166,8 +166,44 @@ function placardStatusDotTone(status: string): ResultCardDotTone {
   return "muted";
 }
 
-function BlueprintsSection({ placards }: { placards: RuntimePlacard[] }) {
+function BlueprintsSection({
+  placards,
+  activeRuntime,
+  onActiveRuntimeChange,
+}: {
+  placards: RuntimePlacard[];
+  activeRuntime: PlatformKey;
+  onActiveRuntimeChange: (key: PlatformKey) => void;
+}) {
   if (placards.length === 0) return null;
+
+  const availableKeys = placards.map((p) => p.platform);
+  const activeKey: PlatformKey = availableKeys.includes(activeRuntime)
+    ? activeRuntime
+    : placards[0].platform;
+  const activePlacard = placards.find((p) => p.platform === activeKey)!;
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [fadeKey, setFadeKey] = useState<string>(activeKey);
+
+  useEffect(() => {
+    setFadeKey(activeKey);
+  }, [activeKey]);
+
+  function handleKeyDown(
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    currentKey: PlatformKey,
+  ) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const idx = availableKeys.indexOf(currentKey);
+    if (idx < 0) return;
+    const delta = event.key === "ArrowRight" ? 1 : -1;
+    const nextKey =
+      availableKeys[(idx + delta + availableKeys.length) % availableKeys.length];
+    onActiveRuntimeChange(nextKey);
+    tabRefs.current[nextKey]?.focus();
+  }
+
   return (
     <section className="resultSection">
       <header className="anchorHead">
@@ -176,10 +212,61 @@ function BlueprintsSection({ placards }: { placards: RuntimePlacard[] }) {
         <p className="anchorCount">—— {placards.length} RUNTIMES</p>
         <div className="anchorRule" aria-hidden="true" />
       </header>
-      <div className="blueprintList">
-        {placards.map((placard) => (
-          <BlueprintGroup key={placard.platform} placard={placard} />
-        ))}
+
+      <div
+        className="runtimeTabs"
+        role="tablist"
+        aria-label="Runtime blueprint"
+      >
+        {placards.map((p) => {
+          const isActive = p.platform === activeKey;
+          const runtimeName = p.label.replace(/\s+blueprint\s*$/i, "");
+          const tabId = `runtime-tab-${p.platform}`;
+          return (
+            <button
+              key={p.platform}
+              ref={(el) => {
+                tabRefs.current[p.platform] = el;
+              }}
+              type="button"
+              id={tabId}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`runtime-panel-${p.platform}`}
+              tabIndex={isActive ? 0 : -1}
+              className={`runtimeTab${isActive ? " runtimeTabActive" : ""}`}
+              onClick={() => onActiveRuntimeChange(p.platform)}
+              onKeyDown={(e) => handleKeyDown(e, p.platform)}
+            >
+              <span className="runtimeTabKicker">
+                {(EXPORT_PLATFORMS.find((t) => t.key === p.platform)?.label ??
+                  p.platform.toUpperCase())}
+              </span>
+              <span className="runtimeTabTitle">{runtimeName}</span>
+              <span className="runtimeTabFootnote">
+                <span
+                  className={`resultDot resultDot--${
+                    isActive
+                      ? placardStatusDotTone(p.status)
+                      : "muted"
+                  }`}
+                  aria-hidden="true"
+                />
+                {`${pretty(p.status).toUpperCase()} · TRUST ${Math.round(p.scores.trust)} · MATCH ${Math.round(p.scores.match)}`}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        key={fadeKey}
+        id={`runtime-panel-${activeKey}`}
+        role="tabpanel"
+        aria-labelledby={`runtime-tab-${activeKey}`}
+        className="runtimePanel"
+      >
+        <BlueprintGroup placard={activePlacard} />
       </div>
     </section>
   );
@@ -224,11 +311,8 @@ function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
     (a) => a.why_selected,
   );
 
-  const runtimeLabel = runtimeName.toUpperCase();
-
   return (
     <div className="blueprintGroup">
-      <p className="blueprintRuntimeLabel">—— {runtimeLabel}</p>
       <ResultCard
         category="BLUEPRINT"
         title={headerTitle}
@@ -449,18 +533,23 @@ function ExportBundleSection({
   exportingPlatform,
   exportedPlatforms,
   onExport,
+  activeRuntime,
+  onActiveRuntimeChange,
 }: {
   placards: RuntimePlacard[];
   policy: PublicPreview["source_policy"] | null | undefined;
   exportingPlatform: string | null;
   exportedPlatforms: Set<string>;
   onExport: (platform: string) => void;
+  activeRuntime: PlatformKey;
+  onActiveRuntimeChange: (key: PlatformKey) => void;
 }) {
   const availableKeys = new Set<string>(placards.map((p) => p.platform));
   const tabs = EXPORT_PLATFORMS.filter((t) => availableKeys.has(t.key));
   const initial = tabs[0]?.key ?? "codex";
-  const [active, setActive] = useState<string>(initial);
-  const activeKey = availableKeys.has(active) ? active : initial;
+  const activeKey = availableKeys.has(activeRuntime) ? activeRuntime : initial;
+  const setActive = (key: string) =>
+    onActiveRuntimeChange(key as PlatformKey);
   const placard = placards.find((p) => p.platform === activeKey);
   const exporting = exportingPlatform === activeKey;
   const exported = exportedPlatforms.has(activeKey);
@@ -752,6 +841,7 @@ export default function App() {
   const [exportingPlatform, setExportingPlatform] = useState<string | null>(
     null,
   );
+  const [activeRuntime, setActiveRuntime] = useState<PlatformKey>("codex");
 
   const [feedback, setFeedback] = useState("");
   const [feedbackEmail, setFeedbackEmail] = useState("");
@@ -1205,7 +1295,11 @@ export default function App() {
           <SourceStatusSection statuses={preview.source_statuses ?? []} />
           <ModelPolicySection preview={preview} />
 
-          <BlueprintsSection placards={preview.placards} />
+          <BlueprintsSection
+            placards={preview.placards}
+            activeRuntime={activeRuntime}
+            onActiveRuntimeChange={setActiveRuntime}
+          />
           <LicensesSection placards={preview.placards} />
           <EvalPlanSection placards={preview.placards} />
           <SourceLinksSection placards={preview.placards} />
@@ -1216,6 +1310,8 @@ export default function App() {
             exportingPlatform={exportingPlatform}
             exportedPlatforms={exportedPlatforms}
             onExport={handleExport}
+            activeRuntime={activeRuntime}
+            onActiveRuntimeChange={setActiveRuntime}
           />
         </section>
       )}

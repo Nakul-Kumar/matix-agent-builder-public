@@ -1551,15 +1551,130 @@ a.resultCard {
   gap: 16px;
 }
 
-.blueprintRuntimeLabel {
-  margin: 0 0 8px;
-  text-align: center;
+.runtimeTabs {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  width: 100%;
+  margin-top: 24px;
+}
+
+.runtimeTab {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100px;
+  padding: 14px;
+  background: #14181C;
+  border: 1px solid #1F2429;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+  appearance: none;
+  box-sizing: border-box;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease;
+}
+
+.runtimeTab:hover:not(.runtimeTabActive) {
+  border-color: #2A3036;
+}
+
+.runtimeTab:hover:not(.runtimeTabActive) .runtimeTabTitle {
+  color: #EDE6DE;
+}
+
+.runtimeTab:focus-visible {
+  outline: none;
+  border-color: #C2674A;
+}
+
+.runtimeTabActive {
+  border-color: #C2674A;
+  background: #181C20;
+  box-shadow: inset 2px 0 0 0 #C2674A;
+}
+
+.runtimeTabKicker {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #6E6359;
+  transition: color 160ms ease;
+}
+
+.runtimeTabActive .runtimeTabKicker {
+  color: #C2674A;
+}
+
+.runtimeTabTitle {
+  margin-top: 8px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #A8998C;
+  transition: color 160ms ease;
+}
+
+.runtimeTabActive .runtimeTabTitle {
+  color: #EDE6DE;
+}
+
+.runtimeTabFootnote {
+  margin-top: auto;
+  align-self: flex-end;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6E6359;
+  transition: color 160ms ease;
+  text-align: right;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.runtimeTabActive .runtimeTabFootnote {
+  color: #A8998C;
+}
+
+@media (max-width: 1023px) {
+  .runtimeTabs {
+    flex-direction: column;
+  }
+  .runtimeTab {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+}
+
+@keyframes runtimePanelFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.runtimePanel {
+  margin-top: 32px;
+  animation: runtimePanelFade 200ms ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .runtimePanel {
+    animation: none;
+  }
 }
 
 .blueprintGrid {
