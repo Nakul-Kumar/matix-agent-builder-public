@@ -241,8 +241,10 @@ main > .topbar ~ * {
 
 @media (min-width: 1024px) {
   .startFromStack {
-    max-height: 460px;
-    overflow-y: auto;
+    height: 440px;
+    max-height: 440px;
+    overflow-y: scroll;
+    overflow-x: hidden;
     padding-right: 8px;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -251,6 +253,7 @@ main > .topbar ~ * {
   }
   .startFromStack::-webkit-scrollbar {
     width: 0;
+    height: 0;
     display: none;
   }
 }
@@ -282,7 +285,7 @@ main > .topbar ~ * {
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-height: 88px;
+  min-height: 110px;
   padding: 14px;
   background: transparent;
   border: 1px solid #2A2420;
@@ -320,14 +323,15 @@ main > .topbar ~ * {
 }
 
 .startFromPreview {
-  margin-top: 4px;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
   font-size: 13px;
   color: #A8998C;
   line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  margin-top: 4px;
 }
 
 .startFromFootnote {
