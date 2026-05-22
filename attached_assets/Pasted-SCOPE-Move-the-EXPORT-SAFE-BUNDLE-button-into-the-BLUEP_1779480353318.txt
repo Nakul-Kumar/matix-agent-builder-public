@@ -1,0 +1,55 @@
+SCOPE: Move the EXPORT SAFE BUNDLE button into the BLUEPRINTS section, between the runtime tab strip and the active blueprint content. The export action must always target the currently-active runtime.
+
+CURRENT STATE
+- The runtime tab strip (Codex / Claude Code / OpenClaw) sits at the top of the BLUEPRINTS section.
+- Directly below it: the CODEX (or active runtime) category label + agent title + the 2×2 grid (Skills / MCPs / Files / Reasons).
+- The "Export safe bundle" button currently lives in a separate Safe Bundle panel further down the page, and there appear to be (or were) three of them — one per runtime.
+
+REQUIRED CHANGE
+Insert a single Export action row BETWEEN the runtime tab strip and the active blueprint header (the CODEX label + agent title). One button only — never three. It must always export the bundle for whichever runtime is active in the tab strip.
+
+LAYOUT — the new export row
+
+A single horizontal row, full width of the blueprints container, sitting in the ~16px gap between the tab strip and the active blueprint content.
+
+Left side (mono caps 10px, muted text, separated by middle dots):
+   <PROVIDER LABEL> · BROWSER PROVIDER CALLS NO · SECRETS INCLUDED NO · ALLOWED SOURCE HOSTS 25
+
+The values (no / no / 25) come from the active runtime's bundle metadata — DO NOT hardcode. Switch them when the active tab changes.
+
+PROVIDER LABEL examples (from the existing data):
+   - Codex active   → "OPENAI / CODEX CLI"
+   - Claude active  → "ANTHROPIC / CLAUDE CODE"
+   - OpenClaw active → "OPENCLAW / RUNTIME"
+Use whatever field already drives those labels — do not invent new strings.
+
+Right side: the EXPORT SAFE BUNDLE button.
+   - Terracotta fill (#C2674A or your existing primary terracotta), mono caps 11px, weight 600, dark text (#1A1410).
+   - Padding: 12px 22px, border-radius 6px.
+   - Hover: brightness 1.05, 150ms ease. Explicit base/hover/focus/active states so it does NOT disappear on hover (you've had this bug before — verify in DevTools).
+   - Focus ring: 2px terracotta outline at 2px offset.
+
+Row container:
+   - display: flex, align-items: center, justify-content: space-between.
+   - Padding: 14px 0 (vertical breathing room only; left/right align to the blueprints content container).
+   - Top border: 1px solid #1F2429 hairline directly under the tab strip.
+   - Bottom border: 1px solid #1F2429 hairline directly above the agent title block.
+   - Background: transparent (lets the section background show through).
+
+BEHAVIOR
+- On tab change (Codex → Claude Code → OpenClaw), the provider label and the three metadata values must update immediately, and the button's click handler must target the newly active runtime's bundle.
+- The italic helper sentence "Bundle is a signed JSON manifest. No secrets, no provider calls, source hosts allow-listed." moves into a small tooltip on the button (title attribute or your existing tooltip pattern) — do NOT keep it as visible body text in this new row. The row should stay one line.
+- 200ms opacity fade on the metadata values when the active runtime changes (snap, don't crossfade).
+
+CLEANUP
+- Remove the old Safe Bundle panel that contained the per-runtime export buttons. There should be exactly ONE export button on the entire results page, and it lives in this new row.
+- If the Safe Bundle panel contained any other content (e.g. a longer description), preserve it elsewhere or drop it — confirm in DevTools the panel is fully removed and no orphan headings remain.
+- Search the DOM for "Export safe bundle" — it should appear exactly once.
+
+VERIFICATION
+1. Open the results page. Confirm the export row sits directly below the runtime tab strip and above the CODEX label + agent title, separated by hairlines.
+2. Click Codex tab → row reads "OPENAI / CODEX CLI · BROWSER PROVIDER CALLS NO · SECRETS INCLUDED NO · ALLOWED SOURCE HOSTS 25". Click Claude Code → label updates to the Claude provider. Click OpenClaw → updates again.
+3. Hover the EXPORT SAFE BUNDLE button — background stays visible (no disappearing), cursor is pointer, brightness lifts slightly.
+4. Click the button on each tab — the exported bundle filename or download payload reflects the currently active runtime (not always Codex).
+5. Inspect the DOM — "Export safe bundle" appears once. No leftover Safe Bundle panel further down the page.
+6. Resize below 1024px — the metadata row may wrap to two lines, but the button must remain visible and right-aligned (or stack below the metadata cleanly, not overlap it).

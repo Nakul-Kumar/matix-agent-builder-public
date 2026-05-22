@@ -170,10 +170,18 @@ function BlueprintsSection({
   placards,
   activeRuntime,
   onActiveRuntimeChange,
+  policy,
+  exportingPlatform,
+  exportedPlatforms,
+  onExport,
 }: {
   placards: RuntimePlacard[];
   activeRuntime: PlatformKey;
   onActiveRuntimeChange: (key: PlatformKey) => void;
+  policy: PublicPreview["source_policy"] | null | undefined;
+  exportingPlatform: string | null;
+  exportedPlatforms: Set<string>;
+  onExport: (platform: string) => void;
 }) {
   if (placards.length === 0) return null;
 
@@ -265,6 +273,43 @@ function BlueprintsSection({
             </button>
           );
         })}
+      </div>
+
+      <div className="exportActionRow">
+        <p key={`meta-${fadeKey}`} className="exportActionMeta">
+          <span className="exportActionProvider">
+            {(platformTheme[activeKey]?.tag ?? activePlacard.label).toUpperCase()}
+          </span>
+          {policy && (
+            <>
+              <span className="exportActionSep">·</span>
+              <span>
+                BROWSER PROVIDER CALLS {policy.browser_provider_calls ? "YES" : "NO"}
+              </span>
+              <span className="exportActionSep">·</span>
+              <span>
+                SECRETS INCLUDED {policy.secrets_included ? "YES" : "NO"}
+              </span>
+              <span className="exportActionSep">·</span>
+              <span>
+                ALLOWED SOURCE HOSTS {policy.allowed_source_hosts.length}
+              </span>
+            </>
+          )}
+        </p>
+        <button
+          type="button"
+          className="exportActionButton"
+          onClick={() => onExport(activeKey)}
+          disabled={exportingPlatform === activeKey}
+          title="Bundle is a signed JSON manifest. No secrets, no provider calls, source hosts allow-listed."
+        >
+          {exportingPlatform === activeKey
+            ? "PREPARING SAFE BUNDLE…"
+            : exportedPlatforms.has(activeKey)
+              ? "EXPORTED — DOWNLOAD AGAIN"
+              : "EXPORT SAFE BUNDLE"}
+        </button>
       </div>
 
       <div
@@ -532,106 +577,6 @@ const RUNTIME_DISPLAY_NAME: Record<PlatformKey, string> = {
   claude_code: "Claude Code",
   openclaw: "OpenClaw",
 };
-
-function ExportBundleSection({
-  placards,
-  policy,
-  exportingPlatform,
-  exportedPlatforms,
-  onExport,
-  activeRuntime,
-  onActiveRuntimeChange,
-}: {
-  placards: RuntimePlacard[];
-  policy: PublicPreview["source_policy"] | null | undefined;
-  exportingPlatform: string | null;
-  exportedPlatforms: Set<string>;
-  onExport: (platform: string) => void;
-  activeRuntime: PlatformKey;
-  onActiveRuntimeChange: (key: PlatformKey) => void;
-}) {
-  const availableKeys = new Set<string>(placards.map((p) => p.platform));
-  const tabs = EXPORT_PLATFORMS.filter((t) => availableKeys.has(t.key));
-  const initial = tabs[0]?.key ?? "codex";
-  const activeKey = availableKeys.has(activeRuntime) ? activeRuntime : initial;
-  const setActive = (key: string) =>
-    onActiveRuntimeChange(key as PlatformKey);
-  const placard = placards.find((p) => p.platform === activeKey);
-  const exporting = exportingPlatform === activeKey;
-  const exported = exportedPlatforms.has(activeKey);
-  if (tabs.length === 0) return null;
-
-  const policyLines: string[] = [];
-  if (policy) {
-    policyLines.push(
-      `Browser provider calls ${policy.browser_provider_calls ? "yes" : "no"}`,
-    );
-    policyLines.push(
-      `Secrets included ${policy.secrets_included ? "yes" : "no"}`,
-    );
-    policyLines.push(
-      `Allowed source hosts ${policy.allowed_source_hosts.length}`,
-    );
-  }
-
-  return (
-    <div className="section">
-      <header className="section-header">
-        <h3 className="section-title">EXPORT SAFE BUNDLE</h3>
-        <span className="section-count">{tabs.length}</span>
-      </header>
-      <div className="exportBundle">
-        <div className="exportTabs" role="tablist" aria-label="Export platform">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              aria-selected={tab.key === activeKey}
-              className={`exportTab ${tab.key === activeKey ? "exportTabActive" : ""}`}
-              onClick={() => setActive(tab.key)}
-            >
-              {tab.label}
-              {exportedPlatforms.has(tab.key) && (
-                <span className="exportTabDot" aria-hidden="true" />
-              )}
-            </button>
-          ))}
-        </div>
-        <div className="exportBody">
-          <div className="exportMeta">
-            <p className="exportRuntime">
-              {placard ? platformTheme[placard.platform as PlatformKey]?.tag ?? placard.label : ""}
-            </p>
-            {policyLines.length > 0 && (
-              <ul className="exportPolicy">
-                {policyLines.map((line) => (
-                  <li key={line}>{line}</li>
-                ))}
-              </ul>
-            )}
-            <p className="exportCaveat">
-              Bundle is a signed JSON manifest. No secrets, no provider calls,
-              source hosts allow-listed.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="exportButtonNew"
-            onClick={() => onExport(activeKey)}
-            disabled={exporting}
-          >
-            {exporting
-              ? "PREPARING SAFE BUNDLE…"
-              : exported
-                ? "EXPORTED — DOWNLOAD AGAIN"
-                : "EXPORT SAFE BUNDLE"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ModelPolicySection({ preview }: { preview: PublicPreview }) {
   const recommended = preview.model;
@@ -1305,20 +1250,14 @@ export default function App() {
             placards={preview.placards}
             activeRuntime={activeRuntime}
             onActiveRuntimeChange={setActiveRuntime}
-          />
-          <LicensesSection placards={preview.placards} />
-          <EvalPlanSection placards={preview.placards} />
-          <SourceLinksSection placards={preview.placards} />
-
-          <ExportBundleSection
-            placards={preview.placards}
             policy={policy}
             exportingPlatform={exportingPlatform}
             exportedPlatforms={exportedPlatforms}
             onExport={handleExport}
-            activeRuntime={activeRuntime}
-            onActiveRuntimeChange={setActiveRuntime}
           />
+          <LicensesSection placards={preview.placards} />
+          <EvalPlanSection placards={preview.placards} />
+          <SourceLinksSection placards={preview.placards} />
         </section>
       )}
 
