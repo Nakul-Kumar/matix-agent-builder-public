@@ -213,6 +213,9 @@ function BlueprintsSection({
         <div className="anchorRule" aria-hidden="true" />
       </header>
 
+      <p className="runtimeTabsHint">
+        Choose your setup — pick the runtime you want to build with.
+      </p>
       <div
         className="runtimeTabs"
         role="tablist"

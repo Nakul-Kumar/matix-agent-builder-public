@@ -1551,12 +1551,22 @@ a.resultCard {
   gap: 16px;
 }
 
+.runtimeTabsHint {
+  margin: 24px 0 12px;
+  text-align: center;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.4;
+  color: #A8998C;
+}
+
 .runtimeTabs {
   display: flex;
   gap: 12px;
   justify-content: center;
   width: 100%;
-  margin-top: 24px;
 }
 
 .runtimeTab {
