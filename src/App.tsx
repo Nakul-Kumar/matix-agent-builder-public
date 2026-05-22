@@ -1239,7 +1239,7 @@ export default function App() {
             <label htmlFor="prompt" className="promptLabel">
               Describe your agent
             </label>
-            <span className="promptCount">{prompt.length}/1000</span>
+            <span className={`promptCount${prompt.length >= 950 ? " promptCount--critical" : prompt.length >= 800 ? " promptCount--warn" : ""}`}>{prompt.length}/1000</span>
           </div>
           <textarea
             id="prompt"

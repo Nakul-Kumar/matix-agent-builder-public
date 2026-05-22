@@ -893,6 +893,13 @@ h1 {
   color: var(--text-secondary);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
+  transition: color 200ms ease;
+}
+.promptCount--warn {
+  color: #C5844A;
+}
+.promptCount--critical {
+  color: var(--accent-brick);
 }
 
 .promptBox textarea {
