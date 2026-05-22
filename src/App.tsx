@@ -1124,14 +1124,12 @@ export default function App() {
 
       {busy && (
         <section className="results" aria-busy="true" aria-live="polite">
-          <div className="resultHeader">
-            <div>
-              <p className="platformTag">Backend-approved preview</p>
-              <h2 className="loadingTitle">
-                Composing three runtime blueprints...
-              </h2>
-            </div>
-          </div>
+          <header className="resultHeaderNew">
+            <p className="resultKicker">—— BACKEND-APPROVED PREVIEW</p>
+            <h2 className="resultPrompt resultPromptLoading">
+              Composing three runtime blueprints…
+            </h2>
+          </header>
           <div className="placards">
             <PlacardSkeleton tone="codex" />
             <PlacardSkeleton tone="claude_code" />
@@ -1142,26 +1140,27 @@ export default function App() {
 
       {!busy && preview && (
         <section className="results" id="results">
-          <div className="resultHeader">
-            <div>
-              <p className="platformTag">Backend-approved preview</p>
-              <h2>{preview.normalized_prompt}</h2>
-              <div className="resultMeta">
-                <span className="resultMetaChip">
-                  {preview.model.provider} / {preview.model.name}
-                </span>
-                <span className="resultMetaChip">
-                  {pretty(preview.selection_source ?? preview.model.status)}
-                </span>
-                <span className="resultMetaDim">
-                  {new Date(preview.generated_at).toLocaleString()}
-                </span>
-              </div>
-            </div>
-            <span className="pill pill-ok">
-              <span className="dot" /> {preview.placards.length} blueprints
-            </span>
-          </div>
+          <header className="resultHeaderNew">
+            <p className="resultKicker">—— BACKEND-APPROVED PREVIEW</p>
+            <h2 className="resultPrompt">{preview.normalized_prompt}</h2>
+            <p className="resultMetaLine">
+              {preview.model.provider.toUpperCase()} / {preview.model.name.toUpperCase()}
+              {" · "}
+              {pretty(preview.selection_source ?? preview.model.status).toUpperCase()}
+              {" · "}
+              {new Date(preview.generated_at)
+                .toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+                .toUpperCase()}
+              {" · "}
+              {preview.placards.length} BLUEPRINTS
+            </p>
+          </header>
 
           <SourceStatusRail statuses={preview.source_statuses ?? []} />
           <CalibrationRail preview={preview} />
