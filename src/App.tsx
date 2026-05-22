@@ -1288,7 +1288,7 @@ export default function App() {
         </div>
         </div>
         <aside className="layoutRight">
-          <div className="startFromHeader">TRY AN EXAMPLE</div>
+          <div className="startFromHeader">—— TRY AN EXAMPLE</div>
           <p className="startFromHelper">
             Click any card to drop it into your prompt — then edit freely.
           </p>
@@ -1330,7 +1330,7 @@ export default function App() {
             className={`startFromHint${startScrolledEnd ? " is-end" : ""}`}
             aria-hidden="true"
           >
-            SCROLL FOR MORE
+            —— SCROLL FOR MORE
           </div>
         </aside>
       </div>
