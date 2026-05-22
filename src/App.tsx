@@ -43,25 +43,25 @@ const platformTheme: Record<
 > = {
   codex: {
     tone: "codex",
-    accent: "#3b82f6",
-    accentSoft: "rgba(59, 130, 246, 0.16)",
-    glow: "rgba(59, 130, 246, 0.32)",
+    accent: "#6366F1",
+    accentSoft: "#2D2B7A",
+    glow: "rgba(99, 102, 241, 0.15)",
     tag: "OpenAI / Codex CLI",
     subtitle: "Cool, technical, structured exports",
   },
   claude_code: {
     tone: "claude",
-    accent: "#cc785c",
-    accentSoft: "rgba(204, 120, 92, 0.18)",
-    glow: "rgba(204, 120, 92, 0.32)",
+    accent: "#6366F1",
+    accentSoft: "#2D2B7A",
+    glow: "rgba(99, 102, 241, 0.15)",
     tag: "Anthropic / Claude Code",
     subtitle: "Warm, careful, citation-friendly",
   },
   openclaw: {
     tone: "openclaw",
-    accent: "#dc2626",
-    accentSoft: "rgba(220, 38, 38, 0.18)",
-    glow: "rgba(220, 38, 38, 0.32)",
+    accent: "#6366F1",
+    accentSoft: "#2D2B7A",
+    glow: "rgba(99, 102, 241, 0.15)",
     tag: "Open source / OpenClaw",
     subtitle: "Experimental, local-first, opinionated",
   },
@@ -244,9 +244,9 @@ function Placard({
 }) {
   const theme = platformTheme[placard.platform] ?? {
     tone: "codex",
-    accent: placard.accent || "#3b82f6",
-    accentSoft: "rgba(59, 130, 246, 0.16)",
-    glow: "rgba(59, 130, 246, 0.32)",
+    accent: "#6366F1",
+    accentSoft: "#2D2B7A",
+    glow: "rgba(99, 102, 241, 0.15)",
     tag: "Runtime",
     subtitle: placard.label,
   };
@@ -776,9 +776,9 @@ export default function App() {
 
       <section className="hero">
         <div className="heroBadges">
-          <span className="badge badge-codex">Codex</span>
-          <span className="badge badge-claude">Claude Code</span>
-          <span className="badge badge-openclaw">OpenClaw</span>
+          <span className="badge">Codex</span>
+          <span className="badge">Claude Code</span>
+          <span className="badge">OpenClaw</span>
         </div>
         <h1>
           One prompt.
@@ -819,10 +819,12 @@ export default function App() {
             <div className="promptCta">
               <span className="kbd">Cmd/Ctrl + Enter</span>
               <button
-                className="primaryButton"
+                className={`primaryButton${busy ? " is-busy" : ""}`}
                 onClick={build}
                 disabled={!canBuild}
+                aria-busy={busy}
               >
+                {busy && <span className="spinner" aria-hidden="true" />}
                 {busy ? "Building blueprint..." : "Build agent"}
               </button>
             </div>
@@ -958,6 +960,7 @@ export default function App() {
         </section>
       )}
 
+      {preview && (
       <section className="feedback">
         <header className="feedbackHead">
           <p className="platformTag">Feedback</p>
@@ -988,7 +991,7 @@ export default function App() {
                     className={`star ${value <= rating ? "starOn" : ""}`}
                     onClick={() => setRating(value)}
                   >
-                    *
+                    {value <= rating ? "\u2605" : "\u2606"}
                   </button>
                 ))}
               </div>
@@ -1018,6 +1021,7 @@ export default function App() {
           </div>
         )}
       </section>
+      )}
 
       <footer className="footer">
         <span>Matix Agent Builder / Public preview</span>
