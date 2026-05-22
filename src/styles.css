@@ -1458,54 +1458,83 @@ textarea[data-busy="true"] {
 
 .modelStrip {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 6px 0;
+  flex-direction: column;
+  gap: 14px;
   margin-top: 28px;
-  padding: 20px 24px;
+  padding: 22px 26px;
   background: var(--surface-card, #F4EFE0);
   border: 1px solid var(--border-hairline, #D8CCB4);
   border-left: 3px solid var(--accent-brick, #A24A26);
   border-radius: 4px;
-  font-family: var(--font-mono);
-  line-height: 1.6;
 }
 
-.modelStripLabel {
-  font-size: 12px;
+.modelStripRow {
+  display: grid;
+  grid-template-columns: 140px minmax(0, auto) 1fr;
+  align-items: baseline;
+  gap: 18px;
+}
+
+.modelStripRow--fallback {
+  padding-top: 14px;
+  border-top: 1px dashed var(--border-hairline, #D8CCB4);
+}
+
+.modelStripBadge {
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
+  text-align: center;
+  padding: 5px 10px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.modelStripBadge--recommended {
+  background: var(--accent-brick, #A24A26);
+  color: #FBF6E8;
+}
+
+.modelStripBadge--fallback {
+  background: transparent;
   color: var(--text-muted, #7A6F5A);
-  margin-right: 10px;
+  border: 1px solid var(--border-hairline, #D8CCB4);
 }
 
 .modelStripValue {
-  font-size: 16px;
+  font-family: var(--font-mono);
+  font-size: 17px;
   font-weight: 500;
   letter-spacing: 0.02em;
   color: var(--text-body, #312818);
-  margin-right: 6px;
 }
 
 .modelStripValue--primary {
   color: var(--accent-brick, #A24A26);
   font-weight: 600;
+  font-size: 18px;
 }
 
-.modelStripSep {
-  font-size: 14px;
+.modelStripCaption {
+  font-family: var(--font-sans, inherit);
+  font-size: 12px;
+  font-style: italic;
   color: var(--text-muted, #7A6F5A);
-  margin: 0 14px;
+  justify-self: end;
+  text-align: right;
 }
 
-.modelStripNote {
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-faint, #877B62);
-  margin-left: 10px;
+@media (max-width: 720px) {
+  .modelStripRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .modelStripCaption {
+    justify-self: start;
+    text-align: left;
+  }
 }
 
 .modelSectionHead {

@@ -189,21 +189,29 @@ function SourceStatusSection({
         ))}
       </div>
       <div className="modelStrip">
-        <span className="modelStripLabel">MODEL</span>
-        <span className="modelStripValue modelStripValue--primary">
-          {recommended.provider.toLowerCase()} / {recommended.name.toLowerCase()}
-        </span>
-        <span className="modelStripSep" aria-hidden="true">·</span>
-        <span className="modelStripLabel">RECOMMENDED</span>
+        <div className="modelStripRow modelStripRow--recommended">
+          <span className="modelStripBadge modelStripBadge--recommended">
+            Recommended
+          </span>
+          <span className="modelStripValue modelStripValue--primary">
+            {recommended.provider.toLowerCase()} / {recommended.name.toLowerCase()}
+          </span>
+          <span className="modelStripCaption">Used to build your agent</span>
+        </div>
         {fallback && (
-          <>
-            <span className="modelStripSep" aria-hidden="true">·</span>
-            <span className="modelStripLabel">FALLBACK</span>
+          <div className="modelStripRow modelStripRow--fallback">
+            <span className="modelStripBadge modelStripBadge--fallback">
+              Fallback
+            </span>
             <span className="modelStripValue">
               {fallback.provider.toLowerCase()} / {fallback.model.toLowerCase()}
             </span>
-            <span className="modelStripNote">({fallback.status})</span>
-          </>
+            <span className="modelStripCaption">
+              {fallback.status === "SHADOW ONLY"
+                ? "Runs in shadow for evaluation only"
+                : "Used if the recommended model is unavailable"}
+            </span>
+          </div>
         )}
       </div>
     </section>
