@@ -132,12 +132,12 @@ function SourceStatusSection({
   return (
     <section className="resultSection">
       <header className="anchorHead">
-        <p className="anchorKicker">—— I. SOURCE SEARCH STATUS</p>
+        <p className="anchorKicker">I. SOURCE SEARCH STATUS</p>
         <h2 className="anchorTitle">
           Directories and marketplaces checked
         </h2>
         <p className="anchorCount">
-          —— {filtered.length}{" "}
+          {filtered.length}{" "}
           {filtered.length === 1 ? "DIRECTORY" : "DIRECTORIES"}
         </p>
         <div className="anchorRule" aria-hidden="true" />
@@ -341,9 +341,9 @@ function BlueprintsSection({
   return (
     <section className="resultSection" id="section-blueprint">
       <header className="anchorHead">
-        <p className="anchorKicker">—— III. BLUEPRINTS</p>
+        <p className="anchorKicker">III. BLUEPRINTS</p>
         <h2 className="anchorTitle">Three runtimes ready to export</h2>
-        <p className="anchorCount">—— {placards.length} RUNTIMES</p>
+        <p className="anchorCount">{placards.length} RUNTIMES</p>
         <div className="anchorRule" aria-hidden="true" />
       </header>
 
@@ -483,7 +483,7 @@ function BlueprintSubBox({
   return (
     <div className="blueprintBox">
       <div className="blueprintBoxHead">
-        <p className="blueprintBoxKicker">—— {label}</p>
+        <p className="blueprintBoxKicker">{label}</p>
         <p className="blueprintBoxCount">{count} ITEMS</p>
         <div className="blueprintBoxRule" aria-hidden="true" />
       </div>
@@ -601,10 +601,10 @@ function LicensesSection({ placards }: { placards: RuntimePlacard[] }) {
   return (
     <section className="resultSection" id="section-license">
       <header className="sectionHead">
-        <p className="sectionKicker">—— IV. LICENSES</p>
+        <p className="sectionKicker">IV. LICENSES</p>
         <div className="sectionRule" aria-hidden="true" />
         <p className="sectionSubtitle">
-          —— {licenses.length} {licenses.length === 1 ? "LICENSE" : "LICENSES"} DETECTED
+          {licenses.length} {licenses.length === 1 ? "LICENSE" : "LICENSES"} DETECTED
         </p>
       </header>
       <div className="resultCardGrid">
@@ -643,10 +643,10 @@ function EvalPlanSection({ placards }: { placards: RuntimePlacard[] }) {
   return (
     <section className="resultSection" id="section-eval-plan">
       <header className="sectionHead">
-        <p className="sectionKicker">—— V. EVAL PLAN</p>
+        <p className="sectionKicker">V. EVAL PLAN</p>
         <div className="sectionRule" aria-hidden="true" />
         <p className="sectionSubtitle">
-          —— {steps.length} {steps.length === 1 ? "STEP" : "STEPS"}
+          {steps.length} {steps.length === 1 ? "STEP" : "STEPS"}
         </p>
       </header>
       <div className="resultCardGrid">
@@ -686,10 +686,10 @@ function SourceLinksSection({ placards }: { placards: RuntimePlacard[] }) {
   return (
     <section className="resultSection" id="section-source-link">
       <header className="sectionHead">
-        <p className="sectionKicker">—— VI. SOURCE LINKS</p>
+        <p className="sectionKicker">VI. SOURCE LINKS</p>
         <div className="sectionRule" aria-hidden="true" />
         <p className="sectionSubtitle">
-          —— {links.length} {links.length === 1 ? "LINK" : "LINKS"}
+          {links.length} {links.length === 1 ? "LINK" : "LINKS"}
         </p>
       </header>
       <div className="resultCardGrid">
@@ -780,7 +780,7 @@ function ModelPolicySection({ preview }: { preview: PublicPreview }) {
       </div>
 
       <div className="alternativesBlock">
-        <p className="alternativesHeader">—— ALTERNATIVES</p>
+        <p className="alternativesHeader">ALTERNATIVES</p>
         {alternatives.length > 0 ? (
           <div className="alternativesRow">
             {alternatives.map((alt) => (
@@ -796,7 +796,7 @@ function ModelPolicySection({ preview }: { preview: PublicPreview }) {
             ))}
           </div>
         ) : (
-          <p className="alternativesEmpty">—— NO ALTERNATIVES CONFIGURED</p>
+          <p className="alternativesEmpty">NO ALTERNATIVES CONFIGURED</p>
         )}
       </div>
     </section>
@@ -1351,7 +1351,7 @@ export default function App() {
             className={`startFromHint${startScrolledEnd ? " is-end" : ""}`}
             aria-hidden="true"
           >
-            —— SCROLL FOR MORE
+            SCROLL FOR MORE
           </div>
         </aside>
       </div>
@@ -1412,7 +1412,7 @@ export default function App() {
       {busy && (
         <section className="results" aria-busy="true" aria-live="polite">
           <header className="resultHeaderNew">
-            <p className="resultKicker">—— BACKEND-APPROVED PREVIEW</p>
+            <p className="resultKicker">BACKEND-APPROVED PREVIEW</p>
             <h2 className="resultPrompt resultPromptLoading">
               Composing three runtime blueprints…
             </h2>
@@ -1428,7 +1428,7 @@ export default function App() {
       {!busy && preview && (
         <section className="results" id="results">
           <header className="resultHeaderNew">
-            <p className="resultKicker">—— BACKEND-APPROVED PREVIEW</p>
+            <p className="resultKicker">BACKEND-APPROVED PREVIEW</p>
             <h2 className="resultPrompt">{preview.normalized_prompt}</h2>
             <p className="resultMetaLine">
               {preview.model.provider.toUpperCase()} / {preview.model.name.toUpperCase()}
