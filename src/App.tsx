@@ -170,6 +170,7 @@ type SectionNavItem = { id: string; index: string; label: string };
 
 function SectionNav({ items }: { items: SectionNavItem[] }) {
   const [activeId, setActiveId] = useState<string>(items[0]?.id ?? "");
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     const elements = items
@@ -192,6 +193,48 @@ function SectionNav({ items }: { items: SectionNavItem[] }) {
     return () => observer.disconnect();
   }, [items]);
 
+  useEffect(() => {
+    const elements = items
+      .map((i) => document.getElementById(i.id))
+      .filter((el): el is HTMLElement => Boolean(el));
+    if (elements.length === 0) return;
+
+    const first = elements[0];
+    const last = elements[elements.length - 1];
+
+    function computeProgress() {
+      const viewportAnchor = window.innerHeight * 0.35;
+      const startY = first.getBoundingClientRect().top;
+      const lastRect = last.getBoundingClientRect();
+      const endY = lastRect.top + lastRect.height;
+      const span = endY - startY;
+      if (span <= 0) {
+        setProgress(0);
+        return;
+      }
+      const traveled = viewportAnchor - startY;
+      const pct = Math.max(0, Math.min(1, traveled / span));
+      setProgress(pct);
+    }
+
+    computeProgress();
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        computeProgress();
+        ticking = false;
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [items]);
+
   function scrollTo(id: string) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -207,6 +250,12 @@ function SectionNav({ items }: { items: SectionNavItem[] }) {
 
   return (
     <nav className="sectionNav" aria-label="Sections">
+      <div className="sectionNavProgressTrack" aria-hidden="true">
+        <div
+          className="sectionNavProgressFill"
+          style={{ transform: `scaleY(${progress})` }}
+        />
+      </div>
       <ul className="sectionNavList">
         {items.map((item) => {
           const isActive = item.id === activeId;
@@ -1211,7 +1260,10 @@ export default function App() {
         </div>
         </div>
         <aside className="layoutRight">
-          <div className="startFromHeader">—— START FROM</div>
+          <div className="startFromHeader">—— TRY AN EXAMPLE</div>
+          <p className="startFromHelper">
+            Click any card to drop it into your prompt — then edit freely.
+          </p>
           <div className={`startFromScroll${busy ? " is-busy" : ""}`}>
           <div
             className="startFromStack"
@@ -1228,7 +1280,12 @@ export default function App() {
                 <span className="startFromCategory">{card.category}</span>
                 <span className="startFromTitle">{card.title}</span>
                 <span className="startFromPreview">{card.preview}</span>
-                <span className="startFromFootnote">{card.footnote}</span>
+                <span className="startFromFootnoteRow">
+                  <span className="startFromFootnote">{card.footnote}</span>
+                  <span className="startFromUseThis" aria-hidden="true">
+                    Use this →
+                  </span>
+                </span>
               </button>
             ))}
           </div>

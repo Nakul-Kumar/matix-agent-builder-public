@@ -367,8 +367,19 @@ main > .topbar ~ * {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: #9D9277;
-  margin-bottom: 16px;
+  margin-bottom: 6px;
   align-self: flex-start;
+}
+
+.startFromHelper {
+  margin: 0 0 16px;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--text-muted);
+  align-self: flex-start;
+  max-width: 360px;
 }
 
 .startFromStack {
@@ -530,16 +541,48 @@ main > .topbar ~ * {
   margin-top: 4px;
 }
 
-.startFromFootnote {
+.startFromFootnoteRow {
   margin-top: 8px;
-  text-align: right;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.startFromFootnote {
   font-family: var(--font-mono);
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: #9D9277;
-  text-align: right;
-  margin-left: auto;
+  text-align: left;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.startFromUseThis {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #A24A26;
+  flex: 0 0 auto;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  white-space: nowrap;
+}
+
+.startFromCard:hover .startFromUseThis,
+.startFromCard:focus-visible .startFromUseThis {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .startFromUseThis {
+    opacity: 1;
+    transition: none;
+  }
 }
 
 @media (max-width: 1023px) {
@@ -1654,6 +1697,37 @@ a.resultCard {
   padding: 16px 0;
 }
 
+.sectionNavProgressTrack {
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  right: -8px;
+  width: 2px;
+  background: #D8CCB4;
+  border-radius: 1px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sectionNavProgressFill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: #4F8A5F;
+  transform: scaleY(0);
+  transform-origin: top center;
+  transition: transform 120ms linear;
+  border-radius: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sectionNavProgressFill {
+    transition: none;
+  }
+}
+
 .sectionNavList {
   list-style: none;
   margin: 0;
@@ -1728,6 +1802,9 @@ a.resultCard {
     position: static;
     padding: 0;
     overflow-x: auto;
+  }
+  .sectionNavProgressTrack {
+    display: none;
   }
   .sectionNavList {
     flex-direction: row;
