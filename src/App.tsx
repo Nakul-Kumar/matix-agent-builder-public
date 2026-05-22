@@ -1,8 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
-import { exportAgent, previewAgent, sendFeedback } from "./lib/publicApi";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ResultCard, type ResultCardDotTone } from "./components/ResultCard";
+import {
+  exportAgent,
+  previewAgent,
+  sendFeedback,
+  PromptRejectedError,
+} from "./lib/publicApi";
+import {
+  classifyPrompt,
+  examplePrompts,
+  localRejection,
+  type PromptRejection,
+} from "./lib/promptIntent";
 import type {
   PublicArtifact,
+  PublicArtifactLicense,
   PublicPreview,
+  PublicSourceLink,
   PublicSourceStatus,
   RuntimePlacard,
 } from "./types";
@@ -16,24 +30,6 @@ const legalLinks = [
   { label: "Security", href: `${repoUrl}/blob/main/SECURITY.md` },
   { label: "GitHub", href: repoUrl },
 ];
-
-const AGENT_KEYWORDS = [
-  "agent", "assistant", "bot", "automation", "workflow",
-  "helper", "tool", "build", "create", "make", "design",
-  "generate", "ai", "llm", "chatbot", "copilot",
-];
-
-function validatePrompt(value: string): string | null {
-  const trimmed = value.trim();
-  if (trimmed.length < 12) {
-    return "Describe the agent in a bit more detail (at least 12 characters).";
-  }
-  const lower = trimmed.toLowerCase();
-  if (!AGENT_KEYWORDS.some((w) => lower.includes(w))) {
-    return "Include what the agent should do — for example words like \"agent\", \"assistant\", \"automation\", or \"build/create\".";
-  }
-  return null;
-}
 
 type PlatformKey = RuntimePlacard["platform"];
 
@@ -50,475 +46,32 @@ const platformTheme: Record<
 > = {
   codex: {
     tone: "codex",
-    accent: "#3b82f6",
-    accentSoft: "rgba(59, 130, 246, 0.16)",
-    glow: "rgba(59, 130, 246, 0.32)",
+    accent: "#A24A26",
+    accentSoft: "rgba(162, 74, 38, 0.12)",
+    glow: "rgba(162, 74, 38, 0.18)",
     tag: "OpenAI / Codex CLI",
     subtitle: "Cool, technical, structured exports",
   },
   claude_code: {
     tone: "claude",
-    accent: "#cc785c",
-    accentSoft: "rgba(204, 120, 92, 0.18)",
-    glow: "rgba(204, 120, 92, 0.32)",
+    accent: "#A24A26",
+    accentSoft: "rgba(162, 74, 38, 0.12)",
+    glow: "rgba(162, 74, 38, 0.18)",
     tag: "Anthropic / Claude Code",
     subtitle: "Warm, careful, citation-friendly",
   },
   openclaw: {
     tone: "openclaw",
-    accent: "#dc2626",
-    accentSoft: "rgba(220, 38, 38, 0.18)",
-    glow: "rgba(220, 38, 38, 0.32)",
+    accent: "#A24A26",
+    accentSoft: "rgba(162, 74, 38, 0.12)",
+    glow: "rgba(162, 74, 38, 0.18)",
     tag: "Open source / OpenClaw",
     subtitle: "Experimental, local-first, opinionated",
   },
 };
 
-const statusToneMap: Record<string, string> = {
-  ok: "ok",
-  ready: "ok",
-  preview: "ok",
-  synced: "ok",
-  planned: "info",
-  searched: "info",
-  experimental: "warn",
-  degraded: "warn",
-  auth_required: "warn",
-  rate_limited: "danger",
-  error: "danger",
-};
-
-function statusTone(value: string): string {
-  return statusToneMap[value.toLowerCase()] ?? "info";
-}
-
 function pretty(value: string): string {
   return value.replace(/_/g, " ");
-}
-
-function ScoreBar({ label, value }: { label: string; value: number }) {
-  const pct = Math.max(0, Math.min(100, Math.round(value)));
-  return (
-    <div className="score">
-      <div className="scoreRow">
-        <span>{label}</span>
-        <strong>{pct}</strong>
-      </div>
-      <div className="scoreTrack" aria-hidden="true">
-        <div className="scoreFill" style={{ width: `${pct}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function Section({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count?: number;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="placardSection">
-      <header>
-        <h3>{title}</h3>
-        {typeof count === "number" && <span className="count">{count}</span>}
-      </header>
-      {children}
-    </section>
-  );
-}
-
-const scoreLaneLabels: Record<string, string> = {
-  task_fit: "task fit",
-  source_trust: "source",
-  license_trust: "license",
-  artifact_quality: "quality",
-  runtime_readiness: "runtime",
-  credential_readiness: "creds",
-  category_coverage: "coverage",
-  safety_risk: "risk",
-};
-
-function ArtifactScoreLanes({
-  scoreBreakdown,
-}: {
-  scoreBreakdown?: Record<string, number>;
-}) {
-  const lanes = Object.entries(scoreBreakdown ?? {}).filter(([, value]) =>
-    Number.isFinite(value),
-  );
-  if (lanes.length === 0) return null;
-  return (
-    <div className="laneGrid" aria-label="Score breakdown">
-      {lanes.map(([key, value]) => (
-        <span key={key} className="lane">
-          <span>{scoreLaneLabels[key] ?? pretty(key)}</span>
-          <strong>{Math.round(value)}</strong>
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function LicenseBadge({ artifact }: { artifact: PublicArtifact }) {
-  const label = artifact.license?.name || "License pending";
-  const confidence = artifact.license?.confidence ?? "low";
-  if (artifact.license?.url) {
-    return (
-      <a
-        className={`licenseBadge license-${confidence}`}
-        href={artifact.license.url}
-        target="_blank"
-        rel="noreferrer noopener"
-      >
-        {label}
-      </a>
-    );
-  }
-  return <span className={`licenseBadge license-${confidence}`}>{label}</span>;
-}
-
-function ArtifactCard({ artifact }: { artifact: PublicArtifact }) {
-  const credentialStatus = artifact.credential_status
-    ? pretty(artifact.credential_status)
-    : "not required";
-  return (
-    <li className="artifactCard">
-      <div className="artifactTitleRow">
-        <span className="artifactName">{artifact.name}</span>
-        <LicenseBadge artifact={artifact} />
-      </div>
-      {artifact.description && (
-        <span className="artifactDesc">{artifact.description}</span>
-      )}
-      {(artifact.capability_matches?.length || artifact.selected_by_model) && (
-        <div className="capabilityMatches" aria-label="Capability matches">
-          {artifact.selected_by_model && (
-            <span className="capabilityChip modelChip">model-selected</span>
-          )}
-          {(artifact.capability_matches ?? []).slice(0, 4).map((capability) => (
-            <span key={`${artifact.artifact_ref}-${capability}`} className="capabilityChip">
-              {pretty(capability)}
-            </span>
-          ))}
-        </div>
-      )}
-      {artifact.why_selected && (
-        <p className="artifactWhy">
-          <strong>Why selected</strong> {artifact.why_selected}
-        </p>
-      )}
-      {artifact.setup_hint && (
-        <p className="artifactSetup">
-          <strong>Setup</strong> {artifact.setup_hint}
-        </p>
-      )}
-      <div className="artifactMetaRow">
-        <span>{pretty(artifact.artifact_kind)}</span>
-        <span>{credentialStatus}</span>
-        <span>{artifact.artifact_ref}</span>
-      </div>
-      <ArtifactScoreLanes scoreBreakdown={artifact.score_breakdown} />
-      {artifact.warnings?.length > 0 && (
-        <ul className="artifactWarnings">
-          {artifact.warnings.map((warning, idx) => (
-            <li key={`${artifact.artifact_ref}-warning-${idx}`}>{warning}</li>
-          ))}
-        </ul>
-      )}
-    </li>
-  );
-}
-
-function ArtifactList({
-  items,
-  empty,
-}: {
-  items: PublicArtifact[];
-  empty: string;
-}) {
-  if (items.length === 0) return <p className="emptyHint">{empty}</p>;
-  return (
-    <ul className="artifactList">
-      {items.map((item) => (
-        <ArtifactCard key={item.artifact_ref} artifact={item} />
-      ))}
-    </ul>
-  );
-}
-
-function Placard({
-  placard,
-  exporting,
-  exported,
-  onExport,
-}: {
-  placard: RuntimePlacard;
-  exporting: boolean;
-  exported: boolean;
-  onExport: (platform: PlatformKey) => void;
-}) {
-  const theme = platformTheme[placard.platform] ?? {
-    tone: "codex",
-    accent: placard.accent || "#3b82f6",
-    accentSoft: "rgba(59, 130, 246, 0.16)",
-    glow: "rgba(59, 130, 246, 0.32)",
-    tag: "Runtime",
-    subtitle: placard.label,
-  };
-
-  const sourceLinks = useMemo(() => {
-    const seen = new Set<string>();
-    const links: { label: string; url: string }[] = [];
-    for (const item of [...placard.skills, ...placard.mcps, ...placard.tools]) {
-      for (const link of item.source_links ?? []) {
-        if (!link?.url || seen.has(link.url)) continue;
-        seen.add(link.url);
-        links.push({ label: link.label || link.url, url: link.url });
-        if (links.length >= 6) break;
-      }
-      if (links.length >= 6) break;
-    }
-    return links;
-  }, [placard]);
-
-  const artifacts = useMemo(
-    () => [...placard.skills, ...placard.mcps, ...placard.tools],
-    [placard],
-  );
-
-  const licenseSummary = useMemo(() => {
-    const seen = new Set<string>();
-    return artifacts
-      .map((artifact) => artifact.license)
-      .filter((license) => {
-        if (!license?.name || seen.has(`${license.name}:${license.url}`)) {
-          return false;
-        }
-        seen.add(`${license.name}:${license.url}`);
-        return true;
-      })
-      .slice(0, 6);
-  }, [artifacts]);
-
-  const credentialItems = artifacts.filter(
-    (artifact) => artifact.credential_status === "missing",
-  );
-
-  const whySelected = artifacts
-    .filter((artifact) => artifact.why_selected)
-    .slice(0, 4);
-
-  const artifactsByRef = useMemo(() => {
-    const map = new Map<string, PublicArtifact>();
-    for (const artifact of artifacts) map.set(artifact.artifact_ref, artifact);
-    return map;
-  }, [artifacts]);
-
-  const tone = statusTone(placard.status);
-
-  return (
-    <article
-      className={`placard placard-${theme.tone}`}
-      style={
-        {
-          "--accent": theme.accent,
-          "--accent-soft": theme.accentSoft,
-          "--accent-glow": theme.glow,
-        } as React.CSSProperties
-      }
-    >
-      <div className="placardGlow" aria-hidden="true" />
-      <header className="placardTop">
-        <div>
-          <p className="platformTag">{theme.tag}</p>
-          <h2>{placard.label}</h2>
-          <p className="placardSubtitle">{theme.subtitle}</p>
-        </div>
-        <span className={`pill pill-${tone}`}>
-          <span className="dot" /> {pretty(placard.status)}
-        </span>
-      </header>
-
-      <div className="placardMeta">
-        <span className="metaChip" title="Model">
-          <span className="metaLabel">model</span>
-          <span className="metaValue">{placard.model}</span>
-        </span>
-        <span className="metaChip" title="Memory mode">
-          <span className="metaLabel">memory</span>
-          <span className="metaValue">{pretty(placard.memory_mode)}</span>
-        </span>
-      </div>
-
-      <div className="scores">
-        <ScoreBar label="Trust" value={placard.scores.trust} />
-        <ScoreBar label="Match" value={placard.scores.match} />
-        <ScoreBar label="Use" value={placard.scores.popularity} />
-        <ScoreBar label="Perf" value={placard.scores.performance} />
-      </div>
-
-      {placard.bundle_sections && placard.bundle_sections.length > 0 && (
-        <Section title="Recommended bundle" count={placard.bundle_sections.length}>
-          <div className="bundleSectionGrid">
-            {placard.bundle_sections.map((section) => (
-              <div className="bundleSectionCard" key={section.section_id}>
-                <strong>{section.title}</strong>
-                <div>
-                  {section.artifact_refs
-                    .map((ref) => artifactsByRef.get(ref))
-                    .filter((artifact): artifact is PublicArtifact => Boolean(artifact))
-                    .slice(0, 5)
-                    .map((artifact) => (
-                      <span key={`${section.section_id}-${artifact.artifact_ref}`}>
-                        {artifact.name}
-                      </span>
-                    ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      <Section title="Export contents preview" count={placard.file_tree.length}>
-        {placard.file_tree.length === 0 ? (
-          <p className="emptyHint">No files in this template.</p>
-        ) : (
-          <div className="fileTree">
-            {placard.file_tree.map((file) => (
-              <code key={file}>{file}</code>
-            ))}
-          </div>
-        )}
-      </Section>
-
-      {whySelected.length > 0 && (
-        <Section title="Why selected" count={whySelected.length}>
-          <ul className="rationaleList">
-            {whySelected.map((artifact) => (
-              <li key={`${artifact.artifact_ref}-why`}>
-                <strong>{artifact.name}</strong>
-                <span>{artifact.why_selected}</span>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      )}
-
-      <Section title="Skills" count={placard.skills.length}>
-        <ArtifactList items={placard.skills} empty="No skills attached." />
-      </Section>
-
-      <Section
-        title="MCPs & tools"
-        count={placard.mcps.length + placard.tools.length}
-      >
-        <ArtifactList
-          items={[...placard.mcps, ...placard.tools]}
-          empty="No MCPs or tools."
-        />
-      </Section>
-
-      {licenseSummary.length > 0 && (
-        <Section title="Licenses" count={licenseSummary.length}>
-          <div className="licenseList">
-            {licenseSummary.map((license) =>
-              license.url ? (
-                <a
-                  key={`${license.name}-${license.url}`}
-                  href={license.url}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                >
-                  {license.name}
-                  <span>{pretty(license.confidence)}</span>
-                </a>
-              ) : (
-                <span key={license.name}>
-                  {license.name}
-                  <em>{pretty(license.confidence)}</em>
-                </span>
-              ),
-            )}
-          </div>
-        </Section>
-      )}
-
-      <Section title="Missing credentials" count={credentialItems.length}>
-        {credentialItems.length === 0 ? (
-          <p className="emptyHint">No credentials are required for the public-safe export.</p>
-        ) : (
-          <ul className="credentialList">
-            {credentialItems.map((artifact) => (
-              <li key={`${artifact.artifact_ref}-credential`}>
-                <strong>{artifact.name}</strong>
-                <span>{pretty(artifact.credential_status)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
-
-      <Section title="Setup instructions">
-        <ul className="setupList">
-          <li>Open <code>START_HERE.md</code> from the exported bundle first.</li>
-          <li>Review <code>LICENSES.md</code> and <code>manifest.json</code> before enabling runtime placeholders.</li>
-          <li>Enable MCP credentials only in the target runtime, never in the browser.</li>
-        </ul>
-      </Section>
-
-      {placard.eval_plan.length > 0 && (
-        <Section title="Eval plan" count={placard.eval_plan.length}>
-          <ol className="evalList">
-            {placard.eval_plan.map((step, idx) => (
-              <li key={`${placard.platform}-eval-${idx}`}>{step}</li>
-            ))}
-          </ol>
-        </Section>
-      )}
-
-      {sourceLinks.length > 0 && (
-        <Section title="Source links" count={sourceLinks.length}>
-          <div className="links">
-            {sourceLinks.map((link) => (
-              <a
-                key={link.url}
-                href={link.url}
-                target="_blank"
-                rel="noreferrer noopener"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
-        </Section>
-      )}
-
-      {placard.warnings.length > 0 && (
-        <ul className="warnings">
-          {placard.warnings.map((warning, idx) => (
-            <li key={`${placard.platform}-w-${idx}`}>{warning}</li>
-          ))}
-        </ul>
-      )}
-
-      <button
-        className="exportButton"
-        onClick={() => onExport(placard.platform)}
-        disabled={exporting}
-      >
-        {exporting
-          ? "Preparing safe bundle..."
-          : exported
-            ? "Exported / download again"
-            : "Export safe bundle"}
-      </button>
-    </article>
-  );
 }
 
 function PlacardSkeleton({ tone }: { tone: PlatformKey }) {
@@ -552,35 +105,648 @@ function PlacardSkeleton({ tone }: { tone: PlatformKey }) {
   );
 }
 
-function SourceStatusRail({ statuses }: { statuses: PublicSourceStatus[] }) {
-  if (statuses.length === 0) return null;
+function deriveSourceKind(source: PublicSourceStatus): string {
+  const haystack = `${source.source_id} ${source.label}`.toLowerCase();
+  if (/registry/.test(haystack)) return "REGISTRY";
+  if (/market|marketplace|store/.test(haystack)) return "MARKET";
+  if (/mirror|cache/.test(haystack)) return "MIRROR";
+  return "DIRECTORY";
+}
+
+function sourceStatusDotTone(status: string): ResultCardDotTone {
+  const s = status.toLowerCase();
+  if (s === "synced" || s === "searched" || s === "ok") return "ok";
+  if (s === "auth_required" || s === "rate_limited") return "accent";
+  return "muted";
+}
+
+function SourceStatusSection({
+  statuses,
+  preview,
+}: {
+  statuses: PublicSourceStatus[];
+  preview: PublicPreview;
+}) {
+  const filtered = statuses.filter(
+    (s) => !/^search:/i.test(s.label.trim()),
+  );
+  if (filtered.length === 0) return null;
+
+  const recommended = preview.model;
+  const recKey = `${recommended.provider.toLowerCase()}/${recommended.name.toLowerCase()}`;
+  const teacher = preview.calibration?.teacher;
+  const students = preview.calibration?.students ?? [];
+  type Fallback = { provider: string; model: string; status: string };
+  let fallback: Fallback | null = null;
+  const seen = new Set<string>([recKey]);
+  if (teacher) {
+    const key = `${teacher.provider.toLowerCase()}/${teacher.model.toLowerCase()}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      fallback = {
+        provider: teacher.provider,
+        model: teacher.model,
+        status: "SHADOW ONLY",
+      };
+    }
+  }
+  if (!fallback) {
+    for (const s of students) {
+      const key = `${s.provider.toLowerCase()}/${s.model.toLowerCase()}`;
+      if (seen.has(key)) continue;
+      fallback = {
+        provider: s.provider,
+        model: s.model,
+        status: s.public_eligible ? "FALLBACK" : "SHADOW ONLY",
+      };
+      break;
+    }
+  }
+
   return (
-    <section className="sourceStatus">
-      <header className="sourceStatusHead">
-        <p className="platformTag">Source search status</p>
-        <h3>Directories and marketplaces checked</h3>
+    <section className="resultSection">
+      <header className="anchorHead">
+        <p className="anchorKicker">SOURCE SEARCH STATUS</p>
+        <h2 className="anchorTitle">
+          Directories and marketplaces checked
+        </h2>
+        <p className="anchorCount">
+          {filtered.length}{" "}
+          {filtered.length === 1 ? "DIRECTORY" : "DIRECTORIES"}
+        </p>
+        <div className="anchorRule" aria-hidden="true" />
       </header>
-      <div className="statusGrid">
-        {statuses.map((source) => {
-          const tone = statusTone(source.status);
+      <div className="resultCardGrid">
+        {filtered.map((source) => (
+          <ResultCard
+            key={source.source_id}
+            category={deriveSourceKind(source)}
+            title={source.label}
+            preview={source.message ?? ""}
+            footnote={pretty(source.status).toUpperCase()}
+            dotTone={sourceStatusDotTone(source.status)}
+          />
+        ))}
+      </div>
+      <div className="modelStrip">
+        <div className="modelStripRow modelStripRow--recommended">
+          <span className="modelStripBadge modelStripBadge--recommended">
+            Recommended
+          </span>
+          <span className="modelStripValue modelStripValue--primary">
+            {recommended.provider.toLowerCase()} / {recommended.name.toLowerCase()}
+          </span>
+          <span className="modelStripCaption">Used to build your agent</span>
+        </div>
+        {fallback && (
+          <div className="modelStripRow modelStripRow--fallback">
+            <span className="modelStripBadge modelStripBadge--fallback">
+              Fallback
+            </span>
+            <span className="modelStripValue">
+              {fallback.provider.toLowerCase()} / {fallback.model.toLowerCase()}
+            </span>
+            <span className="modelStripCaption">
+              {fallback.status === "SHADOW ONLY"
+                ? "Runs in shadow for evaluation only"
+                : "Used if the recommended model is unavailable"}
+            </span>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function placardStatusDotTone(status: string): ResultCardDotTone {
+  const s = status.toLowerCase();
+  if (s === "preview" || s === "synced" || s === "ok" || s === "ready")
+    return "ok";
+  if (s === "experimental" || s === "warn") return "accent";
+  return "muted";
+}
+
+type SectionNavItem = { id: string; index: string; label: string };
+
+function SectionNav({ items }: { items: SectionNavItem[] }) {
+  const [activeId, setActiveId] = useState<string>(items[0]?.id ?? "");
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const elements = items
+      .map((i) => document.getElementById(i.id))
+      .filter((el): el is HTMLElement => Boolean(el));
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]?.target?.id) {
+          setActiveId(visible[0].target.id);
+        }
+      },
+      { rootMargin: "-40% 0px -55% 0px", threshold: [0, 0.25, 0.5, 0.75, 1] },
+    );
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [items]);
+
+  useEffect(() => {
+    const elements = items
+      .map((i) => document.getElementById(i.id))
+      .filter((el): el is HTMLElement => Boolean(el));
+    if (elements.length === 0) return;
+
+    const first = elements[0];
+    const last = elements[elements.length - 1];
+
+    function computeProgress() {
+      const viewportAnchor = window.innerHeight * 0.35;
+      const startY = first.getBoundingClientRect().top;
+      const lastRect = last.getBoundingClientRect();
+      const endY = lastRect.top + lastRect.height;
+      const span = endY - startY;
+      if (span <= 0) {
+        setProgress(0);
+        return;
+      }
+      const traveled = viewportAnchor - startY;
+      const pct = Math.max(0, Math.min(1, traveled / span));
+      setProgress(pct);
+    }
+
+    computeProgress();
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        computeProgress();
+        ticking = false;
+      });
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [items]);
+
+  function scrollTo(id: string) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({
+      behavior: prefersReduced ? "auto" : "smooth",
+      block: "start",
+    });
+    setActiveId(id);
+  }
+
+  return (
+    <nav className="sectionNav" aria-label="Sections">
+      <div className="sectionNavProgressTrack" aria-hidden="true">
+        <div
+          className="sectionNavProgressFill"
+          style={{ transform: `scaleY(${progress})` }}
+        />
+      </div>
+      <ul className="sectionNavList">
+        {items.map((item) => {
+          const isActive = item.id === activeId;
           return (
-            <div
-              className={`statusCell statusCell-${tone}`}
-              key={source.source_id}
+            <li key={item.id}>
+              <button
+                type="button"
+                className={`sectionNavItem ${isActive ? "sectionNavItemActive" : ""}`}
+                onClick={() => scrollTo(item.id)}
+                aria-current={isActive ? "true" : undefined}
+              >
+                <span className="sectionNavIndex">{item.index}</span>
+                <span className="sectionNavLabel">{item.label}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
+function BlueprintsSection({
+  placards,
+  activeRuntime,
+  onActiveRuntimeChange,
+  policy,
+  exportingPlatform,
+  exportedPlatforms,
+  onExport,
+  inspectingPlatform,
+  onInspect,
+}: {
+  placards: RuntimePlacard[];
+  activeRuntime: PlatformKey | null;
+  onActiveRuntimeChange: (key: PlatformKey) => void;
+  policy: PublicPreview["source_policy"] | null | undefined;
+  exportingPlatform: string | null;
+  exportedPlatforms: Set<string>;
+  onExport: (platform: string) => void;
+  inspectingPlatform: string | null;
+  onInspect: (platform: string) => void;
+}) {
+  if (placards.length === 0) return null;
+
+  const availableKeys = placards.map((p) => p.platform);
+  const hasActive = activeRuntime !== null && availableKeys.includes(activeRuntime);
+  const activeKey: PlatformKey | null = hasActive
+    ? (activeRuntime as PlatformKey)
+    : null;
+  const activePlacard = activeKey
+    ? placards.find((p) => p.platform === activeKey) ?? null
+    : null;
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [fadeKey, setFadeKey] = useState<string>(activeKey ?? "none");
+
+  useEffect(() => {
+    setFadeKey(activeKey ?? "none");
+  }, [activeKey]);
+
+  function handleKeyDown(
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    currentKey: PlatformKey,
+  ) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const idx = availableKeys.indexOf(currentKey);
+    if (idx < 0) {
+      const fallback = availableKeys[0];
+      if (fallback) {
+        onActiveRuntimeChange(fallback);
+        tabRefs.current[fallback]?.focus();
+      }
+      return;
+    }
+    const delta = event.key === "ArrowRight" ? 1 : -1;
+    const nextKey =
+      availableKeys[(idx + delta + availableKeys.length) % availableKeys.length];
+    onActiveRuntimeChange(nextKey);
+    tabRefs.current[nextKey]?.focus();
+  }
+
+  return (
+    <section className="resultSection" id="section-blueprint">
+      <header className="anchorHead">
+        <p className="anchorKicker">01 — BLUEPRINTS</p>
+        <h2 className="anchorTitle">Three runtimes ready to export</h2>
+        <p className="anchorCount">{placards.length} RUNTIMES</p>
+        <div className="anchorRule" aria-hidden="true" />
+      </header>
+
+      <div className="runtimeChoose">
+        <h3 className="runtimeChooseTitle">Choose your runtime</h3>
+        <p className="runtimeChooseSubtitle">Pick one to see the blueprint.</p>
+      </div>
+      <div
+        className="runtimeTabs"
+        role="tablist"
+        aria-label="Runtime blueprint"
+      >
+        {placards.map((p) => {
+          const isActive = activeKey !== null && p.platform === activeKey;
+          const tabId = `runtime-tab-${p.platform}`;
+          return (
+            <button
+              key={p.platform}
+              ref={(el) => {
+                tabRefs.current[p.platform] = el;
+              }}
+              type="button"
+              id={tabId}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`runtime-panel-${p.platform}`}
+              tabIndex={isActive ? 0 : -1}
+              className={`runtimeTab${isActive ? " runtimeTabActive" : ""}`}
+              onClick={() => onActiveRuntimeChange(p.platform)}
+              onKeyDown={(e) => handleKeyDown(e, p.platform)}
             >
-              <div className="statusCellTop">
-                <span className="statusCellLabel">{source.label}</span>
-                <span className={`pill pill-${tone}`}>
-                  <span className="dot" /> {pretty(source.status)}
+              <span className="runtimeTabTitle">
+                {RUNTIME_DISPLAY_NAME[p.platform] ?? p.platform}
+              </span>
+              <span className="runtimeTabFootnote">
+                <span
+                  className={`resultDot resultDot--${placardStatusDotTone(p.status)}`}
+                  aria-hidden="true"
+                />
+                <span className="runtimeTabFootnoteLabel">
+                  {pretty(p.status).toUpperCase()}
                 </span>
-              </div>
-              {source.message && (
-                <p className="statusCellMsg">{source.message}</p>
+                <span className="runtimeTabFootnoteSep">·</span>
+                <span className="runtimeTabFootnoteLabel">TRUST</span>
+                <span className="runtimeTabFootnoteValue">
+                  {Math.round(p.scores.trust)}
+                </span>
+                <span className="runtimeTabFootnoteSep">·</span>
+                <span className="runtimeTabFootnoteLabel">MATCH</span>
+                <span className="runtimeTabFootnoteValue">
+                  {Math.round(p.scores.match)}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {activeKey && activePlacard ? (
+        <>
+          <div className="exportActionRow">
+            <p key={`meta-${fadeKey}`} className="exportActionMeta">
+              <span className="exportActionProvider">
+                {(platformTheme[activeKey]?.tag ?? activePlacard.label).toUpperCase()}
+              </span>
+              {policy && (
+                <>
+                  <span className="exportActionSep">·</span>
+                  <span>
+                    BROWSER PROVIDER CALLS {policy.browser_provider_calls ? "YES" : "NO"}
+                  </span>
+                  <span className="exportActionSep">·</span>
+                  <span>
+                    SECRETS INCLUDED {policy.secrets_included ? "YES" : "NO"}
+                  </span>
+                  <span className="exportActionSep">·</span>
+                  <span>
+                    ALLOWED SOURCE HOSTS {policy.allowed_source_hosts.length}
+                  </span>
+                </>
               )}
-              {source.quarantine_review_required && (
-                <span className="quarantineFlag">Manual review required</span>
-              )}
+            </p>
+            <div className="exportActionControls">
+              <button
+                type="button"
+                className="exportActionInspect"
+                onClick={() => onInspect(activeKey)}
+                disabled={inspectingPlatform === activeKey}
+                title="Open the raw JSON manifest in a new tab without downloading."
+              >
+                {inspectingPlatform === activeKey ? "OPENING…" : "VIEW JSON"}
+              </button>
+              <button
+                type="button"
+                className="exportActionButton"
+                onClick={() => onExport(activeKey)}
+                disabled={exportingPlatform === activeKey}
+                title="Bundle is a signed JSON manifest. No secrets, no provider calls, source hosts allow-listed."
+              >
+                {exportingPlatform === activeKey
+                  ? "PREPARING SAFE BUNDLE…"
+                  : exportedPlatforms.has(activeKey)
+                    ? "EXPORTED — DOWNLOAD AGAIN"
+                    : "EXPORT SAFE BUNDLE"}
+              </button>
             </div>
+          </div>
+
+          <div
+            key={fadeKey}
+            id={`runtime-panel-${activeKey}`}
+            role="tabpanel"
+            aria-labelledby={`runtime-tab-${activeKey}`}
+            className="runtimePanel"
+          >
+            <BlueprintGroup placard={activePlacard} />
+          </div>
+        </>
+      ) : (
+        <p className="runtimeEmptyState" aria-live="polite">
+          ↑ Select a runtime above to load its blueprint and export bundle.
+        </p>
+      )}
+    </section>
+  );
+}
+
+function BlueprintSubBox({
+  label,
+  count,
+  children,
+}: {
+  label: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  const stripRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
+  const thumbRef = useRef<HTMLDivElement>(null);
+  const [maskState, setMaskState] = useState<"top" | "middle" | "bottom" | "none">("none");
+
+  const update = useCallback(() => {
+    const strip = stripRef.current;
+    const rail = railRef.current;
+    const thumb = thumbRef.current;
+    if (!strip) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = strip;
+    const overflow = scrollHeight > clientHeight + 1;
+
+    if (!overflow) {
+      setMaskState("none");
+      if (thumb) thumb.style.opacity = "0";
+      return;
+    }
+
+    const atTop = scrollTop <= 2;
+    const atBottom = scrollTop + clientHeight >= scrollHeight - 2;
+    setMaskState(atTop ? "bottom" : atBottom ? "top" : "middle");
+
+    if (rail && thumb) {
+      const railH = rail.clientHeight;
+      const thumbH = Math.max(24, (clientHeight / scrollHeight) * railH);
+      const maxThumbTop = Math.max(0, railH - thumbH);
+      const denom = Math.max(1, scrollHeight - clientHeight);
+      const thumbTop = (scrollTop / denom) * maxThumbTop;
+      thumb.style.height = `${thumbH}px`;
+      thumb.style.transform = `translateY(${thumbTop}px)`;
+      thumb.style.opacity = "1";
+    }
+  }, []);
+
+  useEffect(() => {
+    update();
+    const strip = stripRef.current;
+    if (!strip) return;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        update();
+        ticking = false;
+      });
+    };
+    strip.addEventListener("scroll", onScroll, { passive: true });
+    const ro = new ResizeObserver(() => update());
+    ro.observe(strip);
+    return () => {
+      strip.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+    };
+  }, [update]);
+
+  return (
+    <div className="blueprintBox">
+      <div className="blueprintBoxHead">
+        <p className="blueprintBoxKicker">{label}</p>
+        <p className="blueprintBoxCount">{count} ITEMS</p>
+        <div className="blueprintBoxRule" aria-hidden="true" />
+      </div>
+      <div className="blueprintBoxScroll">
+        <div className="blueprintBoxRail" aria-hidden="true" ref={railRef}>
+          <div className="blueprintBoxThumb" ref={thumbRef} />
+        </div>
+        <div
+          className={`blueprintBoxStrip blueprintBoxStrip--mask-${maskState}`}
+          ref={stripRef}
+        >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
+  const tools = [...placard.mcps, ...placard.tools];
+  const whySelected = [...placard.skills, ...tools].filter(
+    (a) => a.why_selected,
+  );
+  const categoryLabel =
+    EXPORT_PLATFORMS.find((t) => t.key === placard.platform)?.label ??
+    placard.platform.toUpperCase();
+  const agentTitle = placard.label.replace(/\s+blueprint\s*$/i, "");
+
+  return (
+    <div className="blueprintGroup">
+      <header className="activeBlueprintHead">
+        <p className="activeBlueprintCategory">{categoryLabel}</p>
+        <h3 className="activeBlueprintTitle">{agentTitle}</h3>
+      </header>
+      <div className="blueprintGrid">
+        <BlueprintSubBox label="SKILLS" count={placard.skills.length}>
+          {placard.skills.map((a) => (
+            <ResultCard
+              key={`${placard.platform}-skill-${a.artifact_ref}`}
+              category="SKILL"
+              title={a.name}
+              preview={a.description}
+              footnote={`${(a.license?.source ?? "SOURCE").toUpperCase()} · TASK FIT ${Math.round(a.match)} · QUALITY ${Math.round(a.performance)}`}
+            />
+          ))}
+        </BlueprintSubBox>
+        <BlueprintSubBox label="MCPS" count={tools.length}>
+          {tools.map((a) => (
+            <ResultCard
+              key={`${placard.platform}-mcp-${a.artifact_ref}`}
+              category="MCP"
+              title={a.name}
+              preview={a.description}
+              footnote={`${(a.license?.source ?? "SOURCE").toUpperCase()} · TRUST ${Math.round(a.trust)} · QUALITY ${Math.round(a.performance)}`}
+            />
+          ))}
+        </BlueprintSubBox>
+        <BlueprintSubBox label="FILES" count={placard.file_tree.length}>
+          {placard.file_tree.map((file) => (
+            <ResultCard
+              key={`${placard.platform}-file-${file}`}
+              category="FILE"
+              title={file}
+              preview={`Included in the ${agentTitle} bundle`}
+              footnote="EXPORTED"
+              dotTone="muted"
+            />
+          ))}
+        </BlueprintSubBox>
+        <BlueprintSubBox label="REASONS" count={whySelected.length}>
+          {whySelected.map((a) => (
+            <ResultCard
+              key={`${placard.platform}-why-${a.artifact_ref}`}
+              category="REASON"
+              title={a.name}
+              preview={a.why_selected}
+              footnote="MATCHED"
+              dotTone="accent"
+            />
+          ))}
+        </BlueprintSubBox>
+      </div>
+    </div>
+  );
+}
+
+function aggregateArtifacts(placards: RuntimePlacard[]): PublicArtifact[] {
+  const seen = new Set<string>();
+  const out: PublicArtifact[] = [];
+  for (const p of placards) {
+    for (const a of [...p.skills, ...p.mcps, ...p.tools]) {
+      if (seen.has(a.artifact_ref)) continue;
+      seen.add(a.artifact_ref);
+      out.push(a);
+    }
+  }
+  return out;
+}
+
+function licenseSeverity(confidence: string): {
+  label: string;
+  tone: ResultCardDotTone;
+} {
+  const c = confidence.toLowerCase();
+  if (c === "high") return { label: "LOW", tone: "ok" };
+  if (c === "medium") return { label: "MEDIUM", tone: "accent" };
+  return { label: "HIGH", tone: "warn" };
+}
+
+function LicensesSection({ placards }: { placards: RuntimePlacard[] }) {
+  const seen = new Set<string>();
+  const licenses: PublicArtifactLicense[] = [];
+  for (const a of aggregateArtifacts(placards)) {
+    const lic = a.license;
+    if (!lic?.name) continue;
+    const key = `${lic.name}::${lic.url ?? ""}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    licenses.push(lic);
+  }
+  if (licenses.length === 0) return null;
+  return (
+    <section className="resultSection" id="section-license">
+      <header className="sectionHead">
+        <p className="sectionKicker">02 — LICENSES</p>
+        <div className="sectionRule" aria-hidden="true" />
+        <p className="sectionSubtitle">
+          {licenses.length} {licenses.length === 1 ? "LICENSE" : "LICENSES"} DETECTED
+        </p>
+      </header>
+      <div className="resultCardGrid">
+        {licenses.map((lic) => {
+          const sev = licenseSeverity(lic.confidence);
+          const preview =
+            `Source: ${pretty(lic.source)} · Confidence ${pretty(lic.confidence)}`;
+          return (
+            <ResultCard
+              key={`${lic.name}-${lic.url ?? ""}`}
+              category="LICENSE"
+              title={lic.name}
+              preview={preview}
+              footnote={sev.label}
+              dotTone={sev.tone}
+              href={lic.url ?? undefined}
+            />
           );
         })}
       </div>
@@ -588,141 +754,100 @@ function SourceStatusRail({ statuses }: { statuses: PublicSourceStatus[] }) {
   );
 }
 
-function DomainRail({ preview }: { preview: PublicPreview }) {
-  const confidence = preview.intent_confidence;
-  const trace = preview.model_trace_summary;
-  const intent = preview.intent;
-  const mustHave = intent?.must_have_capabilities ?? trace?.must_have_capabilities ?? [];
-  const niceToHave = intent?.nice_to_have_capabilities ?? [];
-  const queries = intent?.query_expansions ?? trace?.source_queries ?? [];
-  if (!preview.agent_archetype && !intent?.domain_label && !trace?.summary && !preview.fallback_reason) {
-    return null;
+function EvalPlanSection({ placards }: { placards: RuntimePlacard[] }) {
+  const seen = new Set<string>();
+  const steps: string[] = [];
+  for (const p of placards) {
+    for (const step of p.eval_plan ?? []) {
+      if (!step || seen.has(step)) continue;
+      seen.add(step);
+      steps.push(step);
+    }
   }
+  if (steps.length === 0) return null;
   return (
-    <section className="domainRail">
-      <div>
-        <p className="platformTag">Recommendation decision</p>
-        <h3>
-          {intent?.domain_label || preview.agent_archetype
-            ? `Detected intent: ${intent?.domain_label ?? preview.agent_archetype}`
-            : "Backend-selected domain"}
-        </h3>
-        {intent?.agent_archetype && intent.agent_archetype !== intent.domain_label && (
-          <p className="intentSubline">Runtime label: {intent.agent_archetype}</p>
-        )}
-        {trace?.summary && <p>{trace.summary}</p>}
-        {intent?.ambiguity && <p className="fallbackNote">{intent.ambiguity}</p>}
-        {preview.fallback_reason && (
-          <p className="fallbackNote">{preview.fallback_reason}</p>
-        )}
+    <section className="resultSection" id="section-eval-plan">
+      <header className="sectionHead">
+        <p className="sectionKicker">03 — EVAL PLAN</p>
+        <div className="sectionRule" aria-hidden="true" />
+        <p className="sectionSubtitle">
+          {steps.length} {steps.length === 1 ? "STEP" : "STEPS"}
+        </p>
+      </header>
+      <div className="resultCardGrid">
+        {steps.map((step, idx) => (
+          <ResultCard
+            key={`eval-${idx}`}
+            category={`STEP ${idx + 1}`}
+            title={step}
+            footnote="REQUIRED"
+            dotTone="muted"
+          />
+        ))}
       </div>
-      <div className="domainChips">
-        {preview.agent_domain && (
-          <span className="pill pill-ok">
-            <span className="dot" /> {pretty(preview.agent_domain)}
-          </span>
-        )}
-        {Number.isFinite(confidence) && (
-          <span className="pill pill-ok">
-            <span className="dot" /> {Math.round(confidence ?? 0)}% confidence
-          </span>
-        )}
-        {trace?.reranker_status && (
-          <span
-            className={`pill pill-${
-              trace.reranker_status === "completed" ? "ok" : "warn"
-            }`}
-          >
-            <span className="dot" /> {pretty(trace.reranker_status)}
-          </span>
-        )}
-        {intent?.model_status && (
-          <span className="pill pill-ok">
-            <span className="dot" /> {pretty(intent.model_status)}
-          </span>
-        )}
-        {intent?.cache_status && (
-          <span className={`pill pill-${intent.cache_status === "hit" ? "ok" : "warn"}`}>
-            <span className="dot" /> cache {pretty(intent.cache_status)}
-          </span>
-        )}
-      </div>
-      {mustHave.length > 0 && (
-        <div className="intentPanel">
-          <span className="intentPanelTitle">Must-have capabilities</span>
-          <div className="capabilityMatches">
-            {mustHave.slice(0, 10).map((capability) => (
-              <span key={`must-${capability}`} className="capabilityChip">
-                {pretty(capability)}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      {niceToHave.length > 0 && (
-        <div className="intentPanel">
-          <span className="intentPanelTitle">Nice-to-have coverage</span>
-          <div className="capabilityMatches">
-            {niceToHave.slice(0, 6).map((capability) => (
-              <span key={`nice-${capability}`} className="capabilityChip mutedChip">
-                {pretty(capability)}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      {queries.length > 0 && (
-        <div className="intentPanel">
-          <span className="intentPanelTitle">Source query expansions</span>
-          <div className="queryChips">
-            {queries.slice(0, 8).map((query) => (
-              <span key={`query-${query}`}>{query}</span>
-            ))}
-          </div>
-        </div>
-      )}
     </section>
   );
 }
 
-function CalibrationRail({ preview }: { preview: PublicPreview }) {
-  const teacher = preview.calibration?.teacher;
-  const students = preview.calibration?.students ?? [];
-  const selectionSource = preview.selection_source ?? preview.model.status;
-  const teacherRanked = selectionSource === "gpt_5_5_rerank";
-  if (!teacher && students.length === 0) return null;
+function extractDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "").toUpperCase();
+  } catch {
+    return "LINK";
+  }
+}
+
+function SourceLinksSection({ placards }: { placards: RuntimePlacard[] }) {
+  const seen = new Set<string>();
+  const links: PublicSourceLink[] = [];
+  for (const a of aggregateArtifacts(placards)) {
+    for (const link of a.source_links ?? []) {
+      if (!link?.url || seen.has(link.url)) continue;
+      seen.add(link.url);
+      links.push(link);
+    }
+  }
+  if (links.length === 0) return null;
   return (
-    <section className="calibrationRail">
-      <div>
-        <p className="platformTag">Recommendation model policy</p>
-        <h3>
-          {teacher && teacherRanked
-            ? `${teacher.provider} / ${teacher.model} ranks the quality bundle`
-            : selectionSource
-              ? `${pretty(selectionSource)} used for this preview`
-              : "Backend-controlled model routing"}
-        </h3>
-        {preview.calibration?.public_serving_policy && (
-          <p>{preview.calibration.public_serving_policy}</p>
-        )}
+    <section className="resultSection" id="section-source-link">
+      <header className="sectionHead">
+        <p className="sectionKicker">04 — SOURCE LINKS</p>
+        <div className="sectionRule" aria-hidden="true" />
+        <p className="sectionSubtitle">
+          {links.length} {links.length === 1 ? "LINK" : "LINKS"}
+        </p>
+      </header>
+      <div className="resultCardGrid">
+        {links.map((link) => (
+          <ResultCard
+            key={link.url}
+            category="SOURCE"
+            title={link.label || link.url}
+            preview={
+              link.source_kind
+                ? `From ${pretty(link.source_kind)}`
+                : "External reference"
+            }
+            footnote={extractDomain(link.url)}
+            href={link.url}
+          />
+        ))}
       </div>
-      {students.length > 0 && (
-        <div className="studentModels">
-          {students.map((student) => (
-            <span
-              key={`${student.provider}-${student.model}`}
-              className={`pill pill-${student.public_eligible ? "ok" : "warn"}`}
-            >
-              <span className="dot" />
-              {student.provider} / {student.model}:{" "}
-              {student.public_eligible ? "public eligible" : pretty(student.role)}
-            </span>
-          ))}
-        </div>
-      )}
     </section>
   );
 }
+
+const EXPORT_PLATFORMS: Array<{ key: string; label: string }> = [
+  { key: "codex", label: "CODEX" },
+  { key: "claude_code", label: "CLAUDE CODE" },
+  { key: "openclaw", label: "OPENCLAW" },
+];
+
+const RUNTIME_DISPLAY_NAME: Record<PlatformKey, string> = {
+  codex: "Codex",
+  claude_code: "Claude Code",
+  openclaw: "OpenClaw",
+};
 
 type BackendStatus =
   | { state: "checking" }
@@ -730,18 +855,141 @@ type BackendStatus =
   | { state: "not_configured" }
   | { state: "unreachable"; detail: string };
 
+const QUICK_START_CARDS = [
+  {
+    category: "ENGINEER",
+    title: "Next.js engineer",
+    preview: "Ships features end-to-end with GitHub PRs and Playwright tests.",
+    footnote: "4 TOOLS · GITHUB · POSTGRES",
+    prompt:
+      "Build a software engineer agent for a Next.js app with GitHub, Postgres, and Playwright testing.",
+  },
+  {
+    category: "RESEARCH",
+    title: "Paper analyst",
+    preview:
+      "Summarises PubMed papers, tracks citations, exports annotated PDFs.",
+    footnote: "3 TOOLS · PUBMED · PDF",
+    prompt:
+      "Build a research assistant agent that summarises academic papers from PubMed, tracks citations across publications, and exports findings as annotated PDFs.",
+  },
+  {
+    category: "SUPPORT",
+    title: "Docs triager",
+    preview:
+      "Reads Notion runbooks and files Linear bugs from customer tickets.",
+    footnote: "3 TOOLS · NOTION · LINEAR",
+    prompt:
+      "Build a customer support agent that reads our Notion docs, classifies inbound tickets, and files Linear bugs with reproduction steps.",
+  },
+  {
+    category: "DATA",
+    title: "Metric scout",
+    preview:
+      "Queries BigQuery, drafts weekly digests, flags anomalies in Slack.",
+    footnote: "3 TOOLS · BIGQUERY · SLACK",
+    prompt:
+      "Build a data analyst agent that queries BigQuery for product metrics, writes a weekly Slack digest, and flags anomalies for review.",
+  },
+  {
+    category: "OPS",
+    title: "Oncall medic",
+    preview:
+      "Triages alerts, scans logs, summarises incidents into postmortems.",
+    footnote: "3 TOOLS · DATADOG · PAGERDUTY",
+    prompt:
+      "Build an on-call response agent that triages Datadog alerts, scans recent logs for related errors, escalates via PagerDuty, and drafts a postmortem timeline after resolution.",
+  },
+  {
+    category: "CONTENT",
+    title: "Blog drafter",
+    preview:
+      "Researches a topic, drafts SEO posts, publishes to WordPress.",
+    footnote: "3 TOOLS · WORDPRESS · SERP",
+    prompt:
+      "Build a content marketing agent that researches a topic across SERP results, drafts an SEO-optimised blog post in our brand voice, and publishes it as a draft to WordPress.",
+  },
+];
+
 export default function App() {
-  const [prompt, setPrompt] = useState(samplePrompt);
+  const [prompt, setPrompt] = useState("");
   const [preview, setPreview] = useState<PublicPreview | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [errorContext, setErrorContext] = useState<"preview" | "export" | null>(null);
+  const [rejection, setRejection] = useState<PromptRejection | null>(null);
+  const promptRef = useRef<HTMLTextAreaElement | null>(null);
+  const startStackRef = useRef<HTMLDivElement | null>(null);
+  const startThumbRafRef = useRef<number | null>(null);
+  const [startScrolledEnd, setStartScrolledEnd] = useState(false);
+  const [promptHasFocused, setPromptHasFocused] = useState(false);
+  const [startThumb, setStartThumb] = useState<{ top: number; height: number; visible: boolean }>(
+    { top: 0, height: 0, visible: false },
+  );
+
+  function computeStartThumb() {
+    const el = startStackRef.current;
+    if (!el) return;
+    const visibleHeight = el.clientHeight;
+    const contentHeight = el.scrollHeight;
+    if (contentHeight <= visibleHeight + 1) {
+      setStartThumb({ top: 0, height: 0, visible: false });
+      return;
+    }
+    const railHeight = visibleHeight - 16;
+    let h = Math.max(32, (visibleHeight / contentHeight) * railHeight);
+    h = Math.min(h, railHeight);
+    const denom = contentHeight - visibleHeight;
+    const t = denom > 0 ? (el.scrollTop / denom) * (railHeight - h) : 0;
+    setStartThumb({ top: t, height: h, visible: true });
+  }
+
+  function onStartStackScroll() {
+    const el = startStackRef.current;
+    if (!el) return;
+    setStartScrolledEnd(el.scrollTop + el.clientHeight >= el.scrollHeight - 4);
+    if (startThumbRafRef.current != null) {
+      cancelAnimationFrame(startThumbRafRef.current);
+    }
+    startThumbRafRef.current = requestAnimationFrame(computeStartThumb);
+  }
+
+  useEffect(() => {
+    computeStartThumb();
+    const onResize = () => computeStartThumb();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const verdict = useMemo(() => classifyPrompt(prompt), [prompt]);
+
+  function updatePrompt(next: string) {
+    setPrompt(next);
+    if (rejection) setRejection(null);
+    if (error) setError(null);
+  }
+
+  function useExamplePrompt(example: string) {
+    setPrompt(example);
+    setRejection(null);
+    setError(null);
+    requestAnimationFrame(() => {
+      const el = promptRef.current;
+      if (el) {
+        el.focus();
+        el.setSelectionRange(example.length, example.length);
+      }
+    });
+  }
   const [exportedPlatforms, setExportedPlatforms] = useState<Set<string>>(
     new Set(),
+  );
+  const [inspectingPlatform, setInspectingPlatform] = useState<string | null>(
+    null,
   );
   const [exportingPlatform, setExportingPlatform] = useState<string | null>(
     null,
   );
+  const [activeRuntime, setActiveRuntime] = useState<PlatformKey | null>(null);
 
   const [feedback, setFeedback] = useState("");
   const [feedbackEmail, setFeedbackEmail] = useState("");
@@ -776,19 +1024,24 @@ export default function App() {
     };
   }, []);
 
-  const promptError = useMemo(
-    () => (prompt.trim().length === 0 ? null : validatePrompt(prompt)),
-    [prompt],
-  );
-
   const canBuild =
-    backend.state === "ready" && !busy && !promptError && prompt.trim().length > 0;
+    backend.state === "ready" &&
+    prompt.trim().length > 4 &&
+    verdict !== "off_topic" &&
+    !busy;
 
   async function build() {
-    if (!canBuild) return;
+    if (backend.state !== "ready" || busy) return;
+    if (verdict === "off_topic") {
+      setError(null);
+      setPreview(null);
+      setRejection(localRejection(prompt));
+      requestAnimationFrame(() => promptRef.current?.focus());
+      return;
+    }
     setBusy(true);
     setError(null);
-    setErrorContext(null);
+    setRejection(null);
     setPreview(null);
     setExportedPlatforms(new Set());
     setFeedbackSent(false);
@@ -801,17 +1054,39 @@ export default function App() {
           ?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Preview failed");
-      setErrorContext("preview");
+      if (err instanceof PromptRejectedError) {
+        setRejection(err.rejection);
+        requestAnimationFrame(() => promptRef.current?.focus());
+      } else {
+        setError(err instanceof Error ? err.message : "Preview failed");
+      }
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleInspect(platform: string) {
+    if (inspectingPlatform) return;
+    setError(null);
+    setInspectingPlatform(platform);
+    try {
+      const payload = await exportAgent(prompt.trim(), platform);
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Inspect failed");
+    } finally {
+      setInspectingPlatform(null);
     }
   }
 
   async function handleExport(platform: string) {
     if (exportingPlatform) return;
     setError(null);
-    setErrorContext(null);
     setExportingPlatform(platform);
     try {
       const payload = await exportAgent(prompt.trim(), platform);
@@ -833,7 +1108,6 @@ export default function App() {
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Export failed");
-      setErrorContext("export");
     } finally {
       setExportingPlatform(null);
     }
@@ -865,24 +1139,102 @@ export default function App() {
   function onPromptKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
     if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
       event.preventDefault();
+      if (prompt.trim().length === 0) return;
       void build();
     }
   }
+
+  const promptEmpty = prompt.trim().length === 0;
+  const showEmptyHint = promptEmpty && promptHasFocused && !busy;
 
   const policy = preview?.source_policy;
 
   return (
     <main>
-      <header className="topbar">
-        <div className="brandRow">
-          <div className="mark" aria-hidden="true">
-            M
-          </div>
-          <div className="brand">
-            <span className="brandName">Matix Agent Builder</span>
-            <span className="brandTag">Public preview / same-origin only</span>
-          </div>
+      <div
+        className="pageDecoration"
+        aria-hidden="true"
+      >
+        <div className="pageDecoShapes">
+          <svg
+            viewBox="0 0 1600 900"
+            preserveAspectRatio="xMidYMid slice"
+            xmlns="http://www.w3.org/2000/svg"
+            width="100%"
+            height="100%"
+          >
+            <defs>
+              <filter id="pageDecoTexture" x="-5%" y="-5%" width="110%" height="110%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves={2} seed={5} />
+                <feDisplacementMap in="SourceGraphic" scale={4} />
+              </filter>
+            </defs>
+            <g filter="url(#pageDecoTexture)">
+              <path
+                className="pageDecoShape pageDecoA"
+                d="M -100 80 C -50 -60, 100 -100, 250 -80 C 380 -60, 480 30, 450 130 C 430 200, 380 250, 300 280 C 220 290, 130 270, 60 240 C -10 200, -80 160, -100 80 Z"
+                fill="#9E8E70"
+                opacity="0.32"
+              />
+              <path
+                className="pageDecoShape pageDecoB"
+                d="M 1150 -50 C 1280 -80, 1420 -40, 1500 30 C 1580 80, 1700 120, 1650 220 C 1610 300, 1450 280, 1330 250 C 1240 220, 1180 160, 1130 100 C 1100 50, 1110 0, 1150 -50 Z"
+                fill="#B89684"
+                opacity="0.30"
+              />
+              <path
+                className="pageDecoShape pageDecoC"
+                d="M -50 380 C 30 360, 120 370, 180 410 C 220 440, 230 480, 200 520 C 170 555, 90 565, 30 540 C -30 520, -60 480, -50 440 C -60 420, -55 400, -50 380 Z"
+                fill="#7F9474"
+                opacity="0.22"
+              />
+              <path
+                className="pageDecoShape pageDecoD"
+                d="M 1180 700 C 1280 660, 1420 660, 1500 700 C 1580 730, 1680 760, 1700 820 C 1700 880, 1620 940, 1500 960 C 1380 980, 1250 970, 1180 920 C 1120 870, 1100 800, 1130 760 C 1140 730, 1160 710, 1180 700 Z"
+                fill="#C5A580"
+                opacity="0.32"
+              />
+              <path
+                className="pageDecoShape pageDecoE"
+                d="M -50 720 C 50 680, 180 670, 280 700 C 360 730, 420 800, 380 860 C 340 920, 220 940, 100 920 C 0 900, -80 860, -100 800 C -100 760, -80 730, -50 720 Z"
+                fill="#8A7565"
+                opacity="0.30"
+              />
+              <path
+                className="pageDecoShape pageDecoF"
+                d="M 820 40 C 850 20, 900 15, 940 30 C 970 45, 985 70, 970 95 C 955 115, 920 125, 880 120 C 840 115, 815 100, 810 80 C 805 65, 810 50, 820 40 Z"
+                fill="#9E8E70"
+                opacity="0.18"
+              />
+            </g>
+          </svg>
         </div>
+        <div className="pageDecoLines">
+          <svg
+            viewBox="0 0 1600 900"
+            preserveAspectRatio="xMidYMid slice"
+            xmlns="http://www.w3.org/2000/svg"
+            width="100%"
+            height="100%"
+          >
+            <g fill="none" stroke="#A24A26" strokeWidth={2} opacity="0.55">
+              <path
+                className="pageDecoLine pageDecoLine1"
+                d="M 1500 50 C 1300 200, 1100 350, 800 400 C 500 450, 200 550, -50 600"
+              />
+              <path
+                className="pageDecoLine pageDecoLine2"
+                d="M -50 120 C 200 60, 600 90, 880 100 C 1180 110, 1400 180, 1700 100"
+              />
+              <path
+                className="pageDecoLine pageDecoLine3"
+                d="M 100 780 C 150 750, 220 770, 240 820 C 250 850, 230 880, 200 870"
+              />
+            </g>
+          </svg>
+        </div>
+      </div>
+      <header className="topbar">
         <div className="topbarRight">
           <span className={`pill pill-${backend.state === "ready" ? "ok" : backend.state === "checking" ? "info" : "warn"}`}>
             <span className="dot" />
@@ -894,69 +1246,161 @@ export default function App() {
         </div>
       </header>
 
-      <section className="hero">
-        <div className="heroBadges">
-          <span className="badge badge-codex">Codex</span>
-          <span className="badge badge-claude">Claude Code</span>
-          <span className="badge badge-openclaw">OpenClaw</span>
+      <div className="brandRow">
+        <div className="mark" aria-hidden="true">
+          M
         </div>
-        <h1>
-          One prompt.
-          <br />
-          <span className="heroAccent">Three ready-to-use agents.</span>
-        </h1>
-        <p className="heroLead">
-          Describe the agent you need. The Matix cockpit returns source-linked
-          skills, MCPs, evaluation plans, and safe example exports for Codex,
-          Claude Code, and OpenClaw - side by side.
-        </p>
+        <div className="brand">
+          <span className="brandName">Matix Agent Builder</span>
+          <span className="brandTag">Public preview / same-origin only</span>
+        </div>
+      </div>
 
+      <section className="hero">
+        <div className="heroMain">
+          <p className="heroMeta">BUILD 0142 · MAY 2026 · MATIX</p>
+          <div className="heroMetaRule" aria-hidden="true" />
+          <h1>
+            Describe your agent once.
+            <br />
+            <span className="heroHeadingMuted">
+              Get three runtimes worth keeping.
+            </span>
+          </h1>
+          <p className="heroDek">
+            A prompt becomes a Codex bundle, a Claude Code workspace, and an
+            OpenClaw runtime — each signed, scoped, and ready to ship. Pick
+            one, or take all three.
+          </p>
+        </div>
+        <aside className="heroSidebar" aria-label="Build details">
+          <dl className="heroSidebarList">
+            <div className="heroSidebarItem">
+              <dt>Runtime targets</dt>
+              <dd>03</dd>
+            </div>
+            <div className="heroSidebarItem">
+              <dt>Avg build time</dt>
+              <dd>7s</dd>
+            </div>
+            <div className="heroSidebarItem">
+              <dt>Export format</dt>
+              <dd>JSON</dd>
+            </div>
+            <div className="heroSidebarItem">
+              <dt>License</dt>
+              <dd>MIT</dd>
+            </div>
+            <div className="heroSidebarItem">
+              <dt>Version</dt>
+              <dd>0.4.1-preview</dd>
+            </div>
+          </dl>
+        </aside>
+      </section>
+
+      <div className="layoutGrid">
+        <div className="layoutLeftBottom">
         <div className="promptBox">
           <div className="promptHeader">
             <label htmlFor="prompt" className="promptLabel">
               Describe your agent
             </label>
-            <span className="promptCount">{prompt.length}/1000</span>
+            <span className={`promptCount${prompt.length >= 950 ? " promptCount--critical" : prompt.length >= 800 ? " promptCount--warn" : ""}`}>{prompt.length}/1000</span>
           </div>
           <textarea
             id="prompt"
+            ref={promptRef}
             value={prompt}
             maxLength={1000}
-            onChange={(event) => setPrompt(event.target.value)}
+            onChange={(event) => updatePrompt(event.target.value)}
             onKeyDown={onPromptKeyDown}
-            placeholder="Build a customer support agent that reads our Notion docs and files Linear bugs..."
+            onFocus={() => setPromptHasFocused(true)}
+            placeholder={samplePrompt}
             disabled={backend.state !== "ready"}
-            aria-invalid={Boolean(promptError)}
-            aria-describedby={promptError ? "prompt-error" : undefined}
+            readOnly={busy}
+            data-busy={busy ? "true" : undefined}
+            aria-invalid={rejection != null}
+            aria-describedby={rejection ? "prompt-rejection" : undefined}
           />
-          {promptError && (
-            <p
-              id="prompt-error"
-              style={{ margin: "8px 0 0", fontSize: 13, color: "var(--danger)" }}
-              role="status"
-            >
-              {promptError}
-            </p>
-          )}
           <div className="promptActions">
+            {error && (
+              <p className="promptErrorHint" role="alert">
+                BUILD FAILED — TRY AGAIN
+              </p>
+            )}
             <p className="trustNote">
               No provider keys run in the browser. This page calls only
               same-origin <code>/api/public/*</code>. Exports are safe example
               files with placeholders.
             </p>
+            {showEmptyHint && (
+              <p className="promptEmptyHint">DESCRIBE YOUR AGENT TO BUILD</p>
+            )}
             <div className="promptCta">
               <span className="kbd">Cmd/Ctrl + Enter</span>
               <button
-                className="primaryButton"
+                className={`primaryButton${busy ? " is-busy" : ""}`}
                 onClick={build}
                 disabled={!canBuild}
+                aria-busy={busy}
+                aria-label={busy ? "Building blueprint" : undefined}
               >
-                {busy ? "Building blueprint..." : "Build agent"}
+                <span className="primaryButtonLabel">
+                  {busy ? "Building…" : "Build agent"}
+                </span>
               </button>
             </div>
           </div>
         </div>
-      </section>
+        </div>
+        <aside className="layoutRight">
+          <div className="startFromHeader">TRY AN EXAMPLE</div>
+          <p className="startFromHelper">
+            Click any card to drop it into your prompt — then edit freely.
+          </p>
+          <div className={`startFromScroll${busy ? " is-busy" : ""}`}>
+          <div
+            className="startFromStack"
+            ref={startStackRef}
+            onScroll={onStartStackScroll}
+          >
+            {QUICK_START_CARDS.map((card) => (
+              <button
+                key={card.category}
+                type="button"
+                className="startFromCard"
+                onClick={() => useExamplePrompt(card.prompt)}
+              >
+                <span className="startFromCategory">{card.category}</span>
+                <span className="startFromTitle">{card.title}</span>
+                <span className="startFromPreview">{card.preview}</span>
+                <span className="startFromFootnoteRow">
+                  <span className="startFromFootnote">{card.footnote}</span>
+                  <span className="startFromUseThis" aria-hidden="true">
+                    Use this →
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+            <div className="startFromRail" aria-hidden="true">
+              {startThumb.visible && (
+                <div
+                  className="startFromThumb"
+                  style={{ top: `${startThumb.top}px`, height: `${startThumb.height}px` }}
+                />
+              )}
+            </div>
+          </div>
+          <div
+            className={`startFromHint${startScrolledEnd ? " is-end" : ""}`}
+            aria-hidden="true"
+          >
+            SCROLL FOR MORE
+          </div>
+        </aside>
+      </div>
 
       {backend.state === "not_configured" && (
         <div className="banner banner-warn" role="status">
@@ -974,22 +1418,51 @@ export default function App() {
         </div>
       )}
 
+      {rejection && (
+        <div
+          id="prompt-rejection"
+          className="rejectionCard"
+          role="alert"
+          aria-live="polite"
+        >
+          <div className="rejectionHead">
+            <span className="rejectionBadge">Not an agent request</span>
+            <h3>{rejection.title}</h3>
+          </div>
+          <p className="rejectionMessage">{rejection.message}</p>
+          {rejection.hint && (
+            <p className="rejectionHint">{rejection.hint}</p>
+          )}
+          <div className="rejectionExamplesLabel">Try one of these:</div>
+          <div className="rejectionExamples">
+            {examplePrompts.map((ex) => (
+              <button
+                key={ex}
+                type="button"
+                className="rejectionExample"
+                onClick={() => useExamplePrompt(ex)}
+              >
+                {ex}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="banner banner-error" role="alert">
-          <strong>{errorContext === "export" ? "Export failed." : "Preview failed."}</strong> {error}
+          <strong>Preview failed.</strong> {error}
         </div>
       )}
 
       {busy && (
         <section className="results" aria-busy="true" aria-live="polite">
-          <div className="resultHeader">
-            <div>
-              <p className="platformTag">Backend-approved preview</p>
-              <h2 className="loadingTitle">
-                Composing three runtime blueprints...
-              </h2>
-            </div>
-          </div>
+          <header className="resultHeaderNew">
+            <p className="resultKicker">BACKEND-APPROVED PREVIEW</p>
+            <h2 className="resultPrompt resultPromptLoading">
+              Composing three runtime blueprints…
+            </h2>
+          </header>
           <div className="placards">
             <PlacardSkeleton tone="codex" />
             <PlacardSkeleton tone="claude_code" />
@@ -1000,62 +1473,67 @@ export default function App() {
 
       {!busy && preview && (
         <section className="results" id="results">
-          <div className="resultHeader">
-            <div>
-              <p className="platformTag">Backend-approved preview</p>
-              <h2>{preview.normalized_prompt}</h2>
-              <div className="resultMeta">
-                <span className="resultMetaChip">
-                  {preview.model.provider} / {preview.model.name}
-                </span>
-                <span className="resultMetaChip">
-                  {pretty(preview.selection_source ?? preview.model.status)}
-                </span>
-                <span className="resultMetaDim">
-                  {new Date(preview.generated_at).toLocaleString()}
-                </span>
-              </div>
-            </div>
-            <span className="pill pill-ok">
-              <span className="dot" /> {preview.placards.length} blueprints
-            </span>
-          </div>
+          <header className="resultHeaderNew">
+            <p className="resultKicker">BACKEND-APPROVED PREVIEW</p>
+            <h2 className="resultPrompt">{preview.normalized_prompt}</h2>
+            <p className="resultMetaLine">
+              {preview.model.provider.toUpperCase()} / {preview.model.name.toUpperCase()}
+              {" · "}
+              {pretty(preview.selection_source ?? preview.model.status).toUpperCase()}
+              {" · "}
+              {new Date(preview.generated_at)
+                .toLocaleString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+                .toUpperCase()}
+              {" · "}
+              {preview.placards.length} BLUEPRINTS
+            </p>
+          </header>
 
-          <SourceStatusRail statuses={preview.source_statuses ?? []} />
-          <DomainRail preview={preview} />
-          <CalibrationRail preview={preview} />
+          <SourceStatusSection
+            statuses={preview.source_statuses ?? []}
+            preview={preview}
+          />
 
-          <div className="placards">
-            {preview.placards.map((placard) => (
-              <Placard
-                key={placard.platform}
-                placard={placard}
-                exporting={exportingPlatform === placard.platform}
-                exported={exportedPlatforms.has(placard.platform)}
+          <div className={`bpNavGrid${activeRuntime !== null ? "" : " bpNavGrid--solo"}`}>
+            <SectionNav
+              items={[
+                { id: "section-blueprint", index: "01", label: "Blueprint" },
+                { id: "section-license", index: "02", label: "License" },
+                { id: "section-eval-plan", index: "03", label: "Eval plan" },
+                { id: "section-source-link", index: "04", label: "Source link" },
+              ]}
+            />
+            <div className="bpNavContent">
+              <BlueprintsSection
+                placards={preview.placards}
+                activeRuntime={activeRuntime}
+                onActiveRuntimeChange={setActiveRuntime}
+                policy={policy}
+                exportingPlatform={exportingPlatform}
+                exportedPlatforms={exportedPlatforms}
                 onExport={handleExport}
+                inspectingPlatform={inspectingPlatform}
+                onInspect={handleInspect}
               />
-            ))}
-          </div>
-
-          {policy && (
-            <div className="policy">
-              <span>
-                <strong>Browser provider calls</strong>{" "}
-                {policy.browser_provider_calls ? "yes" : "no"}
-              </span>
-              <span>
-                <strong>Secrets included</strong>{" "}
-                {policy.secrets_included ? "yes" : "no"}
-              </span>
-              <span>
-                <strong>Allowed source hosts</strong>{" "}
-                {policy.allowed_source_hosts.length}
-              </span>
+              {activeRuntime !== null && (
+                <>
+                  <LicensesSection placards={preview.placards} />
+                  <EvalPlanSection placards={preview.placards} />
+                  <SourceLinksSection placards={preview.placards} />
+                </>
+              )}
             </div>
-          )}
+          </div>
         </section>
       )}
 
+      {preview && (
       <section className="feedback">
         <header className="feedbackHead">
           <p className="platformTag">Feedback</p>
@@ -1086,7 +1564,7 @@ export default function App() {
                     className={`star ${value <= rating ? "starOn" : ""}`}
                     onClick={() => setRating(value)}
                   >
-                    *
+                    {value <= rating ? "\u2605" : "\u2606"}
                   </button>
                 ))}
               </div>
@@ -1116,6 +1594,7 @@ export default function App() {
           </div>
         )}
       </section>
+      )}
 
       <footer className="footer">
         <span>Matix Agent Builder / Public preview</span>

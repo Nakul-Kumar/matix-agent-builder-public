@@ -1,0 +1,31 @@
+SCOPE: Two small adjustments to the RECOMMENDED MODEL section. (1) Center all content in the section (revert the previous left-align). (2) Remove the horizontal hairline rule that sits below the "Recommended model" heading lockup.
+
+CHANGE 1 — CENTER THE SECTION CONTENT
+
+Switch the section back to centered alignment. Every element below should be horizontally centered within the content container:
+
+- The "II  Recommended model" heading lockup → centered as a unit. The terracotta "II" kicker stays attached to the left of the heading word, but the whole lockup is centered on the page.
+- "openai / gpt-5.5" model name → centered.
+- "RECOMMENDED · DETERMINISTIC FALLBACK" mono caps tag → centered.
+- Description paragraph ("Use the teacher/default model...") → centered, keep the ~560px max-width so it wraps to ~2 lines.
+- "-- ALTERNATIVES" sub-label → centered.
+- The alternatives card (gemini / gemini-2.5-flash · SHADOW ONLY) → centered horizontally, keep the same width it has now.
+
+CHANGE 2 — REMOVE THE HAIRLINE UNDER THE HEADING
+
+Remove the 1px --border-hairline rule that currently sits between the "II  Recommended model" lockup and the model name. No bar, no divider, no underline — just whitespace between the heading and the model card content.
+
+Adjust the gap between the heading lockup and the start of the model name to ~40px (was ~32px hairline + 16px padding above hairline). This gives the heading clean breathing room without a visual divider.
+
+WHAT NOT TO TOUCH
+- Do not change the heading typography (Fraunces 32px, weight 600, --text-primary, terracotta "II" kicker). Only its alignment.
+- Do not change the description's max-width — it stays ~560px so it still wraps to two lines, just centered now.
+- Do not change the alternatives card design.
+- Do not touch the I. INPUT or III. BLUEPRINTS sections.
+
+VERIFICATION
+1. Reload the results page. Confirm the entire RECOMMENDED MODEL section is horizontally centered.
+2. Confirm there is NO hairline below the "Recommended model" heading.
+3. Confirm clean breathing room (~40px) between the heading and the model name.
+4. Confirm the description still wraps to ~2 lines (max-width preserved) and is now centered.
+5. Confirm the alternatives card is also centered on the page.

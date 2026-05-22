@@ -1,0 +1,66 @@
+SCOPE: Add a sticky left-side section navigator next to the BLUEPRINT content. Clicking an item smooth-scrolls the page to the matching section. No API, no data changes, no restructure of the section content itself.
+
+CURRENT STATE
+The results page shows sections stacked vertically below the runtime tab strip and export row: BLUEPRINT (CODEX label + agent title + Skills/MCPs/Files/Reasons grid), LICENSE, EVAL PLAN, SOURCE LINK (or whatever the exact section names are below the blueprint). The user has to scroll to reach each section.
+
+REQUIRED CHANGE
+Add a vertical sticky side nav on the LEFT of the blueprint content area. The nav lists each major section as a clickable item. Clicking an item smooth-scrolls to that section's heading. As the user scrolls manually, the matching item highlights to show where they are on the page.
+
+LAYOUT
+
+Wrap the existing blueprint content area in a two-column grid:
+- Left column: 180px fixed width — the side nav.
+- Right column: 1fr — existing blueprint content (CODEX label, title, 2×2 grid, and the sections below it).
+- Gap: 32px between columns.
+- Below 1024px viewport: nav collapses to a horizontal pill row above the content (do NOT hide it).
+
+The side nav itself:
+- position: sticky; top: 96px (or whatever clears your fixed header + tab strip — verify in DevTools that it doesn't overlap the tab strip when scrolling).
+- align-self: flex-start so it doesn't stretch to full column height.
+- padding: 16px 0.
+- Vertical list of items, ~12px gap between them.
+
+NAV ITEMS (top to bottom)
+   01 — Blueprint
+   02 — License
+   03 — Eval plan
+   04 — Source link
+
+(Use the actual section names already rendered on the page — if any differ, match them exactly. Do not invent sections that don't exist.)
+
+Each nav item:
+- Display as flex row: numeric index (mono caps 10px, terracotta) + label (Fraunces 14px, weight 500, muted text color #A89D8F by default).
+- Padding: 8px 12px.
+- Left border: 2px solid transparent (becomes terracotta when active).
+- Cursor pointer.
+- Hover (inactive): label brightens to #F4EBE0, left border lifts to #2A3036. 150ms ease.
+- Active state: left border 2px solid #C2674A terracotta, label color #F4EBE0 (white), background subtle #14181C inset.
+- Focus ring: 2px terracotta outline, 2px offset (keyboard accessibility).
+
+BEHAVIOR
+
+1. Add an id to each section heading so anchors work:
+   - id="section-blueprint"   on the CODEX label / agent title block
+   - id="section-license"     on the License heading
+   - id="section-eval-plan"   on the Eval plan heading
+   - id="section-source-link" on the Source link heading
+
+2. Each nav item is an <a href="#section-..."> OR a button with onClick that calls element.scrollIntoView({ behavior: 'smooth', block: 'start' }). Add scroll-margin-top: 100px to each target heading so the smooth scroll lands BELOW the sticky header, not under it.
+
+3. Scroll-spy: as the user scrolls manually, the nav item whose section is currently in view becomes active. Use IntersectionObserver with rootMargin: "-40% 0px -55% 0px" so the active item flips when the section reaches the upper-middle of the viewport. Update activeSection state on observer intersect.
+
+4. Reduced motion: if prefers-reduced-motion is set, replace smooth scroll with instant jump (behavior: 'auto').
+
+CLEANUP / CONSTRAINTS
+- Do NOT change anything about the blueprint sections' own content, layout, or styles. The nav is purely an addition.
+- Do NOT change the runtime tab strip or the export row above it.
+- The nav should NOT appear inside the active tabpanel HTML — it sits in the outer two-column grid wrapper, so it stays visible across tab switches.
+
+VERIFICATION
+1. Load the results page. Confirm the nav is visible on the left, 180px wide, with items 01–04 listed.
+2. Scroll the page. Confirm the nav stays pinned (sticky) at top: 96px and doesn't overlap the tab strip.
+3. Click each item. Confirm smooth scroll lands the section heading just below the sticky header (not flush against the very top of the viewport).
+4. Scroll manually past each section. Confirm the active terracotta highlight updates as each section enters the upper-middle of the viewport.
+5. Tab through with the keyboard. Focus ring should land on each nav item, Enter should trigger the scroll.
+6. Resize to < 1024px. Confirm nav collapses to a horizontal pill row above the content, still clickable, still scroll-spies.
+7. Inspect DOM — confirm scroll-margin-top is set on each target heading.

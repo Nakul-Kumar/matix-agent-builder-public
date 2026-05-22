@@ -1,0 +1,32 @@
+There is a string-template bug in the preview handler. When a user submits a prompt to /api/public/agent-builder/preview, the prompt is currently being Title-Cased and injected as a literal proper-noun substring into placard titles, why_selected lines, and search expansion card titles. Examples produced today:
+
+- placard titles: "Codex Software Engineer Agent For A Agent", "Claude Code Research Assistant Agent That Summarises Agent"
+- search expansion titles: "Search: Software Engineer Agent For A intent expansions"
+- why_selected lines: "Matches workflow planning for this Software Engineer Agent For A bundle."
+
+Find the handler that builds these strings from the user's prompt. It is probably in a module that handles agent-builder preview generation and constructs placards, why_selected, and search-expansion entries.
+
+Apply these exact changes:
+
+1. Remove any step that converts the user's prompt into a Title-Case noun phrase for substitution into result strings. Search the codebase for: toTitleCase, titleCase, capitaliz, agent_slug, agent_name placeholder uses, and any function that capitalises every word of the prompt. Remove all such interpolation from the result-card pipeline.
+
+2. Replace placard titles with the format "{runtime} blueprint":
+   - "Codex blueprint"
+   - "Claude Code blueprint"
+   - "OpenClaw blueprint"
+   No prompt-derived noun phrase appears in the title.
+
+3. Replace why_selected lines with the format: "Matches {capability} for the requested bundle." Where {capability} is the capability slug already used elsewhere (workflow-planning, report-export, etc.). No prompt-derived noun phrase appears in this line.
+
+4. Replace search expansion card titles with the format: "Search: {capability} expansion" — e.g. "Search: intent expansion", "Search: workflow planning expansion". No prompt-derived noun phrase appears here either.
+
+5. If a short identifier for the agent IS needed somewhere internal (logging, tracing, IDs), derive a slug from the prompt instead: lowercase, hyphenated, max 3 words, e.g. "research-assistant" or "software-engineer". This slug must NOT appear in any user-facing string on the results page.
+
+Verification:
+- Run the preview handler against the prompt "Build a research assistant agent that summarises academic papers from PubMed, tracks citations across publications, and exports findings as annotated PDFs." 
+- Inspect the returned JSON for placards[].title, placards[].why_selected, and any search expansion entries.
+- The substring "Research Assistant Agent That Summarises" must NOT appear in any of those fields.
+- Repeat with "Build a software engineer agent for a Next.js app with GitHub, Postgres, and Playwright testing."
+- The substring "Software Engineer Agent For A" must NOT appear in any field.
+
+Report which file you changed and one before/after pair of placard titles.

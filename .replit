@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "web"]
+modules = ["nodejs-20", "web", "python-3.11"]
 [agent]
 expertMode = true
 stack = "BEST_EFFORT_FALLBACK"
@@ -44,3 +44,7 @@ build = ["npm", "run", "build"]
 
 [userenv.shared]
 MATIX_PUBLIC_API_BASE = "https://cockpit.76.13.118.9.sslip.io/api/v1/public"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000

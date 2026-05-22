@@ -1,0 +1,78 @@
+The right column (the 42% column where the decorative blob used to sit) is currently empty after the decoration moved to the page-level layer. Fill it with four quick-start prompt cards that seed the textarea with example agent descriptions. This solves the cold-start "blank textarea" UX problem while reinforcing the editorial style.
+
+Layout:
+- Container: sits inside the right column, top-aligned to roughly match the bottom of the headline.
+- Stack four cards vertically. Gap between cards: 16px.
+- Each card: full width of the right column, min-height 110px.
+- Above the stack, a small mono caps section header reading "—— START FROM" (two em-dashes leading, JetBrains Mono 10px, letter-spacing 0.16em, color #6E6359). 24px below the header before the first card.
+
+Card structure (each card has identical layout, only content differs):
+- 1px solid hairline border (#2A2420), border-radius 4px maximum.
+- Background: transparent (page background shows through).
+- Internal padding: 20px.
+- Cursor: pointer.
+- On hover: border becomes terracotta primary (#C2674A); a 1px terracotta inset on the LEFT EDGE only (use box-shadow inset 2px 0 0 #C2674A) appears; subtle translateX(2px) shift; transition all 160ms ease.
+- On click: the textarea on the left column updates to that card's full prompt text (replacing whatever is currently there), the character counter updates accordingly, and the textarea receives focus.
+
+Card content layout (top to bottom):
+- Row 1: small mono caps category label (10px, letter-spacing 0.14em, color terracotta primary #C2674A), e.g. "ENGINEER" / "RESEARCH" / "SUPPORT" / "DATA".
+- Row 2 (8px below): card title in Fraunces 18px weight 600, color #EDE6DE, e.g. "Next.js engineer".
+- Row 3 (6px below): one-line preview in sans 13px, color #A8998C, line-clamp 2 lines, ellipsis if longer. Shows the FIRST line of the prompt text it inserts.
+- Row 4 (12px below): mono caps footnote (10px, letter-spacing 0.14em, color #6E6359), formatted as "{n} TOOLS · {stack hint}". Right-align this row.
+
+The four cards (exact content to use):
+
+CARD 1
+- Category: ENGINEER
+- Title: Next.js engineer
+- Preview: Ships features end-to-end with GitHub PRs and Playwright tests.
+- Footnote: 4 TOOLS · GITHUB · POSTGRES
+- Insert prompt: "Build a software engineer agent for a Next.js app with GitHub, Postgres, and Playwright testing."
+
+CARD 2
+- Category: RESEARCH
+- Title: Paper analyst
+- Preview: Summarises PubMed papers, tracks citations, exports annotated PDFs.
+- Footnote: 3 TOOLS · PUBMED · PDF
+- Insert prompt: "Build a research assistant agent that summarises academic papers from PubMed, tracks citations across publications, and exports findings as annotated PDFs."
+
+CARD 3
+- Category: SUPPORT
+- Title: Docs triager
+- Preview: Reads Notion runbooks and files Linear bugs from customer tickets.
+- Footnote: 3 TOOLS · NOTION · LINEAR
+- Insert prompt: "Build a customer support agent that reads our Notion docs, classifies inbound tickets, and files Linear bugs with reproduction steps."
+
+CARD 4
+- Category: DATA
+- Title: Metric scout
+- Preview: Queries BigQuery, drafts weekly digests, flags anomalies in Slack.
+- Footnote: 3 TOOLS · BIGQUERY · SLACK
+- Insert prompt: "Build a data analyst agent that queries BigQuery for product metrics, writes a weekly Slack digest, and flags anomalies for review."
+
+Behavior:
+- Clicking a card fully replaces the textarea's current value (it does not append).
+- The character counter updates immediately on click.
+- After the textarea is populated, scroll-into-view is NOT triggered (the user stays where they are).
+- The textarea receives focus so the user can edit if desired.
+
+Responsive:
+- ≥1024px: cards visible in the right column as described.
+- 768px–1023px: the right column collapses (existing single-column behavior from earlier prompts). Render the "START FROM" header and cards BELOW the textarea instead, full width, in a horizontal scroll row with snap-points so the user can swipe.
+- <768px: same as 768–1023 (below textarea, horizontal scroll).
+
+Style discipline:
+- No new colors outside the locked palette.
+- No card shadows, no gradient fills, no rounded-pill internals.
+- Do not insert icons. The category label is the visual identifier.
+- The cards must NOT use the Anthropic-style "gradient border + soft glow + drop shadow" pattern.
+
+Preserve verbatim:
+- The textarea, label, counter, build button, disclaimer, Cmd/Ctrl hint, footer, hero copy, top-right status indicator, and all current handlers.
+- The page-level decoration layer (the six terracotta shapes and three line accents) sits behind the cards at z-index 0; the cards live at z-index 10 alongside other content.
+
+Verify after the change:
+- Clicking any card replaces the textarea value with the corresponding prompt.
+- The counter updates correctly to the new length.
+- Cards are fully legible — none of the decoration shapes are visible underneath them at a contrast that interferes with text.
+- Hover transitions work and the left-edge terracotta marker appears on the hovered card only.

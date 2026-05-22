@@ -1,0 +1,41 @@
+Add two new prompt cards to the existing four in the START FROM scroll container. The new cards follow the exact same structure, styling, hover, and click behavior as the existing four. They simply extend the array.
+
+Insert them at the END of the card list, after the DATA / Metric scout card, in this order:
+
+CARD 5
+- Category: OPS
+- Title: Oncall medic
+- Preview: Triages alerts, scans logs, summarises incidents into postmortems.
+- Footnote: 3 TOOLS · DATADOG · PAGERDUTY
+- Insert prompt: "Build an on-call response agent that triages Datadog alerts, scans recent logs for related errors, escalates via PagerDuty, and drafts a postmortem timeline after resolution."
+
+CARD 6
+- Category: CONTENT
+- Title: Blog drafter
+- Preview: Researches a topic, drafts SEO posts, publishes to WordPress.
+- Footnote: 3 TOOLS · WORDPRESS · SERP
+- Insert prompt: "Build a content marketing agent that researches a topic across SERP results, drafts an SEO-optimised blog post in our brand voice, and publishes it as a draft to WordPress."
+
+Implementation:
+
+1. Locate the card data array / config (likely a const array of objects or a JSX list).
+
+2. Append the two new entries using the same object shape as the existing four. Do not reorder existing cards.
+
+3. Each new card uses the same styling tokens already defined: 14px padding, 16px Fraunces title, terracotta primary category label, 13px sans preview with single-line ellipsis truncation, mono caps footnote right-aligned, hairline border, terracotta hover state with left-edge inset.
+
+4. Click behavior on the new cards must work identically to the existing ones — replacing the textarea value with the card's insert prompt and updating the counter.
+
+5. Scroll behavior: with six cards inside the 440px container instead of four, the inner scrollHeight grows from ~510px to ~770px (six cards at 120px each plus five 10px gaps). This means more content scrollable beneath the fade, and the custom terracotta thumb height shrinks proportionally to reflect the new visible/content ratio. Verify in DevTools that the thumb height visibly decreases compared to the four-card state.
+
+6. The SCROLL FOR MORE affordance text below the container stays as-is. It still fades to opacity 0 only when the user has scrolled to the very bottom — which now means past the sixth card, not the fourth.
+
+7. Responsive: on viewports below 1024px where the cards switch to horizontal-scroll row mode, all six cards must appear in the row, swipeable. Verify the row scrolls past the fourth card to reach OPS and CONTENT.
+
+8. Do not change: existing card content, container height, mask fade, brackets, rail, or any styling that would affect the four existing cards.
+
+Verification after change:
+- All six cards render with category / title / preview / footnote rows visible.
+- The rail's terracotta thumb is shorter than before (because content is taller relative to viewable area).
+- Scrolling reveals OPS card 5 and CONTENT card 6 below the fade.
+- Clicking the new cards populates the textarea correctly with the longer prompts above.

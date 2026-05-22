@@ -1,0 +1,140 @@
+The results page (shown after the user clicks Build agent) currently uses a busy data-dashboard pattern with multiple visual languages: status pills with varied lengths, score chips with tiny progress bars, irregular card heights, three side-by-side runtime columns repeating near-identical content, and metadata pills using inconsistent capitalisation. Rebuild every card on the results page to use the editorial pattern established by the START FROM cards on the landing page. No data shape changes, no API changes — purely visual restructuring of how the existing data renders.
+
+Section 1 — Define a universal Result Card component.
+
+Create a single reusable component (e.g. ResultCard.tsx in src/components/) that exactly mirrors the START FROM card pattern. Props:
+- category: string (mono caps label, terracotta primary #C2674A, 10px, letter-spacing 0.14em)
+- title: string (Fraunces 16px weight 600, color #EDE6DE)
+- preview: string (sans 13px, color #A8998C, single-line ellipsis truncation: white-space nowrap, overflow hidden, text-overflow ellipsis)
+- footnote: string (mono caps 10px, letter-spacing 0.14em, color #6E6359, right-aligned)
+- onClick (optional): handler — if present, cursor pointer + hover treatment; if absent, static card
+- href (optional): if present, wrap the card in an anchor tag opening in _blank
+
+Card styling identical to START FROM cards:
+- Background #14181C
+- Border 1px solid #1F2429
+- Border radius 4px maximum
+- Padding 14px
+- Min-height 120px
+- Display flex, flex-direction column
+- Row spacing inside the card: category to title 4px margin-top, title to preview 4px margin-top, preview to footnote 8px margin-top
+- Hover (when interactive): border becomes #C2674A, inset box-shadow inset 2px 0 0 #C2674A on the left edge, translateX(2px) shift, transition all 160ms ease
+
+Section 2 — Apply the Result Card pattern to every results section.
+
+Each section below currently renders something different; restructure each one to use Result Card.
+
+2a. SOURCE SEARCH STATUS section
+- Section header: "—— I. SOURCE SEARCH STATUS" (mono caps, two em-dashes leading, Roman numeral)
+- Subtitle: replace "Directories and marketplaces checked" with a small mono caps line "—— 12 DIRECTORIES SEARCHED" (or whatever count matches the data).
+- Render each source as a Result Card:
+  - category = the source kind ("REGISTRY" / "DIRECTORY" / "MIRROR" / "MARKET" — derive from the existing source.type field)
+  - title = source name (e.g. "Official MCP Registry", "skills.sh")
+  - preview = the source's one-line description (truncated to single line)
+  - footnote = the status (e.g. "SYNCED" / "AUTH REQUIRED" / "DEGRADED" / "SEARCHED") — with status dot color depending on kind: green for synced/searched, terracotta for auth required, muted for degraded. Format: "● SYNCED" with the dot rendered as a small inline span.
+- Grid layout: 3 columns at viewport ≥1280px, 2 columns 1024–1279, 1 column below 1024. Gap 12px.
+- Remove the auto-generated "Search: {agent_name} intent expansions" cards entirely from this section — they were never meant to be visible to users (they're search-expansion noise from the upstream).
+
+2b. RECOMMENDATION MODEL POLICY section
+- Section header: "—— II. RECOMMENDATION MODEL POLICY"
+- Single full-width Result Card with:
+  - category = "MODEL"
+  - title = the chosen model (e.g. "openai / gpt-5.5 ranks the quality bundle")
+  - preview = the policy explanation (existing copy, truncated to one line)
+  - footnote = the shadow-model annotation (e.g. "● GEMINI 2.5-FLASH SHADOW ONLY")
+
+2c. THREE RUNTIME BLUEPRINTS section
+- Section header: "—— III. BLUEPRINTS"
+- Subtitle: "—— 3 RUNTIMES"
+- For each of the three runtimes (Codex / Claude Code / OpenClaw), render ONE Result Card per runtime as a header card, then nest the runtime's skill/MCP/file cards inside a scroll container beneath it.
+- The three runtime header cards stack vertically, full width. Each header card:
+  - category = "BLUEPRINT" (always — drop the PREVIEW/PLANNED/EXPERIMENTAL pill in favour of putting that status in the footnote)
+  - title = "{runtime name} blueprint" (e.g. "Codex blueprint", "Claude Code blueprint", "OpenClaw blueprint")
+  - preview = the runtime's tagline ("Cool, technical, structured exports" / "Warm, careful, citation-friendly" / "Experimental, local-first, opinionated")
+  - footnote = "{status} · TRUST {n} · MATCH {n}" — three pieces of high-signal metadata separated by middots. Pull from existing data.
+
+- Beneath each runtime header card, render an expandable detail section that shows the runtime's skills, MCPs, files, and licenses as Result Cards inside a vertical scroll strip identical to the START FROM scroll container (height 440px, hidden scrollbar, mask fade top/bottom, hairline rail + terracotta thumb on the right, hairline corner brackets at top-left and bottom-right). One scroll strip per runtime.
+
+- Inside each scroll strip, render these in order:
+  - SKILLS as Result Cards: category = "SKILL", title = skill name, preview = skill description, footnote = "{source-tag} · TASK FIT {n} · QUALITY {n}"
+  - MCPS & TOOLS as Result Cards: category = "MCP", title = MCP name, preview = MCP description, footnote = "{source-tag} · SOURCE {n} · QUALITY {n}"
+  - EXPORT FILES as Result Cards: category = "FILE", title = filename (e.g. README.md), preview = "Included in the {runtime} bundle" (use existing copy if more specific), footnote = "EXPORTED" (no scores for files)
+  - WHY SELECTED items as Result Cards: category = "REASON", title = the capability name (e.g. "workflow-planning"), preview = the why_selected text, footnote = "MATCHED"
+
+- All previous score chips (TRUST/MATCH/USE/PERF and TASK FIT/SOURCE/LICENSE/QUALITY/RUNTIME/CREDS/COVERAGE/RISK with their tiny terracotta progress bars) are removed in favour of the high-signal numbers compressed into the footnote line. This drastically reduces visual noise.
+
+2d. LICENSES section
+- Section header: "—— IV. LICENSES"
+- Each license as a Result Card:
+  - category = "LICENSE"
+  - title = license name (e.g. "Apache-2.0 generated starter")
+  - preview = the license's one-line description (use existing copy)
+  - footnote = the severity ("MEDIUM" / "LOW" / "HIGH" mapped from the existing rating)
+
+2e. EVAL PLAN section
+- Section header: "—— V. EVAL PLAN"
+- Each eval step as a Result Card:
+  - category = "STEP {n}" (where n is the step number)
+  - title = the step name
+  - preview = leave blank (some eval steps have no description) — if blank, the Result Card collapses to 80px instead of 120px
+  - footnote = "REQUIRED" or "OPTIONAL" depending on existing data
+
+2f. SOURCE LINKS section
+- Section header: "—— VI. SOURCE LINKS"
+- Each link as a Result Card (with href prop so it's clickable):
+  - category = "SOURCE"
+  - title = source name (e.g. "Codex skills", "Matix public repo")
+  - preview = the source's description
+  - footnote = the source domain/host (e.g. "GITHUB.COM" / "SKILLS.SH")
+- Layout: 3 columns at ≥1280px, 2 columns 1024–1279, 1 column below.
+
+2g. EXPORT BUNDLE row
+- Below the three runtime sections, render ONE unified Export safe bundle area, not three repeated buttons. A single Result-Card-styled block with:
+  - category = "EXPORT"
+  - title = "Export safe bundle"
+  - preview = the existing safety caveat ("Public export uses placeholders only; private launch requires authenticated cockpit.")
+  - footnote on the LEFT side instead of right: "● PLACEHOLDERS ONLY · REVIEW SECURITY.MD"
+- The card is interactive — clicking it triggers the existing export logic for whichever runtime tab the user has expanded, OR if the user wants all three exports they click three times (cycle the active runtime). Alternative: render three small mono caps tabs above this card labelled "CODEX · CLAUDE CODE · OPENCLAW" — clicking a tab sets which export gets triggered.
+
+Section 3 — Section headers and page rhythm.
+
+Every section header uses the same format:
+- Roman numeral and label: "—— I. SOURCE SEARCH STATUS"
+- JetBrains Mono, 10px, letter-spacing 0.16em, color #6E6359
+- 64px of vertical space above each section (more than the current ~24px) so the page breathes between sections
+- 1px horizontal hairline #2A2420 directly beneath the section header, 8px gap between the header and the hairline, 24px gap between the hairline and the section's first content
+
+Section 4 — Top header rebuild.
+
+The current "BACKEND-APPROVED PREVIEW" header with the agent prompt + openai/gpt-5.5 pill + deterministic fallback pill + timestamp + 3 BLUEPRINTS pill is too busy. Rebuild as:
+- Above the prompt: "—— BACKEND-APPROVED PREVIEW" in mono caps 10px, terracotta primary #C2674A, letter-spacing 0.16em.
+- The user's prompt rendered as Fraunces 28px italic weight 400, color #EDE6DE, max-width 880px, left-aligned, line-height 1.3.
+- Beneath the prompt: a single mono caps line containing the model + timestamp + blueprint count separated by middots: "OPENAI / GPT-5.5 · DETERMINISTIC FALLBACK · 22/05/2026, 18:38 · 3 BLUEPRINTS"
+- No pills, no chips, no separate containers — pure typography.
+
+Section 5 — Cleanup.
+
+- Remove all status-pill components used across the previous results layout (the SYNCED / AUTH REQUIRED / DEGRADED / etc. pills as standalone elements). Status now lives in the Result Card footnote.
+- Remove all score-chip components with their tiny terracotta progress bars. Scores live in the Result Card footnote.
+- Remove the three side-by-side column layout that repeated identical skills across Codex/Claude Code/OpenClaw. Replace with the three runtime header cards + per-runtime scroll strips as described in 2c.
+- Remove the auto-generated "Search: {agent_name} intent expansions" / "Search: {agent_name} agent" cards from the SOURCE SEARCH STATUS section.
+
+Section 6 — Preserve.
+
+- The /api/public/agent-builder/preview POST behavior, response handling, and result data shape are NOT changed.
+- The Export safe bundle handler is NOT changed — only the visual treatment of the button.
+- The FEEDBACK section at the bottom (rating stars + comment textarea) stays as-is for now.
+- The fixed top-right BACKEND/DEVELOPMENT indicator stays.
+- The footer stays.
+- The decoration shapes either stay (if Prompt C hasn't landed yet) or hide on the results route (if Prompt C has landed).
+- The transition from landing to results stays the same.
+
+Verification after change:
+- Build any agent. Confirm:
+  - The top header is pure typography (no pills) with the prompt in Fraunces italic.
+  - Every card on the page (sources, skills, MCPs, files, why-selected, licenses, eval steps, source links) uses the exact same Result Card pattern: terracotta category label, Fraunces title, single-line muted preview, mono caps footnote with key data.
+  - No tiny terracotta progress bars are visible anywhere.
+  - No status pills exist as standalone elements — status is always in a footnote.
+  - The three runtime header cards stack vertically with their own scroll strips beneath each, not three side-by-side columns of repeated content.
+  - Section headers use the "—— {numeral}. {LABEL}" format.
+  - Page total length has decreased by at least 30% compared to before.

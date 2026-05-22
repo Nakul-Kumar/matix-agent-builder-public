@@ -1,0 +1,47 @@
+The four quick-start prompt cards currently expand the page vertically because they stack full-height. Convert the card stack into a fixed-height vertically-scrolling container so the right column stays aligned with the left-column content (headline through textarea) and the rest of the cards are reachable via internal scroll.
+
+Implementation:
+
+1. Wrap the card stack (the existing four cards, NOT the "—— START FROM" header) in a single container element. The header stays outside, above the scroll container.
+
+2. Container styles:
+   - max-height: 460px (this should approximately match the vertical span from the start of the cards down to the bottom of the textarea on the left column — adjust 420–500px to taste so the bottom of the scroll container aligns with the bottom of the textarea).
+   - overflow-y: auto.
+   - padding-right: 8px so card hover translateX(2px) doesn't get clipped by the scrollbar area.
+   - Hide the native scrollbar visually but keep scroll behavior:
+     - Webkit: `::-webkit-scrollbar { width: 0; display: none; }`
+     - Firefox: `scrollbar-width: none;`
+     - IE/Edge: `-ms-overflow-style: none;`
+
+3. Soft fade at top and bottom of the scroll container so cards appear to bleed off rather than hard-cut at the edges:
+   - Apply: `mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);` and the `-webkit-mask-image` equivalent.
+   - This makes the top 8% and bottom 8% of the container fade to transparent. With four cards inside, you'll see roughly 2.5 cards at rest, with the next one visibly fading in at the bottom edge — a clear "more below" affordance.
+
+4. Scroll behavior:
+   - Smooth scroll on mouse wheel (default browser behavior is fine — do not add scroll-snap, which would feel jerky with these card sizes).
+   - Touch scroll on trackpads / mobile works natively.
+
+5. Affordance hint (subtle):
+   - Below the scroll container (outside it, in the right column), add a single mono caps line: "—— SCROLL FOR MORE" centered horizontally within the right column, mono 9px, letter-spacing 0.18em, color #6E6359, 16px below the container.
+   - This text fades to opacity 0 when the user has scrolled to the bottom of the container. Use a scroll listener or IntersectionObserver to toggle a class.
+   - Initial state: opacity 0.7. Fully scrolled state: opacity 0.
+
+6. Keep the cards themselves untouched — the compaction from the previous prompt stays. Padding 14px, line-clamp 1 preview, 16px title, 88px min-height, 10px stack gap.
+
+7. Responsive:
+   - ≥1024px: scroll container active as described above.
+   - 768–1023px and below: the right column collapses; render the cards in the existing horizontal-scroll row beneath the textarea. Remove the max-height and vertical-scroll container in this mode.
+
+8. Do not change:
+   - Card content, hover, click behavior.
+   - The "—— START FROM" section header.
+   - Anything in the left column.
+   - The page-level decoration shapes.
+
+After the change, verify:
+- Right column height now ends near the bottom of the textarea on the left, not extending down past the build button row.
+- Roughly 2.5 cards visible at rest, with the next one fading in at the bottom edge.
+- Scrolling inside the container reveals the remaining cards smoothly.
+- No visible scrollbar.
+- The "SCROLL FOR MORE" hint is visible at first and fades when scrolled to bottom.
+- Page height is noticeably shorter overall.

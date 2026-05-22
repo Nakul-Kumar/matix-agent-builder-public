@@ -1,0 +1,57 @@
+SCOPE: Make the four blueprint grid boxes (SKILLS / MCPS / FILES / REASONS) read as obviously scrollable. Right now each box shows ~2 cards with the item count badge ("8 ITEMS", "10 ITEMS", etc.) but no visual cue that the rest are hidden below. Goal: a subtle, consistent scroll affordance applied to all four boxes — no heavy chrome since there are four boxes on screen at once.
+
+THREE COMPLEMENTARY CUES — apply ALL three
+
+1) FADE-MASK AT THE BOTTOM OF EACH SCROLL CONTAINER
+On the inner scroll area of each box (the part containing the item cards), apply a mask-image fade so the bottom ~40px fades to transparent. The last visible card will dissolve into the background — an instant "there's more below" cue.
+
+CSS:
+   .blueprint-grid-scroll {
+     mask-image: linear-gradient(to bottom, black calc(100% - 40px), transparent 100%);
+     -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 40px), transparent 100%);
+   }
+
+When the user scrolls to the bottom of the container, switch the mask to fade only at the TOP (linear-gradient(to bottom, transparent 0, black 40px)) so they see the last items clearly and get a cue that there are items above. Use a small scroll listener with rAF throttling to update the mask based on scrollTop / (scrollHeight - clientHeight).
+
+2) THIN HAIRLINE RAIL + TERRACOTTA SCROLL THUMB ON THE RIGHT
+Same pattern used on the landing TRY AN EXAMPLE container — keeps the language consistent.
+
+- Hide native scrollbar inside each grid box (scrollbar-width: none; ::-webkit-scrollbar { display: none; }).
+- Add a 1px vertical hairline rail (--border-hairline) positioned absolute on the right inside edge of each box, 8px from the right padding, spanning the inner scroll area's vertical bounds.
+- On the rail, render a 2px wide terracotta thumb (--accent) whose height = (clientHeight / scrollHeight) × rail height, whose top offset = scrollTop / scrollHeight × rail height. Update on scroll with rAF.
+
+If implementing the position-bound thumb is too involved, an acceptable fallback is to keep the native scrollbar but style it: width 4px, track --border-hairline, thumb --accent. Either approach is fine.
+
+3) "N MORE ↓" MONO CAPS HINT UNDER EACH BOX HEADER
+Directly to the right of the "8 ITEMS" / "10 ITEMS" / etc. count, on the same row, add a small clickable hint:
+
+   8 ITEMS · 6 MORE ↓
+
+Treatment:
+- Mono caps 10px, --text-muted, letter-spacing 0.12em.
+- The "6 MORE ↓" segment is clickable: clicking it smooth-scrolls the inner container to the bottom (or by one card-height, whichever feels more natural — test both).
+- The number is computed: total items minus currently visible items. If everything fits without scrolling (no overflow), hide this hint entirely.
+- Cursor: pointer on hover, --accent color on hover, --text-muted by default.
+
+ALL FOUR BOXES GET THIS TREATMENT
+The cues should apply uniformly to SKILLS, MCPS, FILES, and REASONS. Don't single any one box out — consistency across the 2×2 grid is what makes this read as a system, not a quirk.
+
+WHAT NOT TO TOUCH
+- Card design inside each box (SKILL/MCP/FILE/REASON cards with their tags, titles, descriptions, and right-aligned meta footers) — unchanged.
+- Box header typography ("SKILLS", "MCPS", etc. in white 16px) — unchanged.
+- Box outer borders, padding, background — unchanged.
+- The grid layout (2×2 above 1024px, stacks below) — unchanged.
+
+VERIFICATION
+1. Reload the results page, click a runtime tab to load the blueprint, scroll to the 2×2 grid. Confirm each box now has:
+   - A soft fade at the bottom so the last visible card dissolves.
+   - A 1px hairline rail on the right with a terracotta thumb indicating scroll position.
+   - A "N MORE ↓" hint next to the item count.
+2. Scroll inside one of the boxes. Confirm:
+   - The terracotta thumb moves smoothly.
+   - As you scroll past the top, the fade shifts to the TOP edge (so you can see the bottom clearly).
+   - At the very bottom, the fade is at the top only.
+3. Click the "N MORE ↓" hint. Confirm the box smooth-scrolls down.
+4. Resize a box that has fewer items than fit in its height (if any). Confirm the "N MORE ↓" hint is hidden and the fade-mask doesn't show.
+5. prefers-reduced-motion: the smooth-scroll on the hint click should be instant; the fade-mask itself is static so no change needed there.
+6. All four boxes should look and behave identically. Visually compare them side-by-side.

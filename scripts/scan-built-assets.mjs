@@ -9,13 +9,18 @@ const forbidden = [
   "GEM" + "INI",
   "ANTH" + "ROPIC",
   "api.google",
-  "s" + "k-",
-  "AI" + "za",
   "/api/backend",
   "https://cockpit",
   "registry.modelcontextprotocol",
   "mcpmarket",
   "pulsemcp",
+];
+
+// Loose substrings like "sk-" or "AIza" false-positive on CSS tokens
+// such as `mask-image`. Match the full key shape instead.
+const forbiddenPatterns = [
+  /\bsk-[A-Za-z0-9_-]{20,}/,
+  /\bAIza[A-Za-z0-9_-]{20,}/,
 ];
 
 function walk(dir) {
@@ -31,6 +36,11 @@ function walk(dir) {
     for (const needle of forbidden) {
       if (text.includes(needle)) {
         findings.push(`${path.relative(root, full)} contains ${needle}`);
+      }
+    }
+    for (const pattern of forbiddenPatterns) {
+      if (pattern.test(text)) {
+        findings.push(`${path.relative(root, full)} matches ${pattern}`);
       }
     }
   }

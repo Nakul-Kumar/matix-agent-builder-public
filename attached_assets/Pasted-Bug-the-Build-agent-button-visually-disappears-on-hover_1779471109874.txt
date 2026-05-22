@@ -1,0 +1,53 @@
+Bug: the "Build agent" button visually disappears on hover (background and/or text become invisible) while the click target remains active. Fix by enforcing explicit hover styles that always keep the button visible.
+
+Steps:
+
+1. Locate the "Build agent" button component or its CSS rule.
+
+2. Inspect the button in DevTools at rest and on hover. Compare the computed styles for `background-color`, `background`, `color`, `opacity`, and `visibility`. Identify which property is changing to a value that makes the button vanish. Report which property is responsible before applying the fix.
+
+3. Apply these exact styles to the button, both as base and hover:
+
+Base (at rest):
+- background-color: #C2674A
+- color: #0B0A0A
+- border: none
+- padding: 12px 24px
+- border-radius: 6px
+- font-weight: 600
+- cursor: pointer
+- opacity: 1
+- transition: background-color 160ms ease
+
+Hover state:
+- background-color: #9A4B33
+- color: #0B0A0A
+- opacity: 1
+- cursor: pointer
+
+Focus state (keyboard navigation):
+- background-color: #9A4B33
+- color: #0B0A0A
+- outline: 2px solid #E08B6B
+- outline-offset: 2px
+
+Active state (mouse pressed):
+- background-color: #9A4B33
+- transform: none
+
+4. Remove any conflicting hover rules. Common culprits to check and delete if present:
+- background: transparent on hover
+- color: transparent or color matching the background
+- opacity: 0 on hover
+- visibility: hidden on hover
+- background-image that overrides the background-color on hover
+
+5. The text "Build agent" must remain visible at all interaction states. The button must always show a terracotta fill (primary at rest, deep on hover and focus). No fade-out, no disappearance, no transparency tricks.
+
+6. Verification:
+- Hover over the button — background shifts from #C2674A to #9A4B33, text stays #0B0A0A, button remains clearly visible.
+- Tab to the button — outline appears, button remains visible.
+- Click the button — the existing submit handler fires (do not change behavior).
+- Move cursor away — button returns to #C2674A.
+
+Do not change: the button's text content ("Build agent"), the click handler, the Cmd/Ctrl + Enter shortcut, the button position, or anything else on the page.

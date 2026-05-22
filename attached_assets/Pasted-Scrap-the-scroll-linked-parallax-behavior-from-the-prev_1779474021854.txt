@@ -1,0 +1,84 @@
+Scrap the scroll-linked parallax behavior from the previous prompt. The decoration shapes are NOT going to translate based on scroll position. Instead, they get subtle ambient animation that runs continuously on both the landing page AND the results page — visible across the whole site.
+
+Section 1 — Undo any scroll-parallax logic.
+
+If a previous change added a scroll event listener that updates each shape's transform based on scrollY, remove it. Remove will-change: transform if it was added for parallax. Remove any scrollProgress calculations or rAF callbacks tied to scroll. Each shape's transform returns to its at-rest position (no translateX or translateY tied to scroll).
+
+If a previous change hid the decoration on the results route (opacity 0, display none, conditional render tied to results state), also remove that. The decoration must be visible on both routes regardless of scroll position.
+
+Section 2 — Add subtle ambient drift animation to each shape.
+
+Each of the six shapes (A, B, C, D, E, F) gets its own continuous CSS keyframe animation. The motion is deliberately tiny — the goal is "barely perceptible breathing," not visible movement. A user staring at one shape for 3 seconds should notice motion; a user reading the page should not.
+
+Animation pattern (CSS keyframes):
+- 0%: translate(0, 0) scale(1) rotate(0deg)
+- 25%: translate(4px, -3px) scale(1.015) rotate(0.6deg)
+- 50%: translate(-3px, 5px) scale(0.99) rotate(-0.8deg)
+- 75%: translate(5px, 3px) scale(1.01) rotate(0.4deg)
+- 100%: translate(0, 0) scale(1) rotate(0deg)
+
+All movement values stay within ±6px translate, ±0.02 scale, ±1deg rotation. Anything larger crosses the threshold from ambient to distracting.
+
+Per-shape configuration to prevent sync:
+- Shape A: animation-duration 18s, animation-delay 0s
+- Shape B: animation-duration 22s, animation-delay -7s
+- Shape C: animation-duration 16s, animation-delay -3s
+- Shape D: animation-duration 24s, animation-delay -11s
+- Shape E: animation-duration 20s, animation-delay -5s
+- Shape F: animation-duration 14s, animation-delay -2s
+
+(Negative delays start the animation mid-loop on page load so the shapes don't all begin at the 0% keyframe simultaneously.)
+
+Animation properties:
+- animation-iteration-count: infinite
+- animation-direction: normal (not alternate — using a full keyframe loop instead)
+- animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1) — smooth sinusoidal-feeling easing, NOT linear. Linear feels mechanical; the cubic-bezier above gives the slow-to-fast-to-slow rhythm of a tide.
+
+Section 3 — Lines stay static.
+
+The three line accents (Line 1, Line 2, Line 3) do NOT animate. They remain at their at-rest positions. The contrast between static lines and slowly drifting shapes is part of the effect — it makes the shapes feel like fluid moving past structure.
+
+Section 4 — Performance.
+
+- Use only transform — no animations on top, left, width, height, or filter.
+- Add will-change: transform to each animated shape so the browser promotes them to their own layer.
+- All six animations together should consume well under 1% CPU on a mid-range laptop.
+- Verify in DevTools Performance tab: record 5 seconds of idle page, confirm no long frames and no layout shifts.
+
+Section 5 — Reduced motion.
+
+Wrap the entire animation block in a media query:
+
+@media (prefers-reduced-motion: no-preference) {
+  /* the keyframes and per-shape animation properties go here */
+}
+
+If the user has reduced-motion enabled, no animation is applied — the shapes sit at their at-rest positions, static. Do NOT replace the animation with a fade or any alternative motion; reduced-motion users get pure static decoration.
+
+Section 6 — Optional polish (apply only if performance budget allows): edge ripple.
+
+The existing SVG turbulence filter on the shapes uses a fixed seed value. Animate it subtly so the displaced edges of each shape ripple slowly, reinforcing the liquid feel:
+
+- Inside each feTurbulence element, add an animate child:
+  <animate attributeName="seed" values="1; 3; 2; 4; 1" dur="40s" repeatCount="indefinite" />
+- Use a different seed cycle for each shape so the ripples don't sync.
+- This is OPTIONAL — only add it if the per-frame cost stays under 2ms. If profiling shows any jank, remove the filter animation and keep only the CSS transform animation.
+
+Section 7 — Cleanup.
+
+Remove from the codebase:
+- Any scroll event listener tied to decoration shapes
+- Any scrollProgress / rAF callback used for parallax
+- Any conditional render that toggles decoration based on the results state
+- Any opacity/display change tied to scrollY or route
+
+The decoration is now constant-visibility + constant-ambient-motion across the whole site.
+
+Verification after change:
+- Land on the page. Watch any shape for 3 seconds. Confirm it's visibly moving — slowly, subtly, fluid.
+- Watch the same shape for 30 seconds. Confirm the motion is continuous and never returns to a hard zero (it loops).
+- Confirm no two shapes are doing the same thing at the same time (the staggered delays should make this impossible).
+- Build an agent and observe the results page. The shapes are still visible and still animating — the decoration is constant on both routes.
+- Scroll the page. The shapes do NOT translate with scroll. Only their ambient animation continues.
+- Enable OS reduced motion. Reload. Confirm shapes are static.
+- Open DevTools Performance, record 5s, confirm no jank.

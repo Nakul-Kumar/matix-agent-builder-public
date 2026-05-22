@@ -1,0 +1,30 @@
+The multi-shape decoration composition is correctly placed but the shapes are too dominant and are overlapping content text (notably the OPENCLAW chip, the "Public preview / same-origin only" subtitle, and the entire footer row). Three precise changes:
+
+1. Reduce opacity on every shape. New values:
+   - Shape A (top-left, terracotta deep): opacity 0.32
+   - Shape B (top-right, terracotta primary): opacity 0.30
+   - Shape C (mid-left, terracotta soft): opacity 0.22
+   - Shape D (bottom-right, terracotta deep): opacity 0.32
+   - Shape E (bottom-left, terracotta primary): opacity 0.30
+   - Shape F (top-center accent, terracotta soft): opacity 0.18
+   The line accents stay at opacity 0.55 — do not change them.
+
+2. Remove `mix-blend-mode: multiply` from the shapes. Keep them as plain opacity layers. Multiply against the warm near-black background is what made them feel heavy. Without multiply, the lower opacity will read as a soft tinted glow at the edges.
+
+3. Enforce the center clearance zone STRICTLY. The shapes are currently bleeding into the central content area. Apply a CSS mask or clip-path on the shape composition container so that shape FILLS fade out toward the center:
+   - The simplest implementation: apply a radial-gradient mask to the decoration container, opaque (white) at the corners and transparent (black) in the center. Use:
+     `mask-image: radial-gradient(ellipse 70% 70% at center, transparent 0%, transparent 40%, black 100%);`
+     `-webkit-mask-image: radial-gradient(ellipse 70% 70% at center, transparent 0%, transparent 40%, black 100%);`
+   - This makes the central 40% of the viewport completely shape-free (the radial gradient is transparent there), then fades the shapes in toward the edges.
+   - The line accents should NOT be inside this masked container — they sit in a separate sibling container without the mask, so they can still thread through the center.
+
+4. Verification:
+   - The category chips row (CODEX · CLAUDE CODE · OPENCLAW) must be fully legible with no shape fill behind any of the three words.
+   - The "Public preview / same-origin only" subtitle must be fully legible.
+   - Both footer rows must be fully legible end to end.
+   - The line accents still visibly cross the center area (they're not affected by the mask).
+   - Shape fills are still clearly visible at all four corners and the left/right edges — softer, but present.
+
+Do not change shape paths, positions, sizes, the SVG turbulence filter, or the responsive breakpoints. Only opacity, blend-mode, and the central mask change.
+
+Screenshot after the change and confirm all category chips and footer text are legible.

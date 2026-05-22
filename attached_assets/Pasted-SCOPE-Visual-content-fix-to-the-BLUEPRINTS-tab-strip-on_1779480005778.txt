@@ -1,0 +1,48 @@
+SCOPE: Visual + content fix to the BLUEPRINTS tab strip only. No API, no routing, no data-shape changes.
+
+PROBLEM
+The three blueprint tab triggers currently render the full agent title inside each tab ("Codex Data Analyst Agent That Queries Agent", "Claude Code Data Analyst Agent That Queries Agent", "OpenClaw Data Analyst Agent That Queries Agent"). This:
+1. Repeats the same string three times — visual noise, no information gain.
+2. Wraps to two lines and makes the tabs feel like cards, not selectors.
+3. Wastes the tab strip — the differentiating info (runtime, status, trust, match) gets buried below the redundant title.
+
+FIX — restructure each tab trigger so it shows only what's distinct per runtime.
+
+Each of the three tab triggers should render in this order, top to bottom:
+
+1. Runtime name — Fraunces, weight 600, 18px, white (#F4EBE0 or your existing primary text color). This is the PRIMARY label of the tab.
+   - Codex tab: "Codex"
+   - Claude Code tab: "Claude Code"
+   - OpenClaw tab: "OpenClaw"
+
+2. Status pill + meta row — single row below the runtime name, mono caps 10px, muted text color, separated by middle dots. Format:
+   ● PREVIEW · TRUST 74 · MATCH 92
+   The colored dot keeps its existing status color (green for preview, neutral for planned, amber for experimental). Mono caps for the labels, terracotta for the numeric values as a subtle accent.
+
+REMOVE from the tab trigger entirely: the long "Codex Data Analyst Agent That Queries Agent" title. That title belongs in the active blueprint panel header below the tab strip — not inside the tab itself.
+
+TAB STRIP DIMENSIONS AND LAYOUT
+- Each tab: 72–80px tall (down from the current ~100px+). Should read as tabs, not cards.
+- Flex distribution: flex: 1 1 0 so the three tabs split the row equally.
+- Padding: 14px 18px.
+- Active tab: 1px terracotta border + subtle terracotta inset glow (existing behavior). Runtime name in white, status pill stays its color.
+- Inactive tab: 1px #1F2429 hairline border, runtime name slightly dimmer (#A89D8F or your muted text), status pill at full opacity so it stays scannable.
+- Hover on inactive: border lifts to #2A3036, runtime name brightens to full white. 150ms ease.
+
+ACTIVE BLUEPRINT PANEL BELOW THE STRIP
+This is where the agent title now lives. Render once, at the top of the panel:
+- Category label (mono caps 10px, terracotta): the active runtime — "CODEX" / "CLAUDE CODE" / "OPENCLAW"
+- Title (Fraunces, weight 600, 22px, white): the full agent name, e.g. "Codex Data Analyst Agent That Queries Agent"
+- Then the existing 2×2 grid (Skills / MCPs / Files / Reasons) below.
+
+CLEANUP
+- The agent title must no longer be rendered three times in the DOM. There should be exactly one heading element for the active blueprint, inside the active tabpanel.
+- Keep all ARIA roles (tablist / tab / tabpanel) and keyboard navigation intact.
+- Keep the 200ms opacity fade on tab switch.
+
+VERIFICATION — run these after the change
+1. Open the results page. Confirm the tab strip is one visual row, each tab ~75px tall, and reads "Codex" / "Claude Code" / "OpenClaw" as the dominant label, not the full agent name.
+2. Click each tab. Confirm the agent title appears exactly once, in the panel below, and updates with the active runtime label above it.
+3. Inspect the DOM — search for the agent title string. It should appear once on the page, not three times.
+4. Tab through with the keyboard — focus ring should land on each tab cleanly, arrow keys should switch tabs, Enter/Space should activate.
+5. Resize below 1024px — tabs should stack vertically and still read as compact selectors, not cards.

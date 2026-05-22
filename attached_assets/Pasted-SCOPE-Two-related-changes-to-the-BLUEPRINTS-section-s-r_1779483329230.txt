@@ -1,0 +1,79 @@
+SCOPE: Two related changes to the BLUEPRINTS section's runtime selection.
+
+(1) Make the "Choose your setup" prompt visually obvious — right now it reads as a quiet caption.
+(2) Hide everything below the three runtime tabs (the export row AND the blueprint content) on initial page load. They appear ONLY after the user clicks one of the three runtime cards (Codex / Claude Code / OpenClaw).
+
+CHANGE 1 — PROMOTE THE "CHOOSE YOUR SETUP" PROMPT
+
+Current state: small italic centered helper "Choose your setup — pick the runtime you want to build with." sitting just above the tab strip. Too quiet for what is now a required action.
+
+Replace with a clearer call:
+
+   Choose your runtime
+   Pick one to see the blueprint.
+
+Treatment:
+- Line 1 ("Choose your runtime"): Fraunces serif, weight 600, 22px, --text-primary, centered.
+- Line 2 ("Pick one to see the blueprint."): Fraunces italic 15px, --text-muted, centered, 4px gap below line 1.
+- The whole lockup sits centered above the tab strip with 24px gap below.
+
+Drop the previous italic caption. This two-line lockup replaces it entirely.
+
+CHANGE 2 — GATE EVERYTHING BELOW THE TAB STRIP BEHIND A USER SELECTION
+
+State management:
+- The activeRuntime variable should initialize to null (or undefined), NOT to "codex". On initial render, no runtime is active.
+- When activeRuntime === null:
+   * All three runtime tab cards render in their inactive state — no terracotta border on any card, no inset highlight.
+   * The export row (ANTHROPIC / CLAUDE CODE · BROWSER PROVIDER CALLS NO · ... · VIEW JSON · EXPORT SAFE BUNDLE) does NOT render.
+   * The blueprint content below (the CODEX / CLAUDE CODE / OPENCLAW category label, agent title, and the 2×2 Skills/MCPs/Files/Reasons grid) does NOT render.
+- When the user clicks any tab card:
+   * activeRuntime updates to that runtime.
+   * The clicked card receives the active state (terracotta border + inset).
+   * The export row appears, with metadata bound to the active runtime.
+   * The blueprint content appears below, also bound to the active runtime.
+- Subsequent clicks switch activeRuntime; the content below updates in place. No re-mount, just data swap.
+
+Reveal animation:
+- When activeRuntime transitions from null → a runtime, fade in the export row and blueprint content (opacity 0 → 1, 200ms ease). Skip the fade if prefers-reduced-motion is set.
+- When switching between runtimes (e.g. Codex → Claude Code), keep the existing 200ms opacity fade on the blueprint content — no full mount/unmount.
+
+Empty-state cue (optional but recommended):
+- When activeRuntime === null, render a single line of helper text in the space BELOW the tab strip where the export row would normally sit:
+   "↑ Select a runtime above to load its blueprint and export bundle."
+   Treatment: Fraunces italic 14px, --text-muted, centered, 40px vertical padding so the empty area has presence and the user clearly understands the section is waiting on them.
+- The ↑ arrow character points up at the tab strip — gives the empty state a visual link to the action required.
+- This helper disappears once activeRuntime is set.
+
+Section navigator (the 01/02/03/04 side nav) behavior:
+- Keep the side nav visible even when activeRuntime is null. The Blueprint item remains clickable — clicking it scrolls to the BLUEPRINTS heading (above the tab strip).
+- License, Eval plan, Source link items continue to function as before.
+
+WHAT NOT TO TOUCH
+- Tab card visual design (cream surface, ~75px tall, runtime name in Fraunces, status pill row below) — unchanged.
+- Active state styling (terracotta border, inset glow) — unchanged.
+- Export row design — unchanged, only its conditional rendering changes.
+- 2×2 blueprint grid design — unchanged.
+- Side nav design — unchanged.
+- The "Three runtimes ready to export" heading + "3 RUNTIMES" mono caps + hairline above the tabs — all unchanged.
+
+VERIFICATION
+1. Reload the results page and scroll to the BLUEPRINTS section. Confirm:
+   - The "Choose your runtime / Pick one to see the blueprint." two-line prompt appears above the tab strip in Fraunces serif.
+   - No tab card has a terracotta active border.
+   - The export row is NOT visible.
+   - The blueprint content (category label, title, 2×2 grid) is NOT visible.
+   - The empty-state helper "↑ Select a runtime above to load its blueprint and export bundle." appears centered in the space where the blueprint would render.
+2. Click the Codex tab. Confirm:
+   - Codex card receives the terracotta active border.
+   - The export row appears with "OPENAI / CODEX CLI" provider label.
+   - The blueprint content appears with the CODEX category label and Codex agent title.
+   - The empty-state helper disappears.
+3. Click the Claude Code tab. Confirm:
+   - Codex active border releases, Claude Code receives it.
+   - Export row provider label switches to "ANTHROPIC / CLAUDE CODE".
+   - Blueprint content fades in with CLAUDE CODE category label and Claude Code agent title.
+4. Click OpenClaw. Same swap behavior — provider and blueprint update.
+5. With prefers-reduced-motion enabled, confirm content appears/swaps instantly without the 200ms fade.
+6. Keyboard test: Tab to focus a runtime card, press Enter — the same gated reveal should fire.
+7. Confirm the side nav (Blueprint / License / Eval plan / Source link) remains visible and functional regardless of activeRuntime state.

@@ -1,0 +1,180 @@
+Redesign the UI of this page to be more professional. Do NOT change any functionality, 
+API calls, logic, or copy — only CSS and visual styling. Here is the exact system to follow:
+
+---
+
+## 1. COLOR SYSTEM — 60/30/10 RULE
+
+Apply this strictly. Three color families, each with shade variance. No other hues allowed.
+
+### 60% — DOMINANT (backgrounds & surfaces)
+All backgrounds and containers use shades from this dark navy family only:
+  --bg-base:     #080C17   (page background)
+  --bg-surface:  #0E1221   (card/container backgrounds)
+  --bg-elevated: #151A2D   (inputs, dropdowns, code chips)
+  --bg-hover:    #1C2338   (hover states on surfaces)
+
+### 30% — SECONDARY (text, borders, structural chrome)
+All text and borders use shades from this slate family only:
+  --text-primary:   #E2E8F5   (headings, strong labels)
+  --text-secondary: #8E9BB5   (body copy, descriptions)
+  --text-muted:     #4E5A74   (helper text, captions, counters)
+  --border-subtle:  #141B2D   (barely-there dividers)
+  --border-default: #1E2B44   (card borders, input borders)
+  --border-strong:  #2A3855   (focused/active borders)
+
+### 10% — ACCENT (actions, highlights, brand moments)
+All interactive or brand-coloured elements use shades from this indigo/violet family only:
+  --accent-base:    #6366F1   (primary button bg, active tags)
+  --accent-light:   #818CF8   (button hover, icon highlights)
+  --accent-dim:     #2D2B7A   (badge/tag background tint)
+  --accent-border:  #4845A8   (badge/tag border)
+  --accent-glow:    rgba(99, 102, 241, 0.15)  (focus rings, subtle glows)
+
+No other colours (no coral, no cyan, no amber) — not even as gradients.
+
+---
+
+## 2. TYPOGRAPHY
+
+Keep the existing font stack. Apply this scale consistently:
+- Display heading: 64px–72px, font-weight 800, line-height 1.05, letter-spacing -0.03em
+- Section heading: 28px, font-weight 600, letter-spacing -0.01em
+- Body: 15px, font-weight 400, line-height 1.65
+- Label (uppercase caps): 11px, font-weight 600, letter-spacing 0.1em
+- Code/mono chip: 12px, font-family monospace, bg --bg-elevated, padding 2px 6px, 
+  border-radius 4px, color --text-secondary
+
+---
+
+## 3. COMPONENT CHANGES
+
+### Navbar
+- Background: --bg-base, border-bottom: 1px solid --border-subtle
+- Logo "M" icon: background --accent-base, color white, border-radius 8px
+- Tagline text: --text-muted, font size 11px
+- Status badge (top right): background --bg-elevated, border 1px solid --border-default, 
+  green dot stays (#22C55E), text --text-secondary, font-size 11px, letter-spacing 0.08em
+
+### Platform tags (CODEX, CLAUDE CODE, OPENCLAW)
+All three should be identical in style — no variation between them:
+- Background: --accent-dim
+- Border: 1px solid --accent-border
+- Text: --accent-light
+- Font: 11px, weight 600, letter-spacing 0.08em, uppercase
+- Border-radius: 6px
+- Padding: 4px 10px
+
+### Hero headline
+- "One prompt." → color: --text-primary
+- "Three ready-to-use agents." → CSS gradient using ONLY accent shades:
+  background: linear-gradient(135deg, #818CF8 0%, #A78BFA 50%, #C4B5FD 100%)
+  -webkit-background-clip: text; color: transparent
+  (This stays within the violet/indigo accent family only)
+- Body description: color --text-secondary, max-width 520px, font-size 15px
+
+### Input card (main container)
+- Background: --bg-surface
+- Border: 1px solid --border-default
+- Border-radius: 14px
+- Padding: 24px
+- Box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03)
+
+### Label "DESCRIBE YOUR AGENT"
+- Apply the uppercase label style: --text-muted, 11px, weight 600, letter-spacing 0.1em
+
+### Character counter (96/1000)
+- Color: --text-muted, font-size 12px
+
+### Textarea
+- Background: --bg-elevated
+- Border: 1px solid --border-default
+- Border-radius: 8px
+- Color: --text-primary
+- Font-size: 15px, line-height 1.6
+- Padding: 14px 16px
+- On focus: border-color --accent-base, box-shadow: 0 0 0 3px --accent-glow, outline: none
+- Resize: vertical only (resize: vertical)
+- Minimum height: 120px
+
+### Security note (below textarea)
+- Color: --text-muted, font-size 12px
+- The "/api/public/*" inline code: apply mono chip style from typography section
+
+### Keyboard shortcut chip (Cmd/Ctrl + Enter)
+- Background: --bg-elevated
+- Border: 1px solid --border-default
+- Color: --text-muted
+- Font: 12px monospace
+- Border-radius: 6px
+- Padding: 4px 8px
+
+### Build agent button
+- Background: --accent-base
+- Hover background: --accent-light
+- Active: scale(0.98)
+- Color: white, font-weight 600, font-size 14px
+- Border-radius: 8px
+- Padding: 10px 20px
+- Transition: background 150ms ease, transform 100ms ease
+- Add a loading state: when clicked and awaiting response, show a subtle spinner 
+  (CSS border-radius spinner, 16px, white, inside the button) and disable the button 
+  with opacity 0.7 and cursor not-allowed
+
+### Feedback section
+- Only render this section if an agent blueprint has already been generated 
+  (check if output/results are present in the DOM). If no results yet, hide it 
+  with display:none. This improves perceived polish significantly.
+- When visible, same card style as the input card
+- Star rating: unselected stars use --text-muted, selected stars use --accent-light
+- Textarea: same style as main textarea
+- Email input: same style as textarea
+- "Send feedback" button: ghost/outline variant
+  - Background: transparent
+  - Border: 1px solid --border-strong
+  - Color: --text-secondary
+  - Hover: background --bg-elevated, color --text-primary
+  - Same border-radius and padding as primary button
+
+### Footer
+- Border-top: 1px solid --border-subtle
+- All text: --text-muted, font-size 12px
+- Links: --text-muted, hover: --text-secondary, no underline by default, 
+  underline on hover
+
+---
+
+## 4. SPACING & LAYOUT
+
+- Use an 8px base grid throughout (all spacing should be multiples of 8: 8, 16, 24, 32, 48, 64)
+- Max content width: 740px, centered with auto margins
+- Page top padding: 80px (desktop), 48px (mobile)
+- Gap between hero and input card: 48px
+- Ensure all clickable targets are minimum 44×44px (Fitts's Law — improves 
+  perceived quality immediately)
+
+---
+
+## 5. VALIDATION REQUIREMENTS (the redesign must pass all of these)
+
+These are based on Nielsen's 10 Heuristics and WCAG 2.2 AA:
+
+1. CONTRAST: --text-primary (#E2E8F5) on --bg-surface (#0E1221) must be ≥ 4.5:1. 
+   Verify with https://webaim.org/resources/contrastchecker/
+2. LARGE TEXT: --text-secondary (#8E9BB5) on --bg-surface must be ≥ 3:1 for any 
+   text 18px+ (WCAG large text threshold)
+3. SYSTEM STATUS (Heuristic #1): The "Build agent" button MUST show a loading/busy 
+   state while waiting for a response. No silent waiting.
+4. CONSISTENCY (Heuristic #4): All three platform badge tags (CODEX, CLAUDE CODE, 
+   OPENCLAW) must be visually identical — no variation in style between them.
+5. COLOUR BLINDNESS: No information conveyed by colour alone — the star rating 
+   must use filled/unfilled shapes, not just colour change.
+6. PURE BLACK/WHITE AVOIDANCE: Do not use #000000 or #FFFFFF anywhere — pure 
+   black causes halation artifacts on OLED screens, pure white blooms at night.
+7. NO NEW HUES: Run a visual check — only navy/charcoal, slate, and indigo/violet 
+   should appear. If any other hue is visible, remove it.
+
+---
+
+Do not change: page title, all text content/copy, API endpoint logic, the feedback 
+form fields/labels, the character counter logic, or keyboard shortcut behaviour.
