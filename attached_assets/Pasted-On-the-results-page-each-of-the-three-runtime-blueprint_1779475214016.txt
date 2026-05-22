@@ -1,0 +1,54 @@
+On the results page, each of the three runtime blueprints (Codex, Claude Code, OpenClaw) currently lumps Skills, MCPs, Files, and Reasons into a single long vertical scroll strip. Restructure each runtime block so it has FOUR independent sub-section boxes — Skills, MCPs, Files, Reasons — arranged in a 2x2 grid beneath the runtime header card. Each sub-section box is independently scrollable.
+
+Layout per runtime (Codex, Claude Code, OpenClaw each get this identical structure):
+
+1. The runtime HEADER CARD stays as it is (the Result Card with category "BLUEPRINT", title "{runtime} blueprint", preview tagline, footnote with status + scores). Full width of the content area. No change here.
+
+2. Directly beneath the header card, render a 2x2 GRID of sub-section boxes:
+   - Top-left box: SKILLS
+   - Top-right box: MCPS
+   - Bottom-left box: FILES
+   - Bottom-right box: REASONS
+   - Grid gap: 16px between boxes.
+   - Each box is half the content area's width minus the gap. So at 1280px content area, each box is roughly 632px wide.
+   - At viewport widths below 1024px, the grid collapses to a single column (boxes stack vertically).
+
+3. Each sub-section box is a Result-Card-styled scroll container:
+   - Container has the same dark surface and hairline border as the Result Card (background #14181C, border 1px solid #1F2429, border-radius 4px maximum).
+   - Padding 16px inside the container.
+   - Container height: fixed at 320px.
+   - Container is internally scrollable (overflow-y: scroll, hidden scrollbar, mask fade top/bottom).
+   - Apply the same hairline rail with terracotta thumb on the right edge of each box's scroll area, and the same corner brackets at top-left and bottom-right of each box's scroll area, matching the START FROM cards pattern.
+
+4. Box header (inside each box, above its scroll content):
+   - "—— SKILLS" / "—— MCPS" / "—— FILES" / "—— REASONS" in JetBrains Mono caps 11px, letter-spacing 0.16em, color #6E6359, left-aligned.
+   - Beneath, a small mono caps count: "N ITEMS" in 10px, color #6E6359.
+   - 1px hairline divider #2A2420 beneath the header, then 16px gap before the scroll content begins.
+
+5. Inside each box's scroll content, render the corresponding Result Cards:
+   - SKILLS box: render every skill as a Result Card (category "SKILL", title = skill name, preview = description, footnote with source tag and scores).
+   - MCPS box: render every MCP/tool as a Result Card (category "MCP", title = MCP name, preview = description, footnote with source tag and scores).
+   - FILES box: render every file in the export bundle as a Result Card (category "FILE", title = filename, preview = "Included in the bundle" or existing copy, footnote = "EXPORTED").
+   - REASONS box: render every why-selected entry as a Result Card (category "REASON", title = the capability name, preview = the why_selected text, footnote = "MATCHED").
+   - Card spacing inside each box: 10px gap between cards.
+   - Cards are NOT compacted further — they keep the same 120px min-height and full layout established earlier.
+
+6. Repeat this entire structure (header card + 2x2 grid of four sub-section boxes) for each of the three runtimes. All three runtimes stack vertically down the page.
+
+7. Section header for the overall BLUEPRINTS section (which sits above all three runtime blocks): use the centered + enlarged treatment from Prompt 1 — Roman numeral "—— III. BLUEPRINTS" in mono caps 14px, subtitle "Three runtimes ready to export" in Fraunces 28px center-aligned, count line "—— 3 RUNTIMES" in mono caps 11px, hairline divider below.
+
+8. Between each runtime block, add 48px of vertical space and a centered mono caps separator line: "—— CODEX" / "—— CLAUDE CODE" / "—— OPENCLAW" — 12px, color #6E6359, letter-spacing 0.16em. This labels which runtime the block below belongs to.
+
+9. Cleanup:
+   - Remove the previous single-scroll-strip implementation per runtime if it was applied.
+   - Remove any tab UI or accordion if those were prototyped earlier.
+   - The 2x2 grid of sub-section boxes replaces whatever was rendering the runtime's detail content before.
+
+10. Verification:
+   - For each runtime, the page shows the header card at the top, then four clearly labeled boxes (Skills, MCPs, Files, Reasons) in a 2x2 grid.
+   - Each box is independently scrollable — scrolling inside the Skills box does NOT scroll the page or the other boxes.
+   - The hidden scrollbar + rail + thumb + brackets pattern is visible on each box.
+   - Below 1024px viewport, the four boxes stack vertically in a single column.
+   - Total page height for the three runtimes combined is significantly shorter than before (the 2x2 grid is more compact than three long vertical scroll strips).
+
+Preserve all data, all card content, all export handlers. The change is purely structural.

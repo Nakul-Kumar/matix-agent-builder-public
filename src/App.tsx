@@ -170,10 +170,11 @@ function BlueprintsSection({ placards }: { placards: RuntimePlacard[] }) {
   if (placards.length === 0) return null;
   return (
     <section className="resultSection">
-      <header className="sectionHead">
-        <p className="sectionKicker">—— III. BLUEPRINTS</p>
-        <div className="sectionRule" aria-hidden="true" />
-        <p className="sectionSubtitle">—— {placards.length} RUNTIMES</p>
+      <header className="anchorHead">
+        <p className="anchorKicker">—— III. BLUEPRINTS</p>
+        <h2 className="anchorTitle">Three runtimes ready to export</h2>
+        <p className="anchorCount">—— {placards.length} RUNTIMES</p>
+        <div className="anchorRule" aria-hidden="true" />
       </header>
       <div className="blueprintList">
         {placards.map((placard) => (
@@ -181,6 +182,30 @@ function BlueprintsSection({ placards }: { placards: RuntimePlacard[] }) {
         ))}
       </div>
     </section>
+  );
+}
+
+function BlueprintSubBox({
+  label,
+  count,
+  children,
+}: {
+  label: string;
+  count: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="blueprintBox">
+      <div className="blueprintBoxHead">
+        <p className="blueprintBoxKicker">—— {label}</p>
+        <p className="blueprintBoxCount">{count} ITEMS</p>
+        <div className="blueprintBoxRule" aria-hidden="true" />
+      </div>
+      <div className="blueprintBoxScroll">
+        <div className="blueprintBoxRail" aria-hidden="true" />
+        <div className="blueprintBoxStrip">{children}</div>
+      </div>
+    </div>
   );
 }
 
@@ -199,8 +224,11 @@ function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
     (a) => a.why_selected,
   );
 
+  const runtimeLabel = runtimeName.toUpperCase();
+
   return (
     <div className="blueprintGroup">
+      <p className="blueprintRuntimeLabel">—— {runtimeLabel}</p>
       <ResultCard
         category="BLUEPRINT"
         title={headerTitle}
@@ -208,9 +236,8 @@ function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
         footnote={headerFootnote}
         dotTone={placardStatusDotTone(placard.status)}
       />
-      <div className="blueprintScroll">
-        <div className="blueprintRail" aria-hidden="true" />
-        <div className="blueprintStrip">
+      <div className="blueprintGrid">
+        <BlueprintSubBox label="SKILLS" count={placard.skills.length}>
           {placard.skills.map((a) => (
             <ResultCard
               key={`${placard.platform}-skill-${a.artifact_ref}`}
@@ -220,6 +247,8 @@ function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
               footnote={`${(a.license?.source ?? "SOURCE").toUpperCase()} · TASK FIT ${Math.round(a.match)} · QUALITY ${Math.round(a.performance)}`}
             />
           ))}
+        </BlueprintSubBox>
+        <BlueprintSubBox label="MCPS" count={tools.length}>
           {tools.map((a) => (
             <ResultCard
               key={`${placard.platform}-mcp-${a.artifact_ref}`}
@@ -229,6 +258,8 @@ function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
               footnote={`${(a.license?.source ?? "SOURCE").toUpperCase()} · TRUST ${Math.round(a.trust)} · QUALITY ${Math.round(a.performance)}`}
             />
           ))}
+        </BlueprintSubBox>
+        <BlueprintSubBox label="FILES" count={placard.file_tree.length}>
           {placard.file_tree.map((file) => (
             <ResultCard
               key={`${placard.platform}-file-${file}`}
@@ -239,6 +270,8 @@ function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
               dotTone="muted"
             />
           ))}
+        </BlueprintSubBox>
+        <BlueprintSubBox label="REASONS" count={whySelected.length}>
           {whySelected.map((a) => (
             <ResultCard
               key={`${placard.platform}-why-${a.artifact_ref}`}
@@ -249,7 +282,7 @@ function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
               dotTone="accent"
             />
           ))}
-        </div>
+        </BlueprintSubBox>
       </div>
     </div>
   );
