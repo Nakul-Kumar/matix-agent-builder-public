@@ -258,6 +258,59 @@ main > .topbar ~ * {
   }
 }
 
+.startFromScroll {
+  position: relative;
+  width: 100%;
+  align-self: stretch;
+}
+
+@media (min-width: 1024px) {
+  .startFromScroll::before,
+  .startFromScroll::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    pointer-events: none;
+  }
+  .startFromScroll::before {
+    top: -4px;
+    left: -4px;
+    border-top: 1px solid #2A2420;
+    border-left: 1px solid #2A2420;
+  }
+  .startFromScroll::after {
+    bottom: -4px;
+    right: -4px;
+    border-bottom: 1px solid #2A2420;
+    border-right: 1px solid #2A2420;
+  }
+}
+
+.startFromRail {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .startFromRail {
+    display: block;
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    right: 2px;
+    width: 1px;
+    background: #2A2420;
+    pointer-events: none;
+  }
+  .startFromThumb {
+    position: absolute;
+    left: 0;
+    width: 1px;
+    background: #C2674A;
+    transition: top 60ms linear;
+  }
+}
+
 .startFromHint {
   margin-top: 16px;
   text-align: center;

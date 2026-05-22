@@ -627,13 +627,45 @@ export default function App() {
   const [rejection, setRejection] = useState<PromptRejection | null>(null);
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
   const startStackRef = useRef<HTMLDivElement | null>(null);
+  const startThumbRafRef = useRef<number | null>(null);
   const [startScrolledEnd, setStartScrolledEnd] = useState(false);
+  const [startThumb, setStartThumb] = useState<{ top: number; height: number; visible: boolean }>(
+    { top: 0, height: 0, visible: false },
+  );
+
+  function computeStartThumb() {
+    const el = startStackRef.current;
+    if (!el) return;
+    const visibleHeight = el.clientHeight;
+    const contentHeight = el.scrollHeight;
+    if (contentHeight <= visibleHeight + 1) {
+      setStartThumb({ top: 0, height: 0, visible: false });
+      return;
+    }
+    const railHeight = visibleHeight - 16;
+    let h = Math.max(32, (visibleHeight / contentHeight) * railHeight);
+    h = Math.min(h, railHeight);
+    const denom = contentHeight - visibleHeight;
+    const t = denom > 0 ? (el.scrollTop / denom) * (railHeight - h) : 0;
+    setStartThumb({ top: t, height: h, visible: true });
+  }
 
   function onStartStackScroll() {
     const el = startStackRef.current;
     if (!el) return;
     setStartScrolledEnd(el.scrollTop + el.clientHeight >= el.scrollHeight - 4);
+    if (startThumbRafRef.current != null) {
+      cancelAnimationFrame(startThumbRafRef.current);
+    }
+    startThumbRafRef.current = requestAnimationFrame(computeStartThumb);
   }
+
+  useEffect(() => {
+    computeStartThumb();
+    const onResize = () => computeStartThumb();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const verdict = useMemo(() => classifyPrompt(prompt), [prompt]);
 
@@ -964,6 +996,7 @@ export default function App() {
         </div>
         <aside className="layoutRight">
           <div className="startFromHeader">—— START FROM</div>
+          <div className="startFromScroll">
           <div
             className="startFromStack"
             ref={startStackRef}
@@ -982,6 +1015,15 @@ export default function App() {
                 <span className="startFromFootnote">{card.footnote}</span>
               </button>
             ))}
+          </div>
+            <div className="startFromRail" aria-hidden="true">
+              {startThumb.visible && (
+                <div
+                  className="startFromThumb"
+                  style={{ top: `${startThumb.top}px`, height: `${startThumb.height}px` }}
+                />
+              )}
+            </div>
           </div>
           <div
             className={`startFromHint${startScrolledEnd ? " is-end" : ""}`}
