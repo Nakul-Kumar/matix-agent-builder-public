@@ -258,11 +258,11 @@ h1 {
 
 .promptBox {
   width: 100%;
-  padding: 20px;
-  border-radius: 8px;
-  border: 1px solid var(--border-default);
-  background: var(--bg-surface);
-  box-shadow: var(--shadow-card);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .promptHeader {
@@ -276,31 +276,36 @@ h1 {
   font-family: var(--font-mono);
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--text-muted);
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
   font-weight: 500;
 }
 
 .promptCount {
-  font-size: 12px;
-  color: var(--text-muted);
-  font-family: "JetBrains Mono", "Fira Code", ui-monospace, Menlo, monospace;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
 .promptBox textarea {
   width: 100%;
-  min-height: 110px;
+  min-height: 140px;
   resize: vertical;
-  border: 1px solid var(--border-default);
-  border-radius: 6px;
-  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: var(--bg-base);
   color: var(--text-primary);
-  padding: 12px 14px;
+  caret-color: var(--accent-base);
+  padding: 24px;
   outline: none;
+  box-shadow: none;
   font-size: 14px;
   line-height: 1.55;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  transition: border-color 120ms ease;
 }
 
 .promptBox textarea::placeholder {
@@ -309,7 +314,7 @@ h1 {
 
 .promptBox textarea:focus {
   border-color: var(--accent-base);
-  box-shadow: 0 0 0 2px var(--accent-glow);
+  box-shadow: none;
 }
 
 .promptBox textarea:disabled {
