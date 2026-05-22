@@ -617,6 +617,24 @@ const QUICK_START_CARDS = [
     prompt:
       "Build a data analyst agent that queries BigQuery for product metrics, writes a weekly Slack digest, and flags anomalies for review.",
   },
+  {
+    category: "OPS",
+    title: "Oncall medic",
+    preview:
+      "Triages alerts, scans logs, summarises incidents into postmortems.",
+    footnote: "3 TOOLS · DATADOG · PAGERDUTY",
+    prompt:
+      "Build an on-call response agent that triages Datadog alerts, scans recent logs for related errors, escalates via PagerDuty, and drafts a postmortem timeline after resolution.",
+  },
+  {
+    category: "CONTENT",
+    title: "Blog drafter",
+    preview:
+      "Researches a topic, drafts SEO posts, publishes to WordPress.",
+    footnote: "3 TOOLS · WORDPRESS · SERP",
+    prompt:
+      "Build a content marketing agent that researches a topic across SERP results, drafts an SEO-optimised blog post in our brand voice, and publishes it as a draft to WordPress.",
+  },
 ];
 
 export default function App() {
