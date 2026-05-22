@@ -24,6 +24,12 @@
 
   --status-online: #22C55E;
 
+  /* Font families */
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  --font-display: "Fraunces", "Inter", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, Menlo, monospace;
+
   /* Backwards-compat aliases */
   --bg-soft: var(--bg-surface);
   --bg-card: var(--bg-surface);
@@ -49,8 +55,7 @@
 
   color: var(--text-primary);
   background: var(--bg-base);
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -171,8 +176,9 @@ main {
 .badge-codex,
 .badge-claude,
 .badge-openclaw {
+  font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.10em;
   text-transform: uppercase;
   padding: 3px 8px;
@@ -183,12 +189,19 @@ main {
   line-height: 1.4;
 }
 
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-feature-settings: "ss01";
+}
+
 h1 {
   margin: 0;
   font-size: 48px;
   line-height: 1.08;
   letter-spacing: -0.04em;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   max-width: 100%;
 }
@@ -228,6 +241,7 @@ h1 {
 }
 
 .promptLabel {
+  font-family: var(--font-mono);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.09em;
@@ -434,6 +448,7 @@ h1 {
   gap: 7px;
   padding: 5px 10px;
   border-radius: 6px;
+  font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.07em;
