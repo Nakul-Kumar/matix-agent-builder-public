@@ -43,25 +43,25 @@ const platformTheme: Record<
 > = {
   codex: {
     tone: "codex",
-    accent: "#B54030",
-    accentSoft: "rgba(181, 64, 48, 0.12)",
-    glow: "rgba(181, 64, 48, 0.18)",
+    accent: "#C2674A",
+    accentSoft: "rgba(194, 103, 74, 0.12)",
+    glow: "rgba(194, 103, 74, 0.18)",
     tag: "OpenAI / Codex CLI",
     subtitle: "Cool, technical, structured exports",
   },
   claude_code: {
     tone: "claude",
-    accent: "#B54030",
-    accentSoft: "rgba(181, 64, 48, 0.12)",
-    glow: "rgba(181, 64, 48, 0.18)",
+    accent: "#C2674A",
+    accentSoft: "rgba(194, 103, 74, 0.12)",
+    glow: "rgba(194, 103, 74, 0.18)",
     tag: "Anthropic / Claude Code",
     subtitle: "Warm, careful, citation-friendly",
   },
   openclaw: {
     tone: "openclaw",
-    accent: "#B54030",
-    accentSoft: "rgba(181, 64, 48, 0.12)",
-    glow: "rgba(181, 64, 48, 0.18)",
+    accent: "#C2674A",
+    accentSoft: "rgba(194, 103, 74, 0.12)",
+    glow: "rgba(194, 103, 74, 0.18)",
     tag: "Open source / OpenClaw",
     subtitle: "Experimental, local-first, opinionated",
   },
@@ -244,9 +244,9 @@ function Placard({
 }) {
   const theme = platformTheme[placard.platform] ?? {
     tone: "codex",
-    accent: "#B54030",
-    accentSoft: "rgba(181, 64, 48, 0.12)",
-    glow: "rgba(181, 64, 48, 0.18)",
+    accent: "#C2674A",
+    accentSoft: "rgba(194, 103, 74, 0.12)",
+    glow: "rgba(194, 103, 74, 0.18)",
     tag: "Runtime",
     subtitle: placard.label,
   };
