@@ -374,48 +374,47 @@ h1 {
 .promptActions {
   margin-top: 16px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   gap: 16px;
-  flex-wrap: wrap;
 }
 
 .trustNote {
   margin: 0;
   color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.6;
   max-width: 56ch;
 }
 
 .trustNote code,
 .banner code {
-  font-family: "JetBrains Mono", "Fira Code", ui-monospace, Menlo, monospace;
+  font-family: var(--font-mono);
   background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
+  border: 0;
   border-radius: 3px;
-  padding: 1px 5px;
-  font-size: 11px;
+  padding: 2px 6px;
+  font-size: 12px;
   color: var(--text-secondary);
 }
 
 .promptCta {
-  display: inline-flex;
-  align-items: stretch;
-  gap: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 .kbd {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  padding: 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  border: 0;
+  padding: 0;
   background: transparent;
-  letter-spacing: 0.06em;
-  height: 36px;
   display: inline-flex;
   align-items: center;
 }
@@ -424,32 +423,29 @@ h1 {
 
 .primaryButton {
   position: relative;
-  border: 1px solid var(--accent-base);
+  border: 0;
   background: var(--accent-base);
-  color: var(--text-primary);
-  padding: 0 16px;
-  height: 36px;
-  min-width: 112px;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
+  color: #0B0A0A;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0;
+  text-transform: none;
+  box-shadow: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0;
-  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+  transition: background 120ms ease;
 }
 
 .primaryButton:hover:not(:disabled) {
-  background: var(--accent-light);
-  border-color: var(--accent-light);
+  background: var(--accent-deep);
 }
 
 .primaryButton:active:not(:disabled) {
-  transform: scale(0.975);
+  transform: none;
 }
 
 .primaryButton:disabled {
@@ -1540,40 +1536,49 @@ h1 {
 
 .footer {
   margin-top: 48px;
-  padding: 20px 0 0;
+  padding: 24px 0;
   border-top: 1px solid var(--border-subtle);
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
   color: var(--text-muted);
 }
 
 .footerDim {
+  flex-basis: 100%;
   color: var(--text-muted);
+  margin-top: 4px;
 }
 
 .footerLinks {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 0;
   flex-wrap: wrap;
 }
 
 .footerLinks a {
   color: var(--text-muted);
   text-decoration: none;
-  padding: 8px 0;
-  min-height: 36px;
   display: inline-flex;
   align-items: center;
   transition: color 120ms ease;
 }
 
+.footerLinks a + a::before {
+  content: "·";
+  margin: 0 12px;
+  color: var(--text-muted);
+}
+
 .footerLinks a:hover {
-  color: var(--text-secondary);
   text-decoration: underline;
 }
 
