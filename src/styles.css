@@ -20,11 +20,11 @@
   --border-default: #D8CCB4;
 
   /* Text — warm near-black → faded clay */
-  --text-primary: #2A2014;
-  --text-body: #3D3424;
-  --text-secondary: #7A6F5A;
-  --text-muted: #7A6F5A;
-  --text-faint: #9D9277;
+  --text-primary: #1F1810;
+  --text-body: #312818;
+  --text-secondary: #5E5240;
+  --text-muted: #5E5240;
+  --text-faint: #877B62;
 
   /* Accent — earthen brick (not coral/peach) */
   --accent: #A24A26;
@@ -44,11 +44,11 @@
   --status-online: var(--status-preview);
 
   /* Decoration — muted, dusty, NOT vibrant */
-  --decor-1: #A89A7A;
-  --decor-2: #C5A89A;
-  --decor-3: #8FA084;
-  --decor-4: #D4B89E;
-  --decor-5: #9C8472;
+  --decor-1: #9E8E70;
+  --decor-2: #B89684;
+  --decor-3: #7F9474;
+  --decor-4: #C5A580;
+  --decor-5: #8A7565;
 
   /* Font families */
   --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
@@ -242,8 +242,23 @@ main {
 }
 
 .pageDecoShape {
-  opacity: 0.22;
+  opacity: 0.36;
   mix-blend-mode: normal;
+}
+
+.pageDecoration .pageDecoA,
+.pageDecoration .pageDecoD {
+  opacity: 0.40;
+}
+
+.pageDecoration .pageDecoB,
+.pageDecoration .pageDecoE {
+  opacity: 0.36;
+}
+
+.pageDecoration .pageDecoC,
+.pageDecoration .pageDecoF {
+  opacity: 0.31;
 }
 
 .pageDecoLines g {
