@@ -34,7 +34,29 @@ GPT-5.5 reranking unless the live response shows that selection source.
 git clone https://github.com/Nakul-Kumar/matix-agent-builder-public.git
 cd matix-agent-builder-public
 npm ci
+```
+
+Local development uses two processes: the public BFF (Express) and the Vite
+dev server with HMR. Vite proxies `/api` to the BFF as configured in
+`vite.config.ts`.
+
+```bash
+# Terminal 1 — public BFF on port 8787 (restarts on server file changes)
 npm run dev
+
+# Terminal 2 — Vite dev server on port 5173 (HMR; proxies /api to the BFF)
+npm run dev:web
+
+# Open http://localhost:5173
+```
+
+For a single-process production-like check, build once and serve the bundle
+from the BFF:
+
+```bash
+npm run build
+npm run start
+# Open http://localhost:8787
 ```
 
 Set `MATIX_PUBLIC_API_BASE` in your environment to the deployed public API
@@ -53,11 +75,14 @@ backend contract yourself.
 Use a separate Replit project for this repo. Keep it separate from the
 authenticated cockpit project.
 
-Run:
+The repo's `.replit` workflow already runs `npm run build && tsx server/index.ts`
+when you press Run, so the deployed page works out of the box. If you prefer to
+run it manually from the Replit shell:
 
 ```bash
 npm install
-npm run dev
+npm run build
+npm run start
 ```
 
 Set `MATIX_PUBLIC_API_BASE` in Replit Secrets or environment. This value is a

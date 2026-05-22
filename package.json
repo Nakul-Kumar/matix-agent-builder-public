@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx server/index.ts",
+    "dev": "tsx watch server/index.ts",
+    "dev:web": "vite",
     "build": "tsc -p tsconfig.json && vite build",
     "start": "tsx server/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
