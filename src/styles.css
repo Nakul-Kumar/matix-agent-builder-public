@@ -227,14 +227,14 @@ main > .topbar ~ * {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: #6E6359;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   align-self: flex-start;
 }
 
 .startFromStack {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
   width: 100%;
   align-self: stretch;
 }
@@ -243,8 +243,8 @@ main > .topbar ~ * {
   display: flex;
   flex-direction: column;
   width: 100%;
-  min-height: 110px;
-  padding: 20px;
+  min-height: 88px;
+  padding: 14px;
   background: transparent;
   border: 1px solid #2A2420;
   border-radius: 4px;
@@ -273,26 +273,26 @@ main > .topbar ~ * {
 }
 
 .startFromTitle {
-  margin-top: 8px;
+  margin-top: 4px;
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: #EDE6DE;
 }
 
 .startFromPreview {
-  margin-top: 6px;
+  margin-top: 4px;
   font-size: 13px;
   color: #A8998C;
   line-height: 1.45;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .startFromFootnote {
-  margin-top: 12px;
+  margin-top: 8px;
   font-family: var(--font-mono);
   font-size: 10px;
   text-transform: uppercase;
