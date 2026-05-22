@@ -290,7 +290,7 @@ function BlueprintsSection({
   onInspect,
 }: {
   placards: RuntimePlacard[];
-  activeRuntime: PlatformKey;
+  activeRuntime: PlatformKey | null;
   onActiveRuntimeChange: (key: PlatformKey) => void;
   policy: PublicPreview["source_policy"] | null | undefined;
   exportingPlatform: string | null;
@@ -302,15 +302,18 @@ function BlueprintsSection({
   if (placards.length === 0) return null;
 
   const availableKeys = placards.map((p) => p.platform);
-  const activeKey: PlatformKey = availableKeys.includes(activeRuntime)
-    ? activeRuntime
-    : placards[0].platform;
-  const activePlacard = placards.find((p) => p.platform === activeKey)!;
+  const hasActive = activeRuntime !== null && availableKeys.includes(activeRuntime);
+  const activeKey: PlatformKey | null = hasActive
+    ? (activeRuntime as PlatformKey)
+    : null;
+  const activePlacard = activeKey
+    ? placards.find((p) => p.platform === activeKey) ?? null
+    : null;
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const [fadeKey, setFadeKey] = useState<string>(activeKey);
+  const [fadeKey, setFadeKey] = useState<string>(activeKey ?? "none");
 
   useEffect(() => {
-    setFadeKey(activeKey);
+    setFadeKey(activeKey ?? "none");
   }, [activeKey]);
 
   function handleKeyDown(
@@ -320,7 +323,14 @@ function BlueprintsSection({
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
     event.preventDefault();
     const idx = availableKeys.indexOf(currentKey);
-    if (idx < 0) return;
+    if (idx < 0) {
+      const fallback = availableKeys[0];
+      if (fallback) {
+        onActiveRuntimeChange(fallback);
+        tabRefs.current[fallback]?.focus();
+      }
+      return;
+    }
     const delta = event.key === "ArrowRight" ? 1 : -1;
     const nextKey =
       availableKeys[(idx + delta + availableKeys.length) % availableKeys.length];
@@ -337,16 +347,17 @@ function BlueprintsSection({
         <div className="anchorRule" aria-hidden="true" />
       </header>
 
-      <p className="runtimeTabsHint">
-        Choose your setup — pick the runtime you want to build with.
-      </p>
+      <div className="runtimeChoose">
+        <h3 className="runtimeChooseTitle">Choose your runtime</h3>
+        <p className="runtimeChooseSubtitle">Pick one to see the blueprint.</p>
+      </div>
       <div
         className="runtimeTabs"
         role="tablist"
         aria-label="Runtime blueprint"
       >
         {placards.map((p) => {
-          const isActive = p.platform === activeKey;
+          const isActive = activeKey !== null && p.platform === activeKey;
           const tabId = `runtime-tab-${p.platform}`;
           return (
             <button
@@ -391,63 +402,71 @@ function BlueprintsSection({
         })}
       </div>
 
-      <div className="exportActionRow">
-        <p key={`meta-${fadeKey}`} className="exportActionMeta">
-          <span className="exportActionProvider">
-            {(platformTheme[activeKey]?.tag ?? activePlacard.label).toUpperCase()}
-          </span>
-          {policy && (
-            <>
-              <span className="exportActionSep">·</span>
-              <span>
-                BROWSER PROVIDER CALLS {policy.browser_provider_calls ? "YES" : "NO"}
+      {activeKey && activePlacard ? (
+        <>
+          <div className="exportActionRow">
+            <p key={`meta-${fadeKey}`} className="exportActionMeta">
+              <span className="exportActionProvider">
+                {(platformTheme[activeKey]?.tag ?? activePlacard.label).toUpperCase()}
               </span>
-              <span className="exportActionSep">·</span>
-              <span>
-                SECRETS INCLUDED {policy.secrets_included ? "YES" : "NO"}
-              </span>
-              <span className="exportActionSep">·</span>
-              <span>
-                ALLOWED SOURCE HOSTS {policy.allowed_source_hosts.length}
-              </span>
-            </>
-          )}
-        </p>
-        <div className="exportActionControls">
-          <button
-            type="button"
-            className="exportActionInspect"
-            onClick={() => onInspect(activeKey)}
-            disabled={inspectingPlatform === activeKey}
-            title="Open the raw JSON manifest in a new tab without downloading."
-          >
-            {inspectingPlatform === activeKey ? "OPENING…" : "VIEW JSON"}
-          </button>
-          <button
-            type="button"
-            className="exportActionButton"
-            onClick={() => onExport(activeKey)}
-            disabled={exportingPlatform === activeKey}
-            title="Bundle is a signed JSON manifest. No secrets, no provider calls, source hosts allow-listed."
-          >
-            {exportingPlatform === activeKey
-              ? "PREPARING SAFE BUNDLE…"
-              : exportedPlatforms.has(activeKey)
-                ? "EXPORTED — DOWNLOAD AGAIN"
-                : "EXPORT SAFE BUNDLE"}
-          </button>
-        </div>
-      </div>
+              {policy && (
+                <>
+                  <span className="exportActionSep">·</span>
+                  <span>
+                    BROWSER PROVIDER CALLS {policy.browser_provider_calls ? "YES" : "NO"}
+                  </span>
+                  <span className="exportActionSep">·</span>
+                  <span>
+                    SECRETS INCLUDED {policy.secrets_included ? "YES" : "NO"}
+                  </span>
+                  <span className="exportActionSep">·</span>
+                  <span>
+                    ALLOWED SOURCE HOSTS {policy.allowed_source_hosts.length}
+                  </span>
+                </>
+              )}
+            </p>
+            <div className="exportActionControls">
+              <button
+                type="button"
+                className="exportActionInspect"
+                onClick={() => onInspect(activeKey)}
+                disabled={inspectingPlatform === activeKey}
+                title="Open the raw JSON manifest in a new tab without downloading."
+              >
+                {inspectingPlatform === activeKey ? "OPENING…" : "VIEW JSON"}
+              </button>
+              <button
+                type="button"
+                className="exportActionButton"
+                onClick={() => onExport(activeKey)}
+                disabled={exportingPlatform === activeKey}
+                title="Bundle is a signed JSON manifest. No secrets, no provider calls, source hosts allow-listed."
+              >
+                {exportingPlatform === activeKey
+                  ? "PREPARING SAFE BUNDLE…"
+                  : exportedPlatforms.has(activeKey)
+                    ? "EXPORTED — DOWNLOAD AGAIN"
+                    : "EXPORT SAFE BUNDLE"}
+              </button>
+            </div>
+          </div>
 
-      <div
-        key={fadeKey}
-        id={`runtime-panel-${activeKey}`}
-        role="tabpanel"
-        aria-labelledby={`runtime-tab-${activeKey}`}
-        className="runtimePanel"
-      >
-        <BlueprintGroup placard={activePlacard} />
-      </div>
+          <div
+            key={fadeKey}
+            id={`runtime-panel-${activeKey}`}
+            role="tabpanel"
+            aria-labelledby={`runtime-tab-${activeKey}`}
+            className="runtimePanel"
+          >
+            <BlueprintGroup placard={activePlacard} />
+          </div>
+        </>
+      ) : (
+        <p className="runtimeEmptyState" aria-live="polite">
+          ↑ Select a runtime above to load its blueprint and export bundle.
+        </p>
+      )}
     </section>
   );
 }
@@ -924,7 +943,7 @@ export default function App() {
   const [exportingPlatform, setExportingPlatform] = useState<string | null>(
     null,
   );
-  const [activeRuntime, setActiveRuntime] = useState<PlatformKey>("codex");
+  const [activeRuntime, setActiveRuntime] = useState<PlatformKey | null>(null);
 
   const [feedback, setFeedback] = useState("");
   const [feedbackEmail, setFeedbackEmail] = useState("");

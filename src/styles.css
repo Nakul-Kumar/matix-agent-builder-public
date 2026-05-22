@@ -1774,6 +1774,63 @@ a.resultCard {
   color: #7A6F5A;
 }
 
+.runtimeChoose {
+  margin: 24px 0 24px;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.runtimeChooseTitle {
+  margin: 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary, #1F1810);
+}
+
+.runtimeChooseSubtitle {
+  margin: 4px 0 0;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 15px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text-muted, #7A6F5A);
+}
+
+.runtimeEmptyState {
+  margin: 0;
+  padding: 40px 0;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text-muted, #7A6F5A);
+  animation: runtimePanelFade 200ms ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .runtimeEmptyState {
+    animation: none;
+  }
+}
+
+.exportActionRow {
+  animation: runtimePanelFade 200ms ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exportActionRow {
+    animation: none;
+  }
+}
+
 .runtimeTabs {
   display: flex;
   gap: 12px;
