@@ -748,7 +748,6 @@ function ModelPolicySection({ preview }: { preview: PublicPreview }) {
           <span className="modelSectionKicker">II</span>
           <h2 className="modelSectionTitle">Recommended model</h2>
         </div>
-        <div className="modelSectionRule" aria-hidden="true" />
       </header>
 
       <div className="recommendedModel">
