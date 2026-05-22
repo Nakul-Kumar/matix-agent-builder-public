@@ -346,7 +346,9 @@ h1 {
   resize: vertical;
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
-  background: var(--bg-base);
+  background: #0B0A0A;
+  -webkit-appearance: none;
+  appearance: none;
   color: var(--text-primary);
   caret-color: var(--accent-base);
   padding: 24px;
@@ -369,6 +371,7 @@ h1 {
 .promptBox textarea:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .promptActions {
@@ -411,12 +414,12 @@ h1 {
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--text-muted);
+  color: #6E6359;
   border: 0;
   padding: 0;
   background: transparent;
-  display: inline-flex;
-  align-items: center;
+  display: inline;
+  line-height: inherit;
 }
 
 /* ====================== Buttons ====================== */
