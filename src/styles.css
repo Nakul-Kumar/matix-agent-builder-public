@@ -1848,6 +1848,11 @@ a.resultCard {
   margin-left: -56px;
 }
 
+.bpNavGrid--solo {
+  grid-template-columns: 1fr;
+  margin-left: 0;
+}
+
 .bpNavContent {
   min-width: 0;
   display: flex;
