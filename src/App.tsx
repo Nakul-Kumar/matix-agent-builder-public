@@ -17,6 +17,24 @@ const legalLinks = [
   { label: "GitHub", href: repoUrl },
 ];
 
+const AGENT_KEYWORDS = [
+  "agent", "assistant", "bot", "automation", "workflow",
+  "helper", "tool", "build", "create", "make", "design",
+  "generate", "ai", "llm", "chatbot", "copilot",
+];
+
+function validatePrompt(value: string): string | null {
+  const trimmed = value.trim();
+  if (trimmed.length < 12) {
+    return "Describe the agent in a bit more detail (at least 12 characters).";
+  }
+  const lower = trimmed.toLowerCase();
+  if (!AGENT_KEYWORDS.some((w) => lower.includes(w))) {
+    return "Include what the agent should do — for example words like \"agent\", \"assistant\", \"automation\", or \"build/create\".";
+  }
+  return null;
+}
+
 type PlatformKey = RuntimePlacard["platform"];
 
 const platformTheme: Record<
@@ -287,7 +305,7 @@ function Placard({
   }, [artifacts]);
 
   const credentialItems = artifacts.filter(
-    (artifact) => artifact.credential_status !== "not_required",
+    (artifact) => artifact.credential_status === "missing",
   );
 
   const whySelected = artifacts
@@ -717,6 +735,7 @@ export default function App() {
   const [preview, setPreview] = useState<PublicPreview | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorContext, setErrorContext] = useState<"preview" | "export" | null>(null);
   const [exportedPlatforms, setExportedPlatforms] = useState<Set<string>>(
     new Set(),
   );
@@ -757,13 +776,19 @@ export default function App() {
     };
   }, []);
 
+  const promptError = useMemo(
+    () => (prompt.trim().length === 0 ? null : validatePrompt(prompt)),
+    [prompt],
+  );
+
   const canBuild =
-    backend.state === "ready" && prompt.trim().length > 4 && !busy;
+    backend.state === "ready" && !busy && !promptError && prompt.trim().length > 0;
 
   async function build() {
     if (!canBuild) return;
     setBusy(true);
     setError(null);
+    setErrorContext(null);
     setPreview(null);
     setExportedPlatforms(new Set());
     setFeedbackSent(false);
@@ -777,6 +802,7 @@ export default function App() {
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Preview failed");
+      setErrorContext("preview");
     } finally {
       setBusy(false);
     }
@@ -785,6 +811,7 @@ export default function App() {
   async function handleExport(platform: string) {
     if (exportingPlatform) return;
     setError(null);
+    setErrorContext(null);
     setExportingPlatform(platform);
     try {
       const payload = await exportAgent(prompt.trim(), platform);
@@ -806,6 +833,7 @@ export default function App() {
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Export failed");
+      setErrorContext("export");
     } finally {
       setExportingPlatform(null);
     }
@@ -898,7 +926,18 @@ export default function App() {
             onKeyDown={onPromptKeyDown}
             placeholder="Build a customer support agent that reads our Notion docs and files Linear bugs..."
             disabled={backend.state !== "ready"}
+            aria-invalid={Boolean(promptError)}
+            aria-describedby={promptError ? "prompt-error" : undefined}
           />
+          {promptError && (
+            <p
+              id="prompt-error"
+              style={{ margin: "8px 0 0", fontSize: 13, color: "var(--danger)" }}
+              role="status"
+            >
+              {promptError}
+            </p>
+          )}
           <div className="promptActions">
             <p className="trustNote">
               No provider keys run in the browser. This page calls only
@@ -937,7 +976,7 @@ export default function App() {
 
       {error && (
         <div className="banner banner-error" role="alert">
-          <strong>Preview failed.</strong> {error}
+          <strong>{errorContext === "export" ? "Export failed." : "Preview failed."}</strong> {error}
         </div>
       )}
 
