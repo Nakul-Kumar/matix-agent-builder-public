@@ -506,37 +506,78 @@ function ExportBundleSection({
 }
 
 function ModelPolicySection({ preview }: { preview: PublicPreview }) {
+  const recommended = preview.model;
   const teacher = preview.calibration?.teacher;
   const students = preview.calibration?.students ?? [];
-  if (!teacher && students.length === 0) return null;
 
-  const title = teacher
-    ? `${teacher.provider} / ${teacher.model} ranks the quality bundle`
-    : "Backend-controlled model routing";
-  const preview_text =
+  const recKey = `${recommended.provider.toLowerCase()}/${recommended.name.toLowerCase()}`;
+  type Alt = { provider: string; model: string; status: string };
+  const alternatives: Alt[] = [];
+  const seen = new Set<string>([recKey]);
+
+  if (teacher) {
+    const key = `${teacher.provider.toLowerCase()}/${teacher.model.toLowerCase()}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      alternatives.push({
+        provider: teacher.provider,
+        model: teacher.model,
+        status: "RANKS QUALITY",
+      });
+    }
+  }
+  for (const s of students) {
+    const key = `${s.provider.toLowerCase()}/${s.model.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    alternatives.push({
+      provider: s.provider,
+      model: s.model,
+      status: s.public_eligible ? "FALLBACK" : "SHADOW ONLY",
+    });
+  }
+
+  const policyText =
     preview.calibration?.public_serving_policy ??
-    "Public preview routing controlled by backend policy.";
-
-  const shadow = students.find((s) => !s.public_eligible) ?? students[0];
-  const footnote = shadow
-    ? `${shadow.provider} / ${shadow.model} ${
-        shadow.public_eligible ? "PUBLIC ELIGIBLE" : "SHADOW ONLY"
-      }`.toUpperCase()
-    : undefined;
+    "Use the teacher/default model or deterministic fallback until a student model passes the latest golden prompt calibration run.";
 
   return (
     <section className="resultSection">
-      <header className="sectionHead">
-        <p className="sectionKicker">—— II. RECOMMENDATION MODEL POLICY</p>
-        <div className="sectionRule" aria-hidden="true" />
+      <header className="anchorHead">
+        <p className="anchorKicker">—— II. RECOMMENDED MODEL</p>
+        <div className="anchorRule" aria-hidden="true" />
       </header>
-      <ResultCard
-        category="MODEL"
-        title={title}
-        preview={preview_text}
-        footnote={footnote}
-        dotTone={shadow ? (shadow.public_eligible ? "ok" : "muted") : "none"}
-      />
+
+      <div className="recommendedModel">
+        <p className="recommendedModelName">
+          {recommended.provider.toLowerCase()} / {recommended.name.toLowerCase()}
+        </p>
+        <p className="recommendedModelTag">
+          RECOMMENDED · DETERMINISTIC FALLBACK
+        </p>
+        <p className="recommendedModelPolicy">{policyText}</p>
+      </div>
+
+      <div className="alternativesBlock">
+        <p className="alternativesHeader">—— ALTERNATIVES</p>
+        {alternatives.length > 0 ? (
+          <div className="alternativesRow">
+            {alternatives.map((alt) => (
+              <div
+                key={`${alt.provider}/${alt.model}`}
+                className="alternativePill"
+              >
+                <span className="alternativePillName">
+                  {alt.provider.toLowerCase()} / {alt.model.toLowerCase()}
+                </span>
+                <span className="alternativePillStatus">{alt.status}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="alternativesEmpty">—— NO ALTERNATIVES CONFIGURED</p>
+        )}
+      </div>
     </section>
   );
 }
