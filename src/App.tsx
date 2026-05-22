@@ -854,7 +854,10 @@ export default function App() {
 
   return (
     <main>
-      <div className="pageDecoration" aria-hidden="true">
+      <div
+        className={`pageDecoration${preview ? " is-hidden" : ""}`}
+        aria-hidden="true"
+      >
         <div className="pageDecoShapes">
           <svg
             viewBox="0 0 1600 900"

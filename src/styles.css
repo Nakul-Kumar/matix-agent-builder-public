@@ -106,6 +106,12 @@ main {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+  opacity: 1;
+  transition: opacity 200ms ease;
+}
+
+.pageDecoration.is-hidden {
+  opacity: 0;
 }
 
 .pageDecoration svg {
