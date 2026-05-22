@@ -305,20 +305,23 @@ main > .topbar ~ * {
 /* ====================== Asymmetric layout grid ====================== */
 
 .layoutGrid {
-  display: grid;
-  grid-template-columns: 58fr 42fr;
-  gap: 80px;
-  align-items: start;
+  display: block;
+  max-width: 720px;
+  margin: 64px auto 0;
+  padding: 0;
+}
+
+.layoutLeftBottom {
+  width: 100%;
 }
 
 .layoutRight {
-  min-width: 0;
+  width: 100%;
+  margin-top: 80px;
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-end;
-  pointer-events: none;
+  align-items: stretch;
 }
 
 .rightBlob {
@@ -343,8 +346,11 @@ main > .topbar ~ * {
 
 @media (max-width: 1023px) {
   .layoutGrid {
-    grid-template-columns: 1fr;
-    gap: 0;
+    max-width: 100%;
+    margin-top: 48px;
+  }
+  .layoutRight {
+    margin-top: 56px;
   }
 }
 
@@ -360,12 +366,12 @@ main > .topbar ~ * {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: #9D9277;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   align-self: flex-start;
 }
 
 .startFromHelper {
-  margin: 0 0 16px;
+  margin: 0 0 24px;
   font-family: "Fraunces", Georgia, serif;
   font-size: 13px;
   font-style: italic;
@@ -389,6 +395,7 @@ main > .topbar ~ * {
     max-height: 440px;
     overflow-y: scroll;
     overflow-x: hidden;
+    padding-top: 8px;
     padding-right: 8px;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -823,21 +830,6 @@ h1 {
   -webkit-text-fill-color: currentColor;
 }
 
-@media (min-width: 1024px) {
-  .layoutGrid {
-    row-gap: 24px;
-  }
-  .layoutRight {
-    grid-column: 2;
-    grid-row: 1;
-    align-self: start;
-  }
-  .layoutLeftBottom {
-    grid-column: 1;
-    grid-row: 1;
-    min-width: 0;
-  }
-}
 
 /* ====================== Prompt box ====================== */
 

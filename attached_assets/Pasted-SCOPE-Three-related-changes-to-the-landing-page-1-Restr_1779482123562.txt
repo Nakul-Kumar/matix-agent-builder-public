@@ -1,0 +1,63 @@
+SCOPE: Three related changes to the landing page. (1) Restructure the layout so the Describe-your-agent block is centered on the page, not in a left column. (2) Remove the "-- " mono-caps prefix decoration from "TRY AN EXAMPLE" (and from the matching "-- SCROLL FOR MORE" footer label inside the scroll container). (3) Add breathing room between the "TRY AN EXAMPLE" header + helper line and the first example card. No functionality changes — textarea, Build button, example cards all keep their existing behavior.
+
+CHANGE 1 — CENTER THE DESCRIBE-YOUR-AGENT BLOCK
+
+Right now the page uses a two-column layout: the Describe-your-agent textarea sits in a left column, the TRY AN EXAMPLE scroll container sits in a right column. Collapse this into a single centered column.
+
+Restructure as a single vertical stack, centered on the page:
+
+   [editorial hero metadata + headline + dek]   ← already exists, do not touch
+   ↓ 64px gap
+   DESCRIBE YOUR AGENT block          ← centered, max-width 720px, mx-auto
+   ↓ 80px gap
+   TRY AN EXAMPLE scroll container    ← centered, max-width 720px, mx-auto
+
+Specifically:
+- The Describe-your-agent block (DESCRIBE YOUR AGENT label + 0/1000 counter + textarea + "No provider keys..." helper line + CMD/CTRL + ENTER hint + Build agent button) goes into its own container with:
+   max-width: 720px;
+   margin-left: auto;
+   margin-right: auto;
+   text-align: left;   /* internal alignment stays left — only the BLOCK is centered */
+- The TRY AN EXAMPLE scroll container becomes a second centered block BELOW it, same max-width: 720px, also mx-auto.
+- Remove the two-column grid wrapper that previously placed these side by side. No more flex/grid columns for this section.
+
+Mobile (< 768px): both blocks already collapse correctly with max-width: 720px — confirm padding doesn't push them off-screen.
+
+CHANGE 2 — REMOVE THE "-- " PREFIX FROM "TRY AN EXAMPLE" AND "SCROLL FOR MORE"
+
+The mono-caps headers inside the scroll container currently render as:
+   -- TRY AN EXAMPLE
+   -- SCROLL FOR MORE
+
+Strip the leading "-- " from BOTH so they read as plain mono caps:
+   TRY AN EXAMPLE
+   SCROLL FOR MORE
+
+Keep every other property (font, size, color, letter-spacing, color --text-muted, etc.) identical. This is a string-only change.
+
+Do NOT remove the "-- " prefix from category labels elsewhere on the page (e.g. "-- I. INPUT", "-- II. RECOMMENDED MODEL", "-- III. BLUEPRINTS", the 2×2 grid headers "-- SKILLS", "-- MCPS", "-- FILES", "-- REASONS"). Those stay as they are — the prefix is part of the editorial system in those locations. The removal is ONLY on the two scroll-container labels named above.
+
+CHANGE 3 — BREATHING ROOM ABOVE THE FIRST EXAMPLE CARD
+
+The italic helper line "Click any card to drop it into your prompt — then edit freely." currently sits too close to the first card (Paper analyst). Add space:
+
+- Gap between the italic helper line and the top of the scroll container: 24px (was likely ~8–12px).
+- Top padding inside the scroll container itself: 8px so the first card doesn't kiss the container's top edge / mask-image fade.
+
+Final vertical rhythm inside the TRY AN EXAMPLE block:
+   TRY AN EXAMPLE (mono caps header, no "-- " prefix)
+   ↓ 8px
+   Click any card to drop it into your prompt — then edit freely. (italic helper)
+   ↓ 24px
+   [scroll container with cards]
+   ↓
+   SCROLL FOR MORE (mono caps footer, no "-- " prefix, centered under the container)
+
+VERIFICATION
+1. Reload landing page. Confirm Describe-your-agent block is horizontally centered on the page, max-width 720px, with the Build agent button under the textarea (not off to one side).
+2. Confirm the TRY AN EXAMPLE block sits BELOW the Describe-your-agent block — not to its right — and is also centered to the same 720px column.
+3. Confirm the header reads "TRY AN EXAMPLE" with no "-- " prefix, and the footer at the bottom of the scroll container reads "SCROLL FOR MORE" with no "-- " prefix.
+4. Confirm the "-- " prefix is STILL present on "-- I. INPUT", "-- II. RECOMMENDED MODEL", "-- III. BLUEPRINTS", and on the 2×2 grid box headers ("-- SKILLS" etc.). Do not over-strip.
+5. Confirm visible breathing room (~24px) between the italic helper line and the first card.
+6. Resize to mobile width (< 768px). Both centered blocks should remain centered with comfortable side padding — neither should clip or hug the edges.
+7. Confirm the textarea, Build agent button, and example card click-to-insert behavior all still work identically.
