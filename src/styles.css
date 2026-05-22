@@ -2199,7 +2199,36 @@ a.resultCard {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #9D9277;
+  color: var(--text-muted, #9D9277);
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0;
+}
+
+.blueprintBoxCountSep {
+  margin: 0 6px;
+  color: var(--text-muted, #9D9277);
+}
+
+.blueprintBoxMore {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: var(--text-muted, #9D9277);
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+.blueprintBoxMore:hover,
+.blueprintBoxMore:focus-visible {
+  color: var(--accent-brick, #A24A26);
+  outline: none;
 }
 
 .blueprintBoxRule {
@@ -2228,6 +2257,19 @@ a.resultCard {
   pointer-events: none;
 }
 
+.blueprintBoxThumb {
+  position: absolute;
+  top: 0;
+  left: -1px;
+  width: 3px;
+  height: 24px;
+  background: var(--accent-brick, #A24A26);
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  will-change: transform, height;
+}
+
 .blueprintBoxStrip {
   display: flex;
   flex-direction: column;
@@ -2240,8 +2282,26 @@ a.resultCard {
   padding-right: 8px;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+
+.blueprintBoxStrip--mask-bottom {
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 40px), transparent 100%);
+  mask-image: linear-gradient(to bottom, black calc(100% - 40px), transparent 100%);
+}
+
+.blueprintBoxStrip--mask-top {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 40px);
+  mask-image: linear-gradient(to bottom, transparent 0, black 40px);
+}
+
+.blueprintBoxStrip--mask-middle {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
+}
+
+.blueprintBoxStrip--mask-none {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .blueprintBoxStrip > .resultCard {
