@@ -393,7 +393,7 @@ function BlueprintsSection({
   return (
     <section className="resultSection" id="section-blueprint">
       <header className="anchorHead">
-        <p className="anchorKicker">BLUEPRINTS</p>
+        <p className="anchorKicker">01 — BLUEPRINTS</p>
         <h2 className="anchorTitle">Three runtimes ready to export</h2>
         <p className="anchorCount">{placards.length} RUNTIMES</p>
         <div className="anchorRule" aria-hidden="true" />
@@ -653,7 +653,7 @@ function LicensesSection({ placards }: { placards: RuntimePlacard[] }) {
   return (
     <section className="resultSection" id="section-license">
       <header className="sectionHead">
-        <p className="sectionKicker">LICENSES</p>
+        <p className="sectionKicker">02 — LICENSES</p>
         <div className="sectionRule" aria-hidden="true" />
         <p className="sectionSubtitle">
           {licenses.length} {licenses.length === 1 ? "LICENSE" : "LICENSES"} DETECTED
@@ -695,7 +695,7 @@ function EvalPlanSection({ placards }: { placards: RuntimePlacard[] }) {
   return (
     <section className="resultSection" id="section-eval-plan">
       <header className="sectionHead">
-        <p className="sectionKicker">EVAL PLAN</p>
+        <p className="sectionKicker">03 — EVAL PLAN</p>
         <div className="sectionRule" aria-hidden="true" />
         <p className="sectionSubtitle">
           {steps.length} {steps.length === 1 ? "STEP" : "STEPS"}
@@ -738,7 +738,7 @@ function SourceLinksSection({ placards }: { placards: RuntimePlacard[] }) {
   return (
     <section className="resultSection" id="section-source-link">
       <header className="sectionHead">
-        <p className="sectionKicker">SOURCE LINKS</p>
+        <p className="sectionKicker">04 — SOURCE LINKS</p>
         <div className="sectionRule" aria-hidden="true" />
         <p className="sectionSubtitle">
           {links.length} {links.length === 1 ? "LINK" : "LINKS"}
