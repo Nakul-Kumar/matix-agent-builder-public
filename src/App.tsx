@@ -14,7 +14,9 @@ import {
 } from "./lib/promptIntent";
 import type {
   PublicArtifact,
+  PublicArtifactLicense,
   PublicPreview,
+  PublicSourceLink,
   PublicSourceStatus,
   RuntimePlacard,
 } from "./types";
@@ -651,6 +653,155 @@ function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
   );
 }
 
+function aggregateArtifacts(placards: RuntimePlacard[]): PublicArtifact[] {
+  const seen = new Set<string>();
+  const out: PublicArtifact[] = [];
+  for (const p of placards) {
+    for (const a of [...p.skills, ...p.mcps, ...p.tools]) {
+      if (seen.has(a.artifact_ref)) continue;
+      seen.add(a.artifact_ref);
+      out.push(a);
+    }
+  }
+  return out;
+}
+
+function licenseSeverity(confidence: string): {
+  label: string;
+  tone: ResultCardDotTone;
+} {
+  const c = confidence.toLowerCase();
+  if (c === "high") return { label: "LOW", tone: "ok" };
+  if (c === "medium") return { label: "MEDIUM", tone: "accent" };
+  return { label: "HIGH", tone: "warn" };
+}
+
+function LicensesSection({ placards }: { placards: RuntimePlacard[] }) {
+  const seen = new Set<string>();
+  const licenses: PublicArtifactLicense[] = [];
+  for (const a of aggregateArtifacts(placards)) {
+    const lic = a.license;
+    if (!lic?.name) continue;
+    const key = `${lic.name}::${lic.url ?? ""}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    licenses.push(lic);
+  }
+  if (licenses.length === 0) return null;
+  return (
+    <section className="resultSection">
+      <header className="sectionHead">
+        <p className="sectionKicker">—— IV. LICENSES</p>
+        <div className="sectionRule" aria-hidden="true" />
+        <p className="sectionSubtitle">
+          —— {licenses.length} {licenses.length === 1 ? "LICENSE" : "LICENSES"} DETECTED
+        </p>
+      </header>
+      <div className="resultCardGrid">
+        {licenses.map((lic) => {
+          const sev = licenseSeverity(lic.confidence);
+          const preview =
+            `Source: ${pretty(lic.source)} · Confidence ${pretty(lic.confidence)}`;
+          return (
+            <ResultCard
+              key={`${lic.name}-${lic.url ?? ""}`}
+              category="LICENSE"
+              title={lic.name}
+              preview={preview}
+              footnote={sev.label}
+              dotTone={sev.tone}
+              href={lic.url ?? undefined}
+            />
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function EvalPlanSection({ placards }: { placards: RuntimePlacard[] }) {
+  const seen = new Set<string>();
+  const steps: string[] = [];
+  for (const p of placards) {
+    for (const step of p.eval_plan ?? []) {
+      if (!step || seen.has(step)) continue;
+      seen.add(step);
+      steps.push(step);
+    }
+  }
+  if (steps.length === 0) return null;
+  return (
+    <section className="resultSection">
+      <header className="sectionHead">
+        <p className="sectionKicker">—— V. EVAL PLAN</p>
+        <div className="sectionRule" aria-hidden="true" />
+        <p className="sectionSubtitle">
+          —— {steps.length} {steps.length === 1 ? "STEP" : "STEPS"}
+        </p>
+      </header>
+      <div className="resultCardGrid">
+        {steps.map((step, idx) => (
+          <ResultCard
+            key={`eval-${idx}`}
+            category={`STEP ${idx + 1}`}
+            title={step}
+            footnote="REQUIRED"
+            dotTone="muted"
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function extractDomain(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "").toUpperCase();
+  } catch {
+    return "LINK";
+  }
+}
+
+function SourceLinksSection({ placards }: { placards: RuntimePlacard[] }) {
+  const seen = new Set<string>();
+  const links: PublicSourceLink[] = [];
+  for (const a of aggregateArtifacts(placards)) {
+    for (const link of a.source_links ?? []) {
+      if (!link?.url || seen.has(link.url)) continue;
+      seen.add(link.url);
+      links.push(link);
+    }
+  }
+  if (links.length === 0) return null;
+  return (
+    <section className="resultSection">
+      <header className="sectionHead">
+        <p className="sectionKicker">—— VI. SOURCE LINKS</p>
+        <div className="sectionRule" aria-hidden="true" />
+        <p className="sectionSubtitle">
+          —— {links.length} {links.length === 1 ? "LINK" : "LINKS"}
+        </p>
+      </header>
+      <div className="resultCardGrid">
+        {links.map((link) => (
+          <ResultCard
+            key={link.url}
+            category="SOURCE"
+            title={link.label || link.url}
+            preview={
+              link.source_kind
+                ? `From ${pretty(link.source_kind)}`
+                : "External reference"
+            }
+            footnote={extractDomain(link.url)}
+            href={link.url}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function ModelPolicySection({ preview }: { preview: PublicPreview }) {
   const teacher = preview.calibration?.teacher;
   const students = preview.calibration?.students ?? [];
@@ -1278,6 +1429,9 @@ export default function App() {
           <ModelPolicySection preview={preview} />
 
           <BlueprintsSection placards={preview.placards} />
+          <LicensesSection placards={preview.placards} />
+          <EvalPlanSection placards={preview.placards} />
+          <SourceLinksSection placards={preview.placards} />
 
           {policy && (
             <div className="policy">
