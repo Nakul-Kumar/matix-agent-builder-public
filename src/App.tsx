@@ -839,7 +839,7 @@ export default function App() {
         <aside className="layoutRight" aria-hidden="true">
           <svg
             className="rightBlob"
-            viewBox="0 0 400 400"
+            viewBox="0 0 600 600"
             xmlns="http://www.w3.org/2000/svg"
             preserveAspectRatio="xMaxYMin meet"
           >
@@ -854,27 +854,14 @@ export default function App() {
                 <stop offset="0%" stopColor="#9A4B33" />
                 <stop offset="100%" stopColor="#C2674A" />
               </linearGradient>
-              <filter
-                id="blobNoise"
-                x="-10%"
-                y="-10%"
-                width="120%"
-                height="120%"
-              >
+              <filter id="blobNoise">
                 <feTurbulence
                   type="fractalNoise"
-                  baseFrequency="0.02"
-                  numOctaves="2"
-                  seed="7"
-                  result="noise"
+                  baseFrequency="0.025"
+                  numOctaves={2}
+                  seed={3}
                 />
-                <feDisplacementMap
-                  in="SourceGraphic"
-                  in2="noise"
-                  scale="6"
-                  xChannelSelector="R"
-                  yChannelSelector="G"
-                />
+                <feDisplacementMap in="SourceGraphic" scale={8} />
               </filter>
               <filter
                 id="blobInnerShadow"
@@ -883,42 +870,26 @@ export default function App() {
                 width="140%"
                 height="140%"
               >
-                <feGaussianBlur in="SourceAlpha" stdDeviation="12" result="blur" />
-                <feOffset in="blur" dx="2" dy="4" result="offsetBlur" />
-                <feComposite
-                  in="offsetBlur"
-                  in2="SourceAlpha"
-                  operator="in"
-                  result="shadowShape"
-                />
-                <feColorMatrix
-                  in="shadowShape"
-                  type="matrix"
-                  values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0"
-                  result="darkShadow"
-                />
-                <feMerge>
-                  <feMergeNode in="SourceGraphic" />
-                  <feMergeNode in="darkShadow" />
-                </feMerge>
+                <feGaussianBlur in="SourceAlpha" stdDeviation="12" />
+                <feOffset dx="0" dy="6" result="offsetblur" />
+                <feFlood floodColor="#5A2A1C" floodOpacity="0.55" />
+                <feComposite in2="offsetblur" operator="in" />
+                <feComposite in2="SourceGraphic" operator="over" />
               </filter>
             </defs>
-            <g filter="url(#blobNoise)" transform="rotate(-4, 200, 200)">
-              <path
-                d="M 268 32
-                   C 318 40, 360 78, 372 132
-                   C 380 172, 358 208, 354 248
-                   C 350 286, 372 320, 348 350
-                   C 320 384, 262 388, 214 380
-                   C 168 372, 122 374, 78 354
-                   C 28 332, 6 280, 14 226
-                   C 20 178, 56 144, 60 96
-                   C 64 56, 96 22, 142 18
-                   C 188 14, 224 26, 268 32 Z"
-                fill="url(#blobGradient)"
-                filter="url(#blobInnerShadow)"
-              />
-            </g>
+            <path
+              d="M 320 60 C 440 50, 540 140, 530 270 C 545 380, 470 480, 350 510 C 240 535, 110 470, 90 360 C 70 250, 130 140, 220 100 C 260 80, 290 65, 320 60 Z"
+              fill="url(#blobGradient)"
+              filter="url(#blobNoise)"
+              transform="rotate(-4 300 300)"
+            />
+            <path
+              d="M 320 60 C 440 50, 540 140, 530 270 C 545 380, 470 480, 350 510 C 240 535, 110 470, 90 360 C 70 250, 130 140, 220 100 C 260 80, 290 65, 320 60 Z"
+              fill="url(#blobGradient)"
+              filter="url(#blobInnerShadow)"
+              transform="rotate(-4 300 300)"
+              opacity="0.6"
+            />
           </svg>
           <div className="rightCaption">MATIX · COCKPIT · v0.1</div>
         </aside>
