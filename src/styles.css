@@ -1569,6 +1569,140 @@ a.resultCard {
   width: 100%;
 }
 
+.bpNavGrid {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.bpNavContent {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+#section-blueprint,
+#section-license,
+#section-eval-plan,
+#section-source-link {
+  scroll-margin-top: 100px;
+}
+
+.sectionNav {
+  position: sticky;
+  top: 96px;
+  align-self: flex-start;
+  padding: 16px 0;
+}
+
+.sectionNavList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionNavItem {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: color 150ms ease, border-color 150ms ease, background-color 150ms ease;
+}
+
+.sectionNavItem:hover:not(.sectionNavItemActive) {
+  border-left-color: #2A3036;
+}
+
+.sectionNavItem:hover:not(.sectionNavItemActive) .sectionNavLabel {
+  color: #F4EBE0;
+}
+
+.sectionNavItem:focus-visible {
+  outline: 2px solid #C2674A;
+  outline-offset: 2px;
+}
+
+.sectionNavItemActive {
+  border-left-color: #C2674A;
+  background: #14181C;
+}
+
+.sectionNavItemActive .sectionNavLabel {
+  color: #F4EBE0;
+}
+
+.sectionNavIndex {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #C2674A;
+  flex: 0 0 auto;
+}
+
+.sectionNavLabel {
+  font-family: "Fraunces", Georgia, serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #A89D8F;
+  line-height: 1.3;
+  transition: color 150ms ease;
+}
+
+@media (max-width: 1023px) {
+  .bpNavGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .sectionNav {
+    position: static;
+    padding: 0;
+    overflow-x: auto;
+  }
+  .sectionNavList {
+    flex-direction: row;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+  .sectionNavItem {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #14181C;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  .sectionNavItem:hover:not(.sectionNavItemActive) {
+    border-bottom-color: transparent;
+    background: #1F2429;
+  }
+  .sectionNavItemActive {
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    background: #1F2429;
+    box-shadow: inset 0 0 0 1px #C2674A;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 .runtimeTab {
   flex: 1 1 0;
   min-width: 0;

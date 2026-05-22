@@ -166,6 +166,69 @@ function placardStatusDotTone(status: string): ResultCardDotTone {
   return "muted";
 }
 
+type SectionNavItem = { id: string; index: string; label: string };
+
+function SectionNav({ items }: { items: SectionNavItem[] }) {
+  const [activeId, setActiveId] = useState<string>(items[0]?.id ?? "");
+
+  useEffect(() => {
+    const elements = items
+      .map((i) => document.getElementById(i.id))
+      .filter((el): el is HTMLElement => Boolean(el));
+    if (elements.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]?.target?.id) {
+          setActiveId(visible[0].target.id);
+        }
+      },
+      { rootMargin: "-40% 0px -55% 0px", threshold: [0, 0.25, 0.5, 0.75, 1] },
+    );
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [items]);
+
+  function scrollTo(id: string) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({
+      behavior: prefersReduced ? "auto" : "smooth",
+      block: "start",
+    });
+    setActiveId(id);
+  }
+
+  return (
+    <nav className="sectionNav" aria-label="Sections">
+      <ul className="sectionNavList">
+        {items.map((item) => {
+          const isActive = item.id === activeId;
+          return (
+            <li key={item.id}>
+              <button
+                type="button"
+                className={`sectionNavItem ${isActive ? "sectionNavItemActive" : ""}`}
+                onClick={() => scrollTo(item.id)}
+                aria-current={isActive ? "true" : undefined}
+              >
+                <span className="sectionNavIndex">{item.index}</span>
+                <span className="sectionNavLabel">{item.label}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
+
 function BlueprintsSection({
   placards,
   activeRuntime,
@@ -217,7 +280,7 @@ function BlueprintsSection({
   }
 
   return (
-    <section className="resultSection">
+    <section className="resultSection" id="section-blueprint">
       <header className="anchorHead">
         <p className="anchorKicker">—— III. BLUEPRINTS</p>
         <h2 className="anchorTitle">Three runtimes ready to export</h2>
@@ -468,7 +531,7 @@ function LicensesSection({ placards }: { placards: RuntimePlacard[] }) {
   }
   if (licenses.length === 0) return null;
   return (
-    <section className="resultSection">
+    <section className="resultSection" id="section-license">
       <header className="sectionHead">
         <p className="sectionKicker">—— IV. LICENSES</p>
         <div className="sectionRule" aria-hidden="true" />
@@ -510,7 +573,7 @@ function EvalPlanSection({ placards }: { placards: RuntimePlacard[] }) {
   }
   if (steps.length === 0) return null;
   return (
-    <section className="resultSection">
+    <section className="resultSection" id="section-eval-plan">
       <header className="sectionHead">
         <p className="sectionKicker">—— V. EVAL PLAN</p>
         <div className="sectionRule" aria-hidden="true" />
@@ -553,7 +616,7 @@ function SourceLinksSection({ placards }: { placards: RuntimePlacard[] }) {
   }
   if (links.length === 0) return null;
   return (
-    <section className="resultSection">
+    <section className="resultSection" id="section-source-link">
       <header className="sectionHead">
         <p className="sectionKicker">—— VI. SOURCE LINKS</p>
         <div className="sectionRule" aria-hidden="true" />
@@ -1283,20 +1346,32 @@ export default function App() {
           <SourceStatusSection statuses={preview.source_statuses ?? []} />
           <ModelPolicySection preview={preview} />
 
-          <BlueprintsSection
-            placards={preview.placards}
-            activeRuntime={activeRuntime}
-            onActiveRuntimeChange={setActiveRuntime}
-            policy={policy}
-            exportingPlatform={exportingPlatform}
-            exportedPlatforms={exportedPlatforms}
-            onExport={handleExport}
-            inspectingPlatform={inspectingPlatform}
-            onInspect={handleInspect}
-          />
-          <LicensesSection placards={preview.placards} />
-          <EvalPlanSection placards={preview.placards} />
-          <SourceLinksSection placards={preview.placards} />
+          <div className="bpNavGrid">
+            <SectionNav
+              items={[
+                { id: "section-blueprint", index: "01", label: "Blueprint" },
+                { id: "section-license", index: "02", label: "License" },
+                { id: "section-eval-plan", index: "03", label: "Eval plan" },
+                { id: "section-source-link", index: "04", label: "Source link" },
+              ]}
+            />
+            <div className="bpNavContent">
+              <BlueprintsSection
+                placards={preview.placards}
+                activeRuntime={activeRuntime}
+                onActiveRuntimeChange={setActiveRuntime}
+                policy={policy}
+                exportingPlatform={exportingPlatform}
+                exportedPlatforms={exportedPlatforms}
+                onExport={handleExport}
+                inspectingPlatform={inspectingPlatform}
+                onInspect={handleInspect}
+              />
+              <LicensesSection placards={preview.placards} />
+              <EvalPlanSection placards={preview.placards} />
+              <SourceLinksSection placards={preview.placards} />
+            </div>
+          </div>
         </section>
       )}
 
