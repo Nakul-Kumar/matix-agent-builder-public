@@ -1627,9 +1627,10 @@ a.resultCard {
 
 .bpNavGrid {
   display: grid;
-  grid-template-columns: 180px 1fr;
-  gap: 32px;
+  grid-template-columns: 140px 1fr;
+  gap: 24px;
   align-items: start;
+  margin-left: -56px;
 }
 
 .bpNavContent {
@@ -1665,9 +1666,9 @@ a.resultCard {
 .sectionNavItem {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 10px;
   background: transparent;
   border: none;
   border-left: 2px solid transparent;
@@ -1721,6 +1722,7 @@ a.resultCard {
   .bpNavGrid {
     grid-template-columns: 1fr;
     gap: 16px;
+    margin-left: 0;
   }
   .sectionNav {
     position: static;
