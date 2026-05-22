@@ -360,6 +360,7 @@ main > .topbar ~ * {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: #9D9277;
+  margin-top: 24px;
   margin-bottom: 6px;
   align-self: flex-start;
 }

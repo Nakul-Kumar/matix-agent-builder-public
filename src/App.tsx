@@ -1288,7 +1288,7 @@ export default function App() {
         </div>
         </div>
         <aside className="layoutRight">
-          <div className="startFromHeader">—— TRY AN EXAMPLE</div>
+          <div className="startFromHeader">TRY AN EXAMPLE</div>
           <p className="startFromHelper">
             Click any card to drop it into your prompt — then edit freely.
           </p>
