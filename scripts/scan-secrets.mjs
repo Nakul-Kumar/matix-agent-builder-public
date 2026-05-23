@@ -2,22 +2,29 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 
 const root = process.cwd();
-const forbidden = [
-  "GEMINI_API_KEY",
-  "OPENAI_API_KEY",
-  "ANTHROPIC_API_KEY",
-  "VITE_GEMINI_API_KEY",
-  "VITE_OPENAI_API_KEY",
-  "VITE_ANTHROPIC_API_KEY",
-  "DATABASE_URL",
-  "cockpit_jwt",
-];
+// Always-suspect substrings. Empty by default; we use regexes below so that
+// bare env-var references in source (e.g. `process.env.GEMINI_API_KEY`) do
+// not false-positive while still catching real `KEY=value` assignments.
+const forbidden = [];
 
-// Loose substrings like "sk-" or "AIza" false-positive on CSS tokens
-// such as `mask-image`. Match the full key shape instead.
+// Forbidden patterns:
+//  - Real key shapes (sk-... and AIza... -- substring forms would
+//    false-positive on `mask-image`, BEM modifiers, etc.).
+//  - Env-var assignments. The `\s*[=:]\s*\S` tail requires an actual value
+//    after the env-var name, so legitimate references like
+//    `process.env.GEMINI_API_KEY` are not flagged, but `GEMINI_API_KEY=...`
+//    or `"GEMINI_API_KEY": "AIza..."` still are.
 const forbiddenPatterns = [
   /\bsk-[A-Za-z0-9_-]{20,}/,
   /\bAIza[A-Za-z0-9_-]{20,}/,
+  /\bGEMINI_API_KEY\s*[=:]\s*\S/,
+  /\bOPENAI_API_KEY\s*[=:]\s*\S/,
+  /\bANTHROPIC_API_KEY\s*[=:]\s*\S/,
+  /\bVITE_GEMINI_API_KEY\s*[=:]\s*\S/,
+  /\bVITE_OPENAI_API_KEY\s*[=:]\s*\S/,
+  /\bVITE_ANTHROPIC_API_KEY\s*[=:]\s*\S/,
+  /\bDATABASE_URL\s*[=:]\s*\S/,
+  /\bcockpit_jwt\s*[=:]\s*\S/,
 ];
 
 const ignored = new Set(["node_modules", "dist", "dist-server", ".git", ".local", ".cache", ".agents"]);

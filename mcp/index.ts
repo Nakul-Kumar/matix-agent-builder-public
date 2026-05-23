@@ -77,7 +77,101 @@ function asError(err: unknown): ToolContent {
   };
 }
 
+interface PlacardArtifactSummary {
+  artifact_ref?: string;
+  name?: string;
+  description?: string;
+}
+interface PlacardSummary {
+  platform?: string;
+  skills?: PlacardArtifactSummary[];
+  mcps?: PlacardArtifactSummary[];
+  tools?: PlacardArtifactSummary[];
+}
+interface CockpitPreviewShape {
+  placards?: PlacardSummary[];
+}
+
 const server = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION });
+
+/**
+ * Ask the calling client's LLM (via MCP sampling) to review the deterministic
+ * recommendations. Works in clients that support sampling (Claude Code, Cursor).
+ * Returns null if the client can't sample, so the caller still gets the raw
+ * deterministic response.
+ */
+async function refineViaSampling(
+  prompt: string,
+  cockpit: unknown,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const placards = (cockpit as CockpitPreviewShape)?.placards ?? [];
+    const candidates = placards.map((p) => ({
+      platform: p.platform,
+      skills: (p.skills ?? []).map((a) => ({
+        ref: a.artifact_ref,
+        name: a.name,
+        description: a.description,
+      })),
+      mcps: (p.mcps ?? []).map((a) => ({
+        ref: a.artifact_ref,
+        name: a.name,
+        description: a.description,
+      })),
+      tools: (p.tools ?? []).map((a) => ({
+        ref: a.artifact_ref,
+        name: a.name,
+        description: a.description,
+      })),
+    }));
+    const result = await server.server.createMessage({
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `Review these agent-builder recommendations.
+
+User goal: "${prompt}"
+
+Deterministic candidates per platform:
+${JSON.stringify(candidates, null, 2)}
+
+Return strict JSON only (no markdown, no preamble, no trailing text):
+{
+  "fit": "good"|"partial"|"poor",
+  "summary": "one or two sentences",
+  "top_refs": [up to 5 artifact_ref strings, ordered],
+  "drop_refs": [{"ref": "...", "reason": "..."}],
+  "missing_capabilities": [short capability strings]
+}`,
+          },
+        },
+      ],
+      maxTokens: 800,
+    });
+    const content = result.content;
+    if (content?.type === "text") {
+      try {
+        const parsed = JSON.parse(content.text) as Record<string, unknown>;
+        return { provider: "sampling", model: result.model ?? "client", ...parsed };
+      } catch {
+        return {
+          provider: "sampling",
+          model: result.model ?? "client",
+          review_text: content.text,
+        };
+      }
+    }
+    return null;
+  } catch (err) {
+    console.error(
+      "[mcp sampling] refinement failed:",
+      err instanceof Error ? err.message : String(err),
+    );
+    return null;
+  }
+}
 
 server.registerTool(
   "build_agent_preview",
@@ -98,15 +192,36 @@ server.registerTool(
           "Natural-language description of the agent you want to build. " +
             "Example: 'Build a customer support agent that reads Notion docs and files Linear bugs.'",
         ),
+      refine: z
+        .boolean()
+        .optional()
+        .describe(
+          "If true, after fetching the deterministic preview the MCP server " +
+            "uses MCP sampling to ask the calling client's LLM to review and " +
+            "refine the candidates. The refinement is attached to the response " +
+            "under `refinement`. Requires a sampling-capable MCP client " +
+            "(Claude Code, Cursor). Default false.",
+        ),
     },
   },
-  async ({ prompt }) => {
+  async ({ prompt, refine }) => {
     try {
       const result = await callApi("/agent-builder/preview", {
         method: "POST",
         body: { prompt },
       });
-      return asJsonContent(result);
+      if (!refine) {
+        return asJsonContent(result);
+      }
+      const refinement = await refineViaSampling(prompt, result);
+      if (refinement) {
+        return asJsonContent({ ...(result as object), refinement });
+      }
+      return asJsonContent({
+        ...(result as object),
+        refinement_error:
+          "MCP sampling unavailable on this client (or it returned an unparseable response). The deterministic preview above is unchanged.",
+      });
     } catch (err) {
       return asError(err);
     }

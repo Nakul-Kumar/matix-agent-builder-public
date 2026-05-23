@@ -1,12 +1,93 @@
 import express, { type Request } from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { GoogleGenAI } from "@google/genai";
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
 const apiBase = (process.env.MATIX_PUBLIC_API_BASE || "").replace(/\/$/, "");
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.resolve(root, "dist");
+
+// Optional Gemini rerank. When GEMINI_API_KEY is set, the BFF passes the
+// cockpit's deterministic candidates through Gemini and attaches a
+// `refinement` field to the preview response. Without the key, the BFF
+// behaves as a pure proxy (no behaviour change).
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
+const geminiApiKey = process.env.GEMINI_API_KEY || "";
+const gemini = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
+
+interface PlacardArtifactSummary {
+  artifact_ref?: string;
+  name?: string;
+  description?: string;
+}
+interface PlacardSummary {
+  platform?: string;
+  skills?: PlacardArtifactSummary[];
+  mcps?: PlacardArtifactSummary[];
+  tools?: PlacardArtifactSummary[];
+}
+interface CockpitPreviewShape {
+  placards?: PlacardSummary[];
+}
+
+async function refineWithGemini(
+  prompt: string,
+  cockpit: CockpitPreviewShape,
+): Promise<Record<string, unknown> | null> {
+  if (!gemini) return null;
+  const candidates = (cockpit.placards ?? []).map((p) => ({
+    platform: p.platform,
+    skills: (p.skills ?? []).map((a) => ({
+      ref: a.artifact_ref,
+      name: a.name,
+      description: a.description,
+    })),
+    mcps: (p.mcps ?? []).map((a) => ({
+      ref: a.artifact_ref,
+      name: a.name,
+      description: a.description,
+    })),
+    tools: (p.tools ?? []).map((a) => ({
+      ref: a.artifact_ref,
+      name: a.name,
+      description: a.description,
+    })),
+  }));
+  const reviewPrompt = `You are reviewing agent-builder recommendations.
+
+User goal: "${prompt}"
+
+Deterministic recommender produced these candidates:
+${JSON.stringify(candidates, null, 2)}
+
+As a senior practitioner, decide which artifacts genuinely fit the user's goal and which are generic/off-topic. Return strict JSON only (no markdown, no preamble, no trailing text) with this shape:
+{
+  "fit": "good" | "partial" | "poor",
+  "summary": "one or two sentences explaining overall fit",
+  "top_refs": [up to 5 most-relevant artifact_ref strings, ordered],
+  "drop_refs": [{"ref": "...", "reason": "..."}],
+  "missing_capabilities": [short capability strings the bundle is missing]
+}`;
+  try {
+    const result = await gemini.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: reviewPrompt,
+      config: { responseMimeType: "application/json" },
+    });
+    const text = result.text;
+    if (!text) return null;
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    return { provider: "google", model: GEMINI_MODEL, ...parsed };
+  } catch (err) {
+    console.warn(
+      "[gemini rerank] refinement failed:",
+      err instanceof Error ? err.message : String(err),
+    );
+    return null;
+  }
+}
 // Keep this allowlist small: public visitors should never discover or proxy
 // private cockpit routes through this app.
 const allowedPublicRoutes = new Set([
@@ -153,10 +234,34 @@ app.use("/api/public", async (req, res) => {
       redirect: "manual",
     });
     const text = await response.text();
+    let outText = text;
+    // Optionally refine the /agent-builder/preview response with Gemini.
+    const contentType = response.headers.get("content-type") || "application/json";
+    if (
+      gemini &&
+      response.ok &&
+      req.method === "POST" &&
+      publicPath === "/agent-builder/preview" &&
+      contentType.includes("application/json")
+    ) {
+      try {
+        const cockpitJson = JSON.parse(text) as CockpitPreviewShape & Record<string, unknown>;
+        const promptInput = (req.body as { prompt?: unknown })?.prompt;
+        if (typeof promptInput === "string") {
+          const refinement = await refineWithGemini(promptInput, cockpitJson);
+          if (refinement) {
+            cockpitJson.refinement = refinement;
+            outText = JSON.stringify(cockpitJson);
+          }
+        }
+      } catch {
+        // Non-JSON or unexpected shape; fall through with the original body.
+      }
+    }
     res.status(response.status);
     res.setHeader("Cache-Control", response.headers.get("cache-control") || "no-store");
-    res.type(response.headers.get("content-type") || "application/json");
-    res.send(text);
+    res.type(contentType);
+    res.send(outText);
   } catch {
     res.status(502).json({ error: "public_api_unreachable" });
   }
