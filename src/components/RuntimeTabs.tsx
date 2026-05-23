@@ -67,9 +67,17 @@ export function RuntimeTabs({
                 {runtimeLabels[placard.platform] ?? placard.label}
               </span>
               <span className="runtimeTabMeta">
-                <span>{pretty(placard.status)}</span>
-                <span>trust {formatScore(placard.scores.trust)}</span>
-                <span>match {formatScore(placard.scores.match)}</span>
+                <span className="runtimeTabStatus">
+                  {pretty(placard.status)}
+                </span>
+                <span className="runtimeTabScore">
+                  <em>Trust</em>
+                  {formatScore(placard.scores.trust)}
+                </span>
+                <span className="runtimeTabScore">
+                  <em>Match</em>
+                  {formatScore(placard.scores.match)}
+                </span>
               </span>
             </span>
           </button>

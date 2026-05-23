@@ -69,10 +69,36 @@
 
 .runtimeTabMeta {
   display: flex;
-  gap: var(--space-2);
   flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-3);
+  row-gap: 4px;
   color: var(--text-muted);
   font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.runtimeTabStatus {
+  text-transform: capitalize;
+  color: var(--text);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
+
+.runtimeTabScore {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: var(--text);
+}
+
+.runtimeTabScore em {
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 .exportBar {
