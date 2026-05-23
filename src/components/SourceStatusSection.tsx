@@ -16,9 +16,12 @@ export function SourceStatusSection({
   preview: PublicPreview;
   statuses: PublicSourceStatus[];
 }) {
-  const filtered = statuses.filter(
-    (status) => !/^search:/i.test(status.label.trim()),
-  );
+  const filtered = statuses.filter((status) => {
+    const label = status.label.trim();
+    if (/^search:/i.test(label)) return false;
+    if (/pulse\s*mcp/i.test(`${status.source_id} ${label}`)) return false;
+    return true;
+  });
 
   return (
     <section className="sourcePanel" aria-labelledby="sources-title">
