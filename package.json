@@ -8,6 +8,7 @@
     "dev:web": "vite",
     "build": "tsc -p tsconfig.json && vite build",
     "start": "tsx server/index.ts",
+    "mcp": "tsx mcp/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "scan:assets": "node scripts/scan-built-assets.mjs",
@@ -15,13 +16,15 @@
     "smoke:live": "node scripts/smoke-live.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@vitejs/plugin-react": "^5.0.4",
     "express": "^5.2.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "tsx": "^4.21.0",
     "typescript": "~5.9.2",
-    "vite": "^7.3.2"
+    "vite": "^7.3.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

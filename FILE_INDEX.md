@@ -176,3 +176,23 @@ Fetch helpers for the same-origin public API:
 - feedback
 
 Important: it does not call any model-provider API directly.
+
+## `mcp/`
+
+Model Context Protocol server that wraps the public agent-builder backend
+so any MCP-aware client (Claude Code, Cursor, ChatGPT desktop) can ask for
+agent blueprints and safe example bundles by name. See `mcp/README.md` for
+the setup, the four tools exposed (`build_agent_preview`,
+`export_agent_bundle`, `list_runtimes`, `registry_summary`), and example
+client wiring.
+
+### `mcp/index.ts`
+
+stdio MCP server entry point. Forwards each tool call to
+`MATIX_PUBLIC_API_BASE` via `fetch`. Runs with `npm run mcp`. Holds no
+provider keys.
+
+### `mcp/README.md`
+
+Install/use/wire-up instructions for the MCP server, including config
+snippets for Claude Code and Cursor.
