@@ -25,17 +25,29 @@
 }
 
 .mark {
-  display: grid;
-  place-items: center;
+  position: relative;
+  display: block;
   width: 36px;
   height: 36px;
   border-radius: var(--radius-md);
-  background: var(--text);
-  color: var(--bg-surface);
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: var(--text-lg);
+  background-color: var(--text);
   box-shadow: var(--shadow-subtle);
+  overflow: hidden;
+}
+
+.mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: var(--bg-surface);
+  -webkit-mask-image: url("/brand-mark.png");
+  mask-image: url("/brand-mark.png");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 70% 70%;
+  mask-size: 70% 70%;
 }
 
 .brand {

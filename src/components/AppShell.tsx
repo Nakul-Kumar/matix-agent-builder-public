@@ -29,9 +29,8 @@ export function AppShell({
       <main className="appShell">
         <header className="topbar">
         <a className="brandRow" href="/" aria-label="Matix Agent Builder home">
-          <span className="mark" aria-hidden="true">
-            M
-          </span>
+          <span className="mark" aria-hidden="true" role="img" />
+
           <span className="brand">
             <span className="brandName">Matix Agent Builder</span>
             <span className="brandTag">Public preview</span>
