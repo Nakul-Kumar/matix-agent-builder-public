@@ -769,7 +769,7 @@ main > .topbar ~ * {
   color: var(--text-primary);
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1399px) {
   .hero {
     grid-template-columns: 1fr;
     padding: 48px 0 32px;

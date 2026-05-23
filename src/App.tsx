@@ -1124,8 +1124,7 @@ export default function App() {
             in plain English.
             <br />
             <span className="heroHeadingMuted">
-              Get a Codex, Claude Code, and OpenClaw bundle in about seven
-              seconds.
+              Get three runtime bundles in seconds.
             </span>
           </h1>
           <p className="heroDek">
