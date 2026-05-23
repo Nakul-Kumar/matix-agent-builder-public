@@ -14,7 +14,6 @@ import {
 } from "./lib/promptIntent";
 import type {
   PublicArtifact,
-  PublicArtifactLicense,
   PublicPreview,
   PublicSourceLink,
   PublicSourceStatus,
@@ -657,70 +656,6 @@ function aggregateArtifacts(placards: RuntimePlacard[]): PublicArtifact[] {
   return out;
 }
 
-function licenseSeverity(confidence: string): {
-  label: string;
-  tone: ResultCardDotTone;
-} {
-  const c = confidence.toLowerCase();
-  if (c === "high") return { label: "LOW", tone: "ok" };
-  if (c === "medium") return { label: "MEDIUM", tone: "accent" };
-  return { label: "HIGH", tone: "warn" };
-}
-
-function LicensesSection({ placards }: { placards: RuntimePlacard[] }) {
-  const seen = new Set<string>();
-  let runtimeSeen = false;
-  const licenses: PublicArtifactLicense[] = [];
-  for (const a of aggregateArtifacts(placards)) {
-    const lic = a.license;
-    if (!lic?.name) continue;
-    // Runtime built-in licenses describe the same concept (the host runtime's
-    // tools) regardless of which platform's URL is attached. Show a single
-    // "Runtime built-in" card; otherwise codex + openclaw produce two
-    // visually-identical cards that only differ by the docs URL they link to.
-    if (lic.source === "runtime") {
-      if (runtimeSeen) continue;
-      runtimeSeen = true;
-      licenses.push(lic);
-      continue;
-    }
-    const key = `${lic.name}::${lic.url ?? ""}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    licenses.push(lic);
-  }
-  if (licenses.length === 0) return null;
-  return (
-    <section className="resultSection" id="section-license">
-      <header className="sectionHead">
-        <p className="sectionKicker">02 — LICENSES</p>
-        <div className="sectionRule" aria-hidden="true" />
-        <p className="sectionSubtitle">
-          {licenses.length} {licenses.length === 1 ? "LICENSE" : "LICENSES"} DETECTED
-        </p>
-      </header>
-      <div className="resultCardGrid">
-        {licenses.map((lic) => {
-          const sev = licenseSeverity(lic.confidence);
-          const preview =
-            `Source: ${pretty(lic.source)} · Confidence ${pretty(lic.confidence)}`;
-          return (
-            <ResultCard
-              key={`${lic.name}-${lic.url ?? ""}`}
-              category="LICENSE"
-              title={lic.name}
-              preview={preview}
-              footnote={sev.label}
-              dotTone={sev.tone}
-              href={lic.url ?? undefined}
-            />
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
 function EvalPlanSection({ placards }: { placards: RuntimePlacard[] }) {
   const seen = new Set<string>();
   const steps: string[] = [];
@@ -735,7 +670,7 @@ function EvalPlanSection({ placards }: { placards: RuntimePlacard[] }) {
   return (
     <section className="resultSection" id="section-eval-plan">
       <header className="sectionHead">
-        <p className="sectionKicker">03 — EVAL PLAN</p>
+        <p className="sectionKicker">02 — EVAL PLAN</p>
         <div className="sectionRule" aria-hidden="true" />
         <p className="sectionSubtitle">
           {steps.length} {steps.length === 1 ? "STEP" : "STEPS"}
@@ -778,7 +713,7 @@ function SourceLinksSection({ placards }: { placards: RuntimePlacard[] }) {
   return (
     <section className="resultSection" id="section-source-link">
       <header className="sectionHead">
-        <p className="sectionKicker">04 — SOURCE LINKS</p>
+        <p className="sectionKicker">03 — SOURCE LINKS</p>
         <div className="sectionRule" aria-hidden="true" />
         <p className="sectionSubtitle">
           {links.length} {links.length === 1 ? "LINK" : "LINKS"}
@@ -1469,9 +1404,8 @@ export default function App() {
             <SectionNav
               items={[
                 { id: "section-blueprint", index: "01", label: "Blueprint" },
-                { id: "section-license", index: "02", label: "License" },
-                { id: "section-eval-plan", index: "03", label: "Eval plan" },
-                { id: "section-source-link", index: "04", label: "Source link" },
+                { id: "section-eval-plan", index: "02", label: "Eval plan" },
+                { id: "section-source-link", index: "03", label: "Source link" },
               ]}
             />
             <div className="bpNavContent">
@@ -1488,7 +1422,6 @@ export default function App() {
               />
               {activeRuntime !== null && (
                 <>
-                  <LicensesSection placards={preview.placards} />
                   <EvalPlanSection placards={preview.placards} />
                   <SourceLinksSection placards={preview.placards} />
                 </>
