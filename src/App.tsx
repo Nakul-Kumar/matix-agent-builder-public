@@ -669,10 +669,21 @@ function licenseSeverity(confidence: string): {
 
 function LicensesSection({ placards }: { placards: RuntimePlacard[] }) {
   const seen = new Set<string>();
+  let runtimeSeen = false;
   const licenses: PublicArtifactLicense[] = [];
   for (const a of aggregateArtifacts(placards)) {
     const lic = a.license;
     if (!lic?.name) continue;
+    // Runtime built-in licenses describe the same concept (the host runtime's
+    // tools) regardless of which platform's URL is attached. Show a single
+    // "Runtime built-in" card; otherwise codex + openclaw produce two
+    // visually-identical cards that only differ by the docs URL they link to.
+    if (lic.source === "runtime") {
+      if (runtimeSeen) continue;
+      runtimeSeen = true;
+      licenses.push(lic);
+      continue;
+    }
     const key = `${lic.name}::${lic.url ?? ""}`;
     if (seen.has(key)) continue;
     seen.add(key);
