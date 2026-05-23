@@ -1472,7 +1472,6 @@ textarea[data-busy="true"] {
   padding: 22px 26px;
   background: var(--surface-card, #F4EFE0);
   border: 1px solid var(--border-hairline, #D8CCB4);
-  border-left: 3px solid var(--accent-brick, #8A9A5B);
   border-radius: 4px;
 }
 
@@ -3521,3 +3520,264 @@ a.resultCard {
     width: 100%;
   }
 }
+
+/* ====================================================================
+   Phase B/C/D — De-AI overrides
+   ==================================================================== */
+
+/* Hand-drawn accent underline under "agent" in the hero (Phase C) */
+.heroAccentWord {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+.heroAccentMark {
+  position: absolute;
+  left: -2%;
+  right: -2%;
+  bottom: -0.18em;
+  width: 104%;
+  height: 0.32em;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+/* Hero scale — let the display type carry the page */
+h1 {
+  font-size: clamp(56px, 6.4vw, 96px);
+  letter-spacing: -0.025em;
+  line-height: 1.02;
+}
+.heroDek {
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1.55;
+  color: var(--text-body);
+  max-width: 520px;
+}
+
+/* Meta line under hero — sentence case, mono only for the identifier */
+.heroMeta {
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.heroSidebarItem dt {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.heroSidebarItem dd {
+  font-family: var(--font-mono);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Section kickers — sentence case, near-default tracking */
+.sectionKicker,
+.anchorKicker {
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.anchorKicker {
+  font-size: 14px;
+}
+.sectionSubtitle,
+.anchorCount {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* Blueprint sub-box headers */
+.blueprintBoxKicker {
+  text-transform: none;
+  letter-spacing: -0.005em;
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+.blueprintBoxCount {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* Result cards — categories and footnotes as sentence-case sans */
+.resultCardCategory {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--accent);
+}
+.resultCardFootnote {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* Active blueprint header */
+.activeBlueprintCategory {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--accent);
+}
+
+/* Runtime tab footnote — sentence case, numbers stay mono */
+.runtimeTabFootnote {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 11px;
+}
+.runtimeTabFootnoteLabel {
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+}
+.runtimeTabFootnoteValue {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+}
+
+/* Start-from quick cards */
+.startFromHeader {
+  text-transform: none;
+  letter-spacing: 0.005em;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.startFromHint {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.startFromCategory {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--accent);
+}
+.startFromFootnote {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* Model strip badge — keep mono but sentence */
+.modelStripBadge {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* Prompt empty hint / error hint */
+.promptEmptyHint,
+.promptErrorHint {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* Export action meta — sentence case */
+.exportActionMeta {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.exportActionProvider {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.exportActionInspect,
+.exportActionButton {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+
+/* Result header meta line — data values keep mono */
+.resultKicker {
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.resultMetaLine {
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.resultMetaMono {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-body);
+  background: transparent;
+  padding: 0;
+}
+
+/* Status text — replaces the dot+label pattern with colored text */
+.statusText {
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+.statusText--ok    { color: var(--status-preview, #4F8A5F); }
+.statusText--accent{ color: var(--accent); }
+.statusText--warn  { color: var(--status-experimental, #C77F3E); }
+.statusText--muted { color: var(--text-faint); }
+
+/* Result-card hover keeps the accent rail (kept as a single, deliberate emphasis) */

@@ -106,10 +106,10 @@ function PlacardSkeleton({ tone }: { tone: PlatformKey }) {
 
 function deriveSourceKind(source: PublicSourceStatus): string {
   const haystack = `${source.source_id} ${source.label}`.toLowerCase();
-  if (/registry/.test(haystack)) return "REGISTRY";
-  if (/market|marketplace|store/.test(haystack)) return "MARKET";
-  if (/mirror|cache/.test(haystack)) return "MIRROR";
-  return "DIRECTORY";
+  if (/registry/.test(haystack)) return "Registry";
+  if (/market|marketplace|store/.test(haystack)) return "Marketplace";
+  if (/mirror|cache/.test(haystack)) return "Mirror";
+  return "Directory";
 }
 
 function sourceStatusDotTone(status: string): ResultCardDotTone {
@@ -136,13 +136,13 @@ function SourceStatusSection({
   return (
     <section className="resultSection">
       <header className="anchorHead">
-        <p className="anchorKicker">SOURCE SEARCH STATUS</p>
+        <p className="anchorKicker">Source search</p>
         <h2 className="anchorTitle">
           Directories and marketplaces checked
         </h2>
         <p className="anchorCount">
           {filtered.length}{" "}
-          {filtered.length === 1 ? "DIRECTORY" : "DIRECTORIES"}
+          {filtered.length === 1 ? "directory" : "directories"}
         </p>
         <div className="anchorRule" aria-hidden="true" />
       </header>
@@ -153,8 +153,13 @@ function SourceStatusSection({
             category={deriveSourceKind(source)}
             title={source.label}
             preview={source.message ?? ""}
-            footnote={pretty(source.status).toUpperCase()}
-            dotTone={sourceStatusDotTone(source.status)}
+            footnote={
+              <span
+                className={`statusText statusText--${sourceStatusDotTone(source.status)}`}
+              >
+                {pretty(source.status)}
+              </span>
+            }
           />
         ))}
       </div>
@@ -356,9 +361,9 @@ function BlueprintsSection({
   return (
     <section className="resultSection" id="section-blueprint">
       <header className="anchorHead">
-        <p className="anchorKicker">01 — BLUEPRINTS</p>
+        <p className="anchorKicker">Blueprints</p>
         <h2 className="anchorTitle">Three runtimes ready to export</h2>
-        <p className="anchorCount">{placards.length} RUNTIMES</p>
+        <p className="anchorCount">{placards.length} runtimes</p>
         <div className="anchorRule" aria-hidden="true" />
       </header>
 
@@ -395,19 +400,17 @@ function BlueprintsSection({
               </span>
               <span className="runtimeTabFootnote">
                 <span
-                  className={`resultDot resultDot--${placardStatusDotTone(p.status)}`}
-                  aria-hidden="true"
-                />
-                <span className="runtimeTabFootnoteLabel">
-                  {pretty(p.status).toUpperCase()}
+                  className={`statusText statusText--${placardStatusDotTone(p.status)}`}
+                >
+                  {pretty(p.status)}
                 </span>
                 <span className="runtimeTabFootnoteSep">·</span>
-                <span className="runtimeTabFootnoteLabel">TRUST</span>
+                <span className="runtimeTabFootnoteLabel">trust</span>
                 <span className="runtimeTabFootnoteValue">
                   {Math.round(p.scores.trust)}
                 </span>
                 <span className="runtimeTabFootnoteSep">·</span>
-                <span className="runtimeTabFootnoteLabel">MATCH</span>
+                <span className="runtimeTabFootnoteLabel">match</span>
                 <span className="runtimeTabFootnoteValue">
                   {Math.round(p.scores.match)}
                 </span>
@@ -422,21 +425,21 @@ function BlueprintsSection({
           <div className="exportActionRow">
             <p key={`meta-${fadeKey}`} className="exportActionMeta">
               <span className="exportActionProvider">
-                {(platformTheme[activeKey]?.tag ?? activePlacard.label).toUpperCase()}
+                {platformTheme[activeKey]?.tag ?? activePlacard.label}
               </span>
               {policy && (
                 <>
                   <span className="exportActionSep">·</span>
                   <span>
-                    BROWSER PROVIDER CALLS {policy.browser_provider_calls ? "YES" : "NO"}
+                    No browser provider calls
                   </span>
                   <span className="exportActionSep">·</span>
                   <span>
-                    SECRETS INCLUDED {policy.secrets_included ? "YES" : "NO"}
+                    No secrets bundled
                   </span>
                   <span className="exportActionSep">·</span>
                   <span>
-                    ALLOWED SOURCE HOSTS {policy.allowed_source_hosts.length}
+                    {policy.allowed_source_hosts.length} allow-listed hosts
                   </span>
                 </>
               )}
@@ -449,7 +452,7 @@ function BlueprintsSection({
                 disabled={inspectingPlatform === activeKey}
                 title="Open the raw JSON manifest in a new tab without downloading."
               >
-                {inspectingPlatform === activeKey ? "OPENING…" : "VIEW JSON"}
+                {inspectingPlatform === activeKey ? "Opening…" : "View JSON"}
               </button>
               <button
                 type="button"
@@ -459,10 +462,10 @@ function BlueprintsSection({
                 title="Bundle is a signed JSON manifest. No secrets, no provider calls, source hosts allow-listed."
               >
                 {exportingPlatform === activeKey
-                  ? "PREPARING SAFE BUNDLE…"
+                  ? "Preparing safe bundle…"
                   : exportedPlatforms.has(activeKey)
-                    ? "EXPORTED — DOWNLOAD AGAIN"
-                    : "EXPORT SAFE BUNDLE"}
+                    ? "Exported. Download again."
+                    : "Export safe bundle"}
               </button>
             </div>
           </div>
@@ -557,7 +560,7 @@ function BlueprintSubBox({
     <div className="blueprintBox">
       <div className="blueprintBoxHead">
         <p className="blueprintBoxKicker">{label}</p>
-        <p className="blueprintBoxCount">{count} ITEMS</p>
+        <p className="blueprintBoxCount">{count} {count === 1 ? "item" : "items"}</p>
         <div className="blueprintBoxRule" aria-hidden="true" />
       </div>
       <div className="blueprintBoxScroll">
@@ -592,49 +595,47 @@ function BlueprintGroup({ placard }: { placard: RuntimePlacard }) {
         <h3 className="activeBlueprintTitle">{agentTitle}</h3>
       </header>
       <div className="blueprintGrid">
-        <BlueprintSubBox label="SKILLS" count={placard.skills.length}>
+        <BlueprintSubBox label="Skills" count={placard.skills.length}>
           {placard.skills.map((a) => (
             <ResultCard
               key={`${placard.platform}-skill-${a.artifact_ref}`}
-              category="SKILL"
+              category="Skill"
               title={a.name}
               preview={a.description}
-              footnote={`${(a.license?.source ?? "SOURCE").toUpperCase()} · TASK FIT ${Math.round(a.match)} · QUALITY ${Math.round(a.performance)}`}
+              footnote={`${a.license?.source ?? "source"} · fit ${Math.round(a.match)} · quality ${Math.round(a.performance)}`}
             />
           ))}
         </BlueprintSubBox>
-        <BlueprintSubBox label="MCPS" count={tools.length}>
+        <BlueprintSubBox label="MCPs" count={tools.length}>
           {tools.map((a) => (
             <ResultCard
               key={`${placard.platform}-mcp-${a.artifact_ref}`}
               category="MCP"
               title={a.name}
               preview={a.description}
-              footnote={`${(a.license?.source ?? "SOURCE").toUpperCase()} · TRUST ${Math.round(a.trust)} · QUALITY ${Math.round(a.performance)}`}
+              footnote={`${a.license?.source ?? "source"} · trust ${Math.round(a.trust)} · quality ${Math.round(a.performance)}`}
             />
           ))}
         </BlueprintSubBox>
-        <BlueprintSubBox label="FILES" count={placard.file_tree.length}>
+        <BlueprintSubBox label="Files" count={placard.file_tree.length}>
           {placard.file_tree.map((file) => (
             <ResultCard
               key={`${placard.platform}-file-${file}`}
-              category="FILE"
+              category="File"
               title={file}
               preview={`Included in the ${agentTitle} bundle`}
-              footnote="EXPORTED"
-              dotTone="muted"
+              footnote="Exported"
             />
           ))}
         </BlueprintSubBox>
-        <BlueprintSubBox label="REASONS" count={whySelected.length}>
+        <BlueprintSubBox label="Reasons" count={whySelected.length}>
           {whySelected.map((a) => (
             <ResultCard
               key={`${placard.platform}-why-${a.artifact_ref}`}
-              category="REASON"
+              category="Reason"
               title={a.name}
               preview={a.why_selected}
-              footnote="MATCHED"
-              dotTone="accent"
+              footnote={<span className="statusText statusText--accent">Matched</span>}
             />
           ))}
         </BlueprintSubBox>
@@ -670,20 +671,19 @@ function EvalPlanSection({ placards }: { placards: RuntimePlacard[] }) {
   return (
     <section className="resultSection" id="section-eval-plan">
       <header className="sectionHead">
-        <p className="sectionKicker">02 — EVAL PLAN</p>
+        <p className="sectionKicker">Evaluation plan</p>
         <div className="sectionRule" aria-hidden="true" />
         <p className="sectionSubtitle">
-          {steps.length} {steps.length === 1 ? "STEP" : "STEPS"}
+          {steps.length} {steps.length === 1 ? "step" : "steps"}
         </p>
       </header>
       <div className="resultCardGrid">
         {steps.map((step, idx) => (
           <ResultCard
             key={`eval-${idx}`}
-            category={`STEP ${idx + 1}`}
+            category={`Step ${idx + 1}`}
             title={step}
-            footnote="REQUIRED"
-            dotTone="muted"
+            footnote="Required"
           />
         ))}
       </div>
@@ -693,9 +693,9 @@ function EvalPlanSection({ placards }: { placards: RuntimePlacard[] }) {
 
 function extractDomain(url: string): string {
   try {
-    return new URL(url).hostname.replace(/^www\./, "").toUpperCase();
+    return new URL(url).hostname.replace(/^www\./, "");
   } catch {
-    return "LINK";
+    return "link";
   }
 }
 
@@ -713,17 +713,17 @@ function SourceLinksSection({ placards }: { placards: RuntimePlacard[] }) {
   return (
     <section className="resultSection" id="section-source-link">
       <header className="sectionHead">
-        <p className="sectionKicker">03 — SOURCE LINKS</p>
+        <p className="sectionKicker">Source links</p>
         <div className="sectionRule" aria-hidden="true" />
         <p className="sectionSubtitle">
-          {links.length} {links.length === 1 ? "LINK" : "LINKS"}
+          {links.length} {links.length === 1 ? "link" : "links"}
         </p>
       </header>
       <div className="resultCardGrid">
         {links.map((link) => (
           <ResultCard
             key={link.url}
-            category="SOURCE"
+            category="Source"
             title={link.label || link.url}
             preview={
               link.source_kind
@@ -1057,60 +1057,6 @@ export default function App() {
         className="pageDecoration"
         aria-hidden="true"
       >
-        <div className="pageDecoShapes">
-          <svg
-            viewBox="0 0 1600 900"
-            preserveAspectRatio="xMidYMid slice"
-            xmlns="http://www.w3.org/2000/svg"
-            width="100%"
-            height="100%"
-          >
-            <defs>
-              <filter id="pageDecoTexture" x="-5%" y="-5%" width="110%" height="110%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves={2} seed={5} />
-                <feDisplacementMap in="SourceGraphic" scale={4} />
-              </filter>
-            </defs>
-            <g filter="url(#pageDecoTexture)">
-              <path
-                className="pageDecoShape pageDecoA"
-                d="M -100 80 C -50 -60, 100 -100, 250 -80 C 380 -60, 480 30, 450 130 C 430 200, 380 250, 300 280 C 220 290, 130 270, 60 240 C -10 200, -80 160, -100 80 Z"
-                fill="#9E8E70"
-                opacity="0.32"
-              />
-              <path
-                className="pageDecoShape pageDecoB"
-                d="M 1150 -50 C 1280 -80, 1420 -40, 1500 30 C 1580 80, 1700 120, 1650 220 C 1610 300, 1450 280, 1330 250 C 1240 220, 1180 160, 1130 100 C 1100 50, 1110 0, 1150 -50 Z"
-                fill="#B89684"
-                opacity="0.30"
-              />
-              <path
-                className="pageDecoShape pageDecoC"
-                d="M -50 380 C 30 360, 120 370, 180 410 C 220 440, 230 480, 200 520 C 170 555, 90 565, 30 540 C -30 520, -60 480, -50 440 C -60 420, -55 400, -50 380 Z"
-                fill="#7F9474"
-                opacity="0.22"
-              />
-              <path
-                className="pageDecoShape pageDecoD"
-                d="M 1180 700 C 1280 660, 1420 660, 1500 700 C 1580 730, 1680 760, 1700 820 C 1700 880, 1620 940, 1500 960 C 1380 980, 1250 970, 1180 920 C 1120 870, 1100 800, 1130 760 C 1140 730, 1160 710, 1180 700 Z"
-                fill="#C5A580"
-                opacity="0.32"
-              />
-              <path
-                className="pageDecoShape pageDecoE"
-                d="M -50 720 C 50 680, 180 670, 280 700 C 360 730, 420 800, 380 860 C 340 920, 220 940, 100 920 C 0 900, -80 860, -100 800 C -100 760, -80 730, -50 720 Z"
-                fill="#8A7565"
-                opacity="0.30"
-              />
-              <path
-                className="pageDecoShape pageDecoF"
-                d="M 820 40 C 850 20, 900 15, 940 30 C 970 45, 985 70, 970 95 C 955 115, 920 125, 880 120 C 840 115, 815 100, 810 80 C 805 65, 810 50, 820 40 Z"
-                fill="#9E8E70"
-                opacity="0.18"
-              />
-            </g>
-          </svg>
-        </div>
         <div className="pageDecoLines">
           <svg
             viewBox="0 0 1600 900"
@@ -1160,19 +1106,32 @@ export default function App() {
 
       <section className="hero">
         <div className="heroMain">
-          <p className="heroMeta">BUILD 0142 · MAY 2026 · MATIX</p>
+          <p className="heroMeta">Build 0142 / May 2026 / Matix</p>
           <div className="heroMetaRule" aria-hidden="true" />
           <h1>
-            Describe your agent once.
+            Describe an{" "}
+            <span className="heroAccentWord">
+              agent
+              <svg
+                className="heroAccentMark"
+                viewBox="0 0 220 18"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <path d="M 4 12 C 28 6, 54 14, 82 9 C 112 4, 138 13, 168 8 C 188 6, 204 11, 216 8" />
+              </svg>
+            </span>{" "}
+            in plain English.
             <br />
             <span className="heroHeadingMuted">
-              Get three runtimes worth keeping.
+              Get a Codex, Claude Code, and OpenClaw bundle in about seven
+              seconds.
             </span>
           </h1>
           <p className="heroDek">
-            A prompt becomes a Codex bundle, a Claude Code workspace, and an
-            OpenClaw runtime — each signed, scoped, and ready to ship. Pick
-            one, or take all three.
+            We compose the skills, MCPs, files, and an evaluation plan. The
+            export is a signed JSON manifest with no secrets and no live
+            provider calls.
           </p>
         </div>
         <aside className="heroSidebar" aria-label="Build details">
@@ -1228,7 +1187,7 @@ export default function App() {
           <div className="promptActions">
             {error && (
               <p className="promptErrorHint" role="alert">
-                BUILD FAILED — TRY AGAIN
+                Build failed. Try again.
               </p>
             )}
             <p className="trustNote">
@@ -1237,7 +1196,7 @@ export default function App() {
               files with placeholders.
             </p>
             {showEmptyHint && (
-              <p className="promptEmptyHint">DESCRIBE YOUR AGENT TO BUILD</p>
+              <p className="promptEmptyHint">Write a sentence about the agent you want.</p>
             )}
             <div className="promptCta">
               <span className="kbd">Cmd/Ctrl + Enter</span>
@@ -1257,9 +1216,9 @@ export default function App() {
         </div>
         </div>
         <aside className="layoutRight">
-          <div className="startFromHeader">TRY AN EXAMPLE</div>
+          <div className="startFromHeader">Try an example</div>
           <p className="startFromHelper">
-            Click any card to drop it into your prompt — then edit freely.
+            Tap a card to fill the prompt. You can edit before building.
           </p>
           <div className={`startFromScroll${busy ? " is-busy" : ""}`}>
           <div
@@ -1299,7 +1258,7 @@ export default function App() {
             className={`startFromHint${startScrolledEnd ? " is-end" : ""}`}
             aria-hidden="true"
           >
-            SCROLL FOR MORE
+            Scroll for more
           </div>
         </aside>
       </div>
@@ -1360,7 +1319,7 @@ export default function App() {
       {busy && (
         <section className="results" aria-busy="true" aria-live="polite">
           <header className="resultHeaderNew">
-            <p className="resultKicker">BACKEND-APPROVED PREVIEW</p>
+            <p className="resultKicker">Preview from the backend</p>
             <h2 className="resultPrompt resultPromptLoading">
               Composing three runtime blueprints…
             </h2>
@@ -1376,22 +1335,20 @@ export default function App() {
       {!busy && preview && (
         <section className="results" id="results">
           <header className="resultHeaderNew">
-            <p className="resultKicker">BACKEND-APPROVED PREVIEW</p>
+            <p className="resultKicker">Preview from the backend</p>
             <h2 className="resultPrompt">{preview.normalized_prompt}</h2>
             <p className="resultMetaLine">
-              GEMINI / GEMINI-2.5-FLASH
-              {" · "}
-              {new Date(preview.generated_at)
-                .toLocaleString("en-GB", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-                .toUpperCase()}
-              {" · "}
-              {preview.placards.length} BLUEPRINTS
+              <code className="resultMetaMono">gemini-2.5-flash</code>
+              {" / "}
+              {new Date(preview.generated_at).toLocaleString("en-GB", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+              {" / "}
+              {preview.placards.length} blueprints
             </p>
           </header>
 
