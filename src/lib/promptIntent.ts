@@ -181,15 +181,15 @@ export function localRejection(rawPrompt: string): PromptRejection {
   } else if (CONVERSATIONAL_PATTERNS.some((re) => re.test(stripUrls(trimmed).trim()))) {
     reason = "It looks like a greeting or chit-chat, not an agent description.";
   } else if (OFF_TOPIC_REQUESTS.some((re) => re.test(stripUrls(trimmed).trim()))) {
-    reason = "This page only builds AI agent blueprints — it isn't a general assistant.";
+    reason = "This page only builds AI agent blueprints. It isn't a general assistant.";
   } else if (wordCount(stripUrls(trimmed)) <= 2) {
-    reason = "Too few words — give me a sentence about the agent you want.";
+    reason = "That's too short. Write a sentence about the agent you want.";
   }
 
   return {
     source: "local",
     title: "This doesn't look like an agent request",
     message: reason,
-    hint: "Tell me what the agent should do, for whom, and what tools or sources it needs.",
+    hint: "Say what the agent should do, who it's for, and which tools or sources it needs.",
   };
 }

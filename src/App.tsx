@@ -1394,14 +1394,14 @@ export default function App() {
           <p className="platformTag">Feedback</p>
           <h2>What would make this blueprint better?</h2>
           <p className="feedbackHint">
-            We read every note. Optional email if you&apos;d like a reply;
-            feedback may be stored under the public preview privacy policy.
+            We read every note. Leave an email if you want a reply. Feedback
+            may be stored under the public preview privacy policy.
           </p>
         </header>
 
         {feedbackSent ? (
           <div className="feedbackThanks" role="status">
-            <strong>Thanks - that&apos;s in.</strong> Your note went straight to
+            <strong>Thanks, that&apos;s in.</strong> Your note went straight to
             the Matix team.
           </div>
         ) : (
@@ -1466,7 +1466,7 @@ export default function App() {
           ))}
         </nav>
         <span className="footerDim">
-          Same-origin /api/public/* only / no provider keys in the browser
+          Calls only same-origin <code>/api/public/*</code>. No provider keys in the browser.
         </span>
       </footer>
     </main>
