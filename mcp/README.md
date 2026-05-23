@@ -12,12 +12,18 @@ the response. No provider keys live in this process.
 
 | Tool | Description |
 |---|---|
-| `build_agent_preview` | Generate a 3-platform agent blueprint preview from a prompt. |
+| `build_agent_preview` | Generate a 3-platform agent blueprint preview from a prompt. Optional `refine: true` parameter uses MCP sampling to ask the calling client's LLM to review/filter the candidates and attach a `refinement` field. |
 | `export_agent_bundle` | Generate a safe example export bundle for one platform (`codex`, `claude_code`, or `openclaw`). |
 | `list_runtimes` | List the runtime templates the public backend supports. |
 | `registry_summary` | Get a summary of skills in the public registry with trust scores. |
 
 All tools return JSON serialized as a single text block.
+
+### Sampling-based refinement (optional)
+
+Calling `build_agent_preview` with `refine: true` triggers an extra step: the MCP server asks the calling client's LLM (via the MCP **sampling** primitive) to review the deterministic candidates and return strict JSON with `fit`, `summary`, `top_refs`, `drop_refs`, and `missing_capabilities`. The refinement is attached under `refinement` on the response.
+
+This requires an MCP client that supports sampling (Claude Code, Cursor). On clients that don't, the original deterministic preview is returned with a `refinement_error` explaining why.
 
 ## Run it
 
