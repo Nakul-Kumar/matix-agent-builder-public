@@ -45,25 +45,25 @@ const platformTheme: Record<
 > = {
   codex: {
     tone: "codex",
-    accent: "#A24A26",
-    accentSoft: "rgba(162, 74, 38, 0.12)",
-    glow: "rgba(162, 74, 38, 0.18)",
+    accent: "#8A9A5B",
+    accentSoft: "rgba(138, 154, 91, 0.12)",
+    glow: "rgba(138, 154, 91, 0.18)",
     tag: "OpenAI / Codex CLI",
     subtitle: "Cool, technical, structured exports",
   },
   claude_code: {
     tone: "claude",
-    accent: "#A24A26",
-    accentSoft: "rgba(162, 74, 38, 0.12)",
-    glow: "rgba(162, 74, 38, 0.18)",
+    accent: "#8A9A5B",
+    accentSoft: "rgba(138, 154, 91, 0.12)",
+    glow: "rgba(138, 154, 91, 0.18)",
     tag: "Anthropic / Claude Code",
     subtitle: "Warm, careful, citation-friendly",
   },
   openclaw: {
     tone: "openclaw",
-    accent: "#A24A26",
-    accentSoft: "rgba(162, 74, 38, 0.12)",
-    glow: "rgba(162, 74, 38, 0.18)",
+    accent: "#8A9A5B",
+    accentSoft: "rgba(138, 154, 91, 0.12)",
+    glow: "rgba(138, 154, 91, 0.18)",
     tag: "Open source / OpenClaw",
     subtitle: "Experimental, local-first, opinionated",
   },
@@ -1119,7 +1119,7 @@ export default function App() {
             width="100%"
             height="100%"
           >
-            <g fill="none" stroke="#A24A26" strokeWidth={2} opacity="0.55">
+            <g className="pageDecoLines" fill="none" strokeWidth={2} opacity="0.55">
               <path
                 className="pageDecoLine pageDecoLine1"
                 d="M 1500 50 C 1300 200, 1100 350, 800 400 C 500 450, 200 550, -50 600"

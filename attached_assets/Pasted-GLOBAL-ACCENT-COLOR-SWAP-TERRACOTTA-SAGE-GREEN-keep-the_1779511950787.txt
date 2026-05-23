@@ -1,0 +1,92 @@
+GLOBAL ACCENT COLOR SWAP — TERRACOTTA → SAGE GREEN
+(keep the two terracotta decoration lines in the background)
+
+Replace every terracotta / orange-brick accent in the design system with a sage green — EXCEPT the two terracotta lines that run through the background decoration layer. Those stay exactly as they are. The cream/linen background palette, decoration blobs, text tokens, status dots, and editorial typography also stay unchanged.
+
+──────────────────────────────────────────
+1. UPDATE THE ACCENT TOKENS
+──────────────────────────────────────────
+
+In the global CSS where design tokens live, replace the existing accent block:
+
+BEFORE
+  --accent:         #A24A26;
+  --accent-hover:   #8C3D1C;
+  --accent-soft:    #DDB8A0;
+  --accent-on-fill: #F5ECD8;
+
+AFTER
+  --accent:         #8A9A5B;   /* sage */
+  --accent-hover:   #74844A;   /* deeper sage for hover/active */
+  --accent-soft:    #C9D2A8;   /* muted sage tint for soft fills / chip backgrounds */
+  --accent-on-fill: #F5ECD8;   /* unchanged — cream text on sage fills */
+
+──────────────────────────────────────────
+2. PRESERVE THE TWO TERRACOTTA BACKGROUND LINES
+──────────────────────────────────────────
+
+There are two diagonal/decorative terracotta lines that live in the background decoration layer (the same layer as the muted blobs). DO NOT touch those.
+
+Action:
+  - Locate the two terracotta lines in the background layer (likely SVG <line>/<path> elements or pseudo-element gradients sitting alongside the decor blobs).
+  - Extract their colour into its own dedicated token so it never gets swept up by future accent edits:
+
+      --decor-line: #A24A26;   /* preserved terracotta — background lines ONLY */
+
+  - Point those two lines at var(--decor-line). They should render identically to before.
+  - These lines must NOT use --accent, --accent-hover, or --accent-soft.
+
+──────────────────────────────────────────
+3. SCRUB ALL OTHER HARDCODED TERRACOTTA HEX VALUES
+──────────────────────────────────────────
+
+Search the entire repo (css, tsx, jsx, ts, js, mdx) for these hex strings. Replace with the sage equivalents EVERYWHERE EXCEPT the two background lines (which now use --decor-line).
+
+  #A24A26  →  #8A9A5B   (skip the two background lines)
+  #8C3D1C  →  #74844A
+  #DDB8A0  →  #C9D2A8
+
+Also catch any rgb(...) / hsl(...) equivalents. If a component already references var(--accent) / var(--accent-hover) / var(--accent-soft), leave it — it picks up the new sage automatically.
+
+──────────────────────────────────────────
+4. COMPONENTS TO VERIFY (should now be SAGE)
+──────────────────────────────────────────
+
+  - Primary CTA: "Build Agent" button (rest / hover / disabled)
+  - Active tab indicator on the runtime tab strip (Codex / Claude Code / OpenClaw)
+  - "Export Safe Bundle" button outline and hover
+  - Section number badges (I / II / III / IV / V on results page)
+  - Sticky left-side section navigator: active link underline / dot
+  - In-text links and inline highlights
+  - Star rating hover/fill in the feedback form
+  - Focus ring on inputs and buttons
+  - ::selection highlight
+  - Chips, pills, "PREVIEW" badges using accent-soft
+  - Scroll thumb on the 2×2 blueprint grid (SKILLS / MCPS / FILES / REASONS)
+
+──────────────────────────────────────────
+5. ELEMENTS THAT SHOULD STAY TERRACOTTA
+──────────────────────────────────────────
+
+  - The two terracotta lines in the background decoration layer (now using --decor-line)
+  - Nothing else
+
+──────────────────────────────────────────
+6. DO NOT CHANGE
+──────────────────────────────────────────
+
+  - Background surface tokens (cream / linen)
+  - Border tokens
+  - Text tokens
+  - Decoration blob tokens (--decor-1 … --decor-5)
+  - Status dot tokens (--status-preview / --status-planned / --status-experimental)
+  - Typography, spacing, layout
+
+──────────────────────────────────────────
+7. CONTRAST CHECK
+──────────────────────────────────────────
+
+  - Sage on cream: body-text inline links should meet WCAG AA (4.5:1). If a small-text link fails contrast at #8A9A5B, use --accent-hover (#74844A) for inline body links and reserve --accent (#8A9A5B) for larger UI (buttons, badges, indicators).
+  - Cream text on sage fill: confirm button labels pass AA. If marginal, set buttons to --accent-hover at rest.
+
+Report back: list of files touched, and a screenshot of the homepage + a results page so I can confirm the two terracotta lines are still present in the background and everything else has flipped to sage.
