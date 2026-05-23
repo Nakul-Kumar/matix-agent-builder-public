@@ -70,11 +70,17 @@ export function RuntimeTabs({
                 <span className="runtimeTabStatus">
                   {pretty(placard.status)}
                 </span>
-                <span className="runtimeTabScore">
+                <span
+                  className="runtimeTabScore"
+                  title="Trust: how confident the backend is in this runtime's source data and provenance (0-100)."
+                >
                   <em>Trust</em>
                   {formatScore(placard.scores.trust)}
                 </span>
-                <span className="runtimeTabScore">
+                <span
+                  className="runtimeTabScore"
+                  title="Match: how well this runtime's skills and tools fit your agent request (0-100)."
+                >
                   <em>Match</em>
                   {formatScore(placard.scores.match)}
                 </span>
