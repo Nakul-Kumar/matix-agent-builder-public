@@ -1120,12 +1120,7 @@ export default function App() {
               >
                 <path d="M 4 12 C 28 6, 54 14, 82 9 C 112 4, 138 13, 168 8 C 188 6, 204 11, 216 8" />
               </svg>
-            </span>{" "}
-            in plain English.
-            <br />
-            <span className="heroHeadingMuted">
-              Get three runtime bundles in seconds.
-            </span>
+            </span>.
           </h1>
           <p className="heroDek">
             We compose the skills, MCPs, files, and an evaluation plan. The
