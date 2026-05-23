@@ -165,7 +165,7 @@ function SourceStatusSection({
             Model
           </span>
           <span className="modelStripValue modelStripValue--primary">
-            gemini
+            Gemini
           </span>
           <span className="modelStripCaption">Used to build your agent</span>
         </div>
