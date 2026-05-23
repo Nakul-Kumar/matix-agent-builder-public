@@ -35,6 +35,28 @@ interface CockpitPreviewShape {
   placards?: PlacardSummary[];
 }
 
+interface ExportArtifact {
+  artifact_ref?: string;
+  artifact_kind?: string;
+  name?: string;
+  description?: string;
+}
+interface ExportManifest {
+  platform?: string;
+  selected_artifacts?: ExportArtifact[];
+  file_manifest?: {
+    instructions?: string;
+    mcp_config?: string;
+    skills_root?: string;
+  };
+  [k: string]: unknown;
+}
+interface ExportShape {
+  ok?: boolean;
+  files?: Record<string, string>;
+  manifest?: ExportManifest;
+}
+
 async function refineWithGemini(
   prompt: string,
   cockpit: CockpitPreviewShape,
@@ -86,6 +108,80 @@ As a senior practitioner, decide which artifacts genuinely fit the user's goal a
   } catch (err) {
     console.warn(
       "[gemini rerank] refinement failed:",
+      err instanceof Error ? err.message : String(err),
+    );
+    return null;
+  }
+}
+
+// Rewrite the export bundle's primary instructions file (the one
+// `manifest.file_manifest.instructions` points to -- AGENTS.md / CLAUDE.md /
+// equivalent) so the downstream runtime reads a Gemini-authored brief that
+// reflects the user's actual prompt and honestly flags capability gaps.
+// Returns null on any failure; caller keeps the cockpit's original file.
+async function rewriteInstructionsWithGemini(
+  prompt: string,
+  platform: string | undefined,
+  currentInstructions: string,
+  selectedArtifacts: ExportArtifact[],
+): Promise<string | null> {
+  if (!gemini) return null;
+  const renderList = (kind: string): string => {
+    const items = selectedArtifacts
+      .filter((a) => a.artifact_kind === kind)
+      .map((a) => `- ${a.name ?? a.artifact_ref ?? "(unnamed)"}: ${a.description ?? "(no description)"}`);
+    return items.length > 0 ? items.join("\n") : "(none)";
+  };
+  const skills = renderList("skill");
+  const mcps = renderList("mcp_server");
+  const tools = renderList("native_tool");
+
+  const rewritePrompt = `You are rewriting the primary instructions file that the ${platform ?? "agent"} runtime will read to build an AI agent from this bundle. Your output must be valid markdown only and will REPLACE the current file's content directly. Do not include code fences around the whole output, no preamble, no surrounding commentary.
+
+USER'S STATED GOAL:
+"${prompt}"
+
+WHAT THIS BUNDLE PROVIDES (do not invent items not listed; do not remove items that ARE listed):
+
+Skills:
+${skills}
+
+MCP servers:
+${mcps}
+
+Native tools:
+${tools}
+
+CURRENT INSTRUCTIONS FILE (preserve any platform-specific commands, file paths, or runtime hints present here):
+---
+${currentInstructions}
+---
+
+REWRITE TASK:
+1. Open with a clear, plain-English statement of what the user actually asked for, paraphrasing their goal honestly.
+2. Describe the agent's responsibilities as instructions the runtime should follow.
+3. List the available skills, MCP servers, and native tools using the names above; do not invent any.
+4. Explicitly call out any obvious capability gap between the user's goal and what the bundle provides, so the downstream runtime knows where to ask the user or request additional artifacts. Be honest -- if the user asked for Linear integration and there's no Linear MCP, say so.
+5. Preserve any platform-specific commands, paths, or runtime-readiness notes from the current file (e.g. setup commands, eval pointers, codex login).
+6. Use clear markdown headings. Keep it under ~800 words.
+
+Return only the rewritten markdown.`;
+
+  try {
+    const result = await gemini.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: rewritePrompt,
+    });
+    const text = result.text;
+    if (!text) return null;
+    // Strip accidental code fences wrapping the entire output.
+    return text
+      .replace(/^```(?:markdown|md)?\s*\n?/i, "")
+      .replace(/\n?```\s*$/i, "")
+      .trim();
+  } catch (err) {
+    console.warn(
+      "[gemini rewrite] instructions rewrite failed:",
       err instanceof Error ? err.message : String(err),
     );
     return null;
@@ -255,6 +351,47 @@ app.use("/api/public", async (req, res) => {
           if (refinement) {
             cockpitJson.refinement = refinement;
             outText = JSON.stringify(cockpitJson);
+          }
+        }
+      } catch {
+        // Non-JSON or unexpected shape; fall through with the original body.
+      }
+    }
+    if (
+      gemini &&
+      response.ok &&
+      req.method === "POST" &&
+      publicPath === "/agent-builder/export" &&
+      contentType.includes("application/json")
+    ) {
+      try {
+        const exportJson = JSON.parse(text) as ExportShape & Record<string, unknown>;
+        const promptInput = (req.body as { prompt?: unknown })?.prompt;
+        const instructionsPath = exportJson.manifest?.file_manifest?.instructions;
+        if (
+          typeof promptInput === "string" &&
+          typeof instructionsPath === "string" &&
+          exportJson.files &&
+          typeof exportJson.files[instructionsPath] === "string"
+        ) {
+          const rewritten = await rewriteInstructionsWithGemini(
+            promptInput,
+            exportJson.manifest?.platform,
+            exportJson.files[instructionsPath],
+            exportJson.manifest?.selected_artifacts ?? [],
+          );
+          if (rewritten) {
+            exportJson.files[instructionsPath] = rewritten;
+            exportJson.manifest = {
+              ...(exportJson.manifest ?? {}),
+              gemini_instructions: {
+                provider: "google",
+                model: GEMINI_MODEL,
+                applied_to: instructionsPath,
+                generated_at: new Date().toISOString(),
+              },
+            };
+            outText = JSON.stringify(exportJson);
           }
         }
       } catch {
