@@ -1,7 +1,6 @@
 import express, { type Request } from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { GoogleGenAI } from "@google/genai";
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
@@ -9,13 +8,19 @@ const apiBase = (process.env.MATIX_PUBLIC_API_BASE || "").replace(/\/$/, "");
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.resolve(root, "dist");
 
-// Optional Gemini rerank. When GEMINI_API_KEY is set, the BFF passes the
-// cockpit's deterministic candidates through Gemini and attaches a
-// `refinement` field to the preview response. Without the key, the BFF
-// behaves as a pure proxy (no behaviour change).
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
-const geminiApiKey = process.env.GEMINI_API_KEY || "";
-const gemini = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
+// Optional OpenRouter rerank. When OPENROUTER_API_KEY is set, the BFF passes
+// the cockpit's deterministic candidates through the configured OpenRouter
+// model (default: google/gemini-3.5-flash) and attaches a `refinement` field
+// to the preview response. Without the key, the BFF behaves as a pure proxy
+// (no behaviour change). OpenRouter exposes an OpenAI-compatible chat
+// completions endpoint, so we make a plain HTTPS POST -- no SDK needed.
+const OPENROUTER_BASE = (
+  process.env.OPENROUTER_BASE || "https://openrouter.ai/api/v1"
+).replace(/\/$/, "");
+const OPENROUTER_MODEL =
+  process.env.OPENROUTER_MODEL || "google/gemini-3.5-flash";
+const openRouterApiKey = process.env.OPENROUTER_API_KEY || "";
+const openRouterEnabled = openRouterApiKey.length > 0;
 
 interface PlacardArtifactSummary {
   artifact_ref?: string;
@@ -32,11 +37,16 @@ interface CockpitPreviewShape {
   placards?: PlacardSummary[];
 }
 
-async function refineWithGemini(
+interface OpenRouterChatResponse {
+  choices?: Array<{ message?: { content?: string } }>;
+  error?: { message?: string; code?: number | string };
+}
+
+async function refineWithOpenRouter(
   prompt: string,
   cockpit: CockpitPreviewShape,
 ): Promise<Record<string, unknown> | null> {
-  if (!gemini) return null;
+  if (!openRouterEnabled) return null;
   const candidates = (cockpit.placards ?? []).map((p) => ({
     platform: p.platform,
     skills: (p.skills ?? []).map((a) => ({
@@ -71,18 +81,36 @@ As a senior practitioner, decide which artifacts genuinely fit the user's goal a
   "missing_capabilities": [short capability strings the bundle is missing]
 }`;
   try {
-    const result = await gemini.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: reviewPrompt,
-      config: { responseMimeType: "application/json" },
+    const response = await fetch(`${OPENROUTER_BASE}/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${openRouterApiKey}`,
+        "Content-Type": "application/json",
+        // Optional attribution headers; OpenRouter uses these for analytics
+        // and for ranking on its public app leaderboard.
+        "HTTP-Referer":
+          "https://github.com/Nakul-Kumar/matix-agent-builder-public",
+        "X-Title": "Matix Agent Builder",
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        messages: [{ role: "user", content: reviewPrompt }],
+        response_format: { type: "json_object" },
+      }),
     });
-    const text = result.text;
-    if (!text) return null;
-    const parsed = JSON.parse(text) as Record<string, unknown>;
-    return { provider: "google", model: GEMINI_MODEL, ...parsed };
+    const data = (await response.json()) as OpenRouterChatResponse;
+    if (!response.ok) {
+      const errMsg = data.error?.message || `HTTP ${response.status}`;
+      console.warn(`[openrouter rerank] ${errMsg}`);
+      return null;
+    }
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return null;
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    return { provider: "openrouter", model: OPENROUTER_MODEL, ...parsed };
   } catch (err) {
     console.warn(
-      "[gemini rerank] refinement failed:",
+      "[openrouter rerank] refinement failed:",
       err instanceof Error ? err.message : String(err),
     );
     return null;
@@ -235,10 +263,10 @@ app.use("/api/public", async (req, res) => {
     });
     const text = await response.text();
     let outText = text;
-    // Optionally refine the /agent-builder/preview response with Gemini.
+    // Optionally refine the /agent-builder/preview response via OpenRouter.
     const contentType = response.headers.get("content-type") || "application/json";
     if (
-      gemini &&
+      openRouterEnabled &&
       response.ok &&
       req.method === "POST" &&
       publicPath === "/agent-builder/preview" &&
@@ -248,7 +276,7 @@ app.use("/api/public", async (req, res) => {
         const cockpitJson = JSON.parse(text) as CockpitPreviewShape & Record<string, unknown>;
         const promptInput = (req.body as { prompt?: unknown })?.prompt;
         if (typeof promptInput === "string") {
-          const refinement = await refineWithGemini(promptInput, cockpitJson);
+          const refinement = await refineWithOpenRouter(promptInput, cockpitJson);
           if (refinement) {
             cockpitJson.refinement = refinement;
             outText = JSON.stringify(cockpitJson);
