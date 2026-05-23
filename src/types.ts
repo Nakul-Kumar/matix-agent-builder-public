@@ -132,3 +132,9 @@ export interface PublicPreview {
     allowed_source_hosts: string[];
   };
 }
+
+export type BackendStatus =
+  | { state: "checking" }
+  | { state: "ready"; env: string }
+  | { state: "not_configured" }
+  | { state: "unreachable"; detail: string };

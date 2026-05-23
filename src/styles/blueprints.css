@@ -1,0 +1,300 @@
+.runtimeTabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.runtimeTab {
+  display: flex;
+  min-height: 72px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-page);
+  padding: 11px;
+  text-align: left;
+}
+
+.runtimeTab:hover,
+.runtimeTab:focus-visible {
+  border-color: var(--accent);
+}
+
+.runtimeTab-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.runtimeTabName {
+  font-weight: 800;
+}
+
+.runtimeTabMeta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.exportBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 14px 0;
+  padding: 12px 0;
+}
+
+.exportBar p {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.exportBar strong {
+  color: var(--text);
+}
+
+.exportControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.runtimePanel {
+  animation: panelIn 180ms ease both;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0.5;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.blueprintGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 12px;
+}
+
+.blueprintCanvas,
+.blueprintInspector {
+  min-width: 0;
+}
+
+.blueprintCanvas {
+  display: flex;
+  min-height: 420px;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid var(--border);
+  padding: 6px 18px 6px 0;
+}
+
+.canvasHeader h2 {
+  margin: 8px 0 0;
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 1.04;
+}
+
+.canvasHeader p {
+  margin: 12px 0 0;
+  color: var(--text-soft);
+}
+
+.scoreLedger {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.scoreLedger span {
+  display: flex;
+  min-height: 68px;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  padding: 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.scoreLedger strong {
+  color: var(--text);
+  font-size: 20px;
+}
+
+.nodeRail {
+  display: grid;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.nodeRail span {
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  padding: 10px 12px;
+  color: var(--text-soft);
+  font-weight: 700;
+}
+
+.blueprintInspector {
+  display: flex;
+  max-height: 680px;
+  flex-direction: column;
+  gap: 0;
+  overflow: auto;
+  padding: 0 0 0 6px;
+}
+
+.detailBlock {
+  border-top: 1px solid var(--border);
+  padding: 14px 0;
+}
+
+.detailBlock:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.detailHeader h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.detailHeader span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.artifactList,
+.rationaleList,
+.warningList {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.artifactRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(122px, auto);
+  gap: 10px;
+  border-top: 1px solid var(--border);
+  padding: 10px 0;
+}
+
+.artifactRow:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.artifactMain {
+  min-width: 0;
+}
+
+.rowLabel {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.artifactMain strong {
+  display: block;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.artifactMain p {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.artifactAside {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.artifactAside a {
+  color: var(--accent);
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.artifactAside a:hover {
+  text-decoration: underline;
+}
+
+.fileTree {
+  display: grid;
+  gap: 6px;
+}
+
+.fileTree code {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-page);
+  padding: 7px 9px;
+  color: var(--text-soft);
+  overflow-wrap: anywhere;
+}
+
+.rationaleList li,
+.warningList li {
+  border-top: 1px solid var(--border);
+  padding: 9px 0;
+}
+
+.rationaleList li:first-child,
+.warningList li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.rationaleList strong {
+  display: block;
+}
+
+.rationaleList span,
+.warningList li {
+  color: var(--text-muted);
+  font-size: 12px;
+}

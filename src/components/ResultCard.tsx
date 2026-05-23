@@ -68,7 +68,7 @@ export function ResultCard({
         className={className}
         href={href}
         target="_blank"
-        rel="noreferrer"
+        rel="noreferrer noopener"
         aria-label={ariaLabel}
       >
         {inner}

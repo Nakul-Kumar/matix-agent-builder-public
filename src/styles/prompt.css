@@ -1,0 +1,216 @@
+.promptPanel,
+.exampleRail {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-surface);
+  padding: 18px;
+  box-shadow: var(--shadow-subtle);
+}
+
+.promptHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.promptHeader label {
+  color: var(--text-soft);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.promptCount {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.promptCount-warn {
+  color: var(--warn);
+}
+
+.promptCount-critical {
+  color: var(--danger);
+}
+
+.promptPanel textarea {
+  width: 100%;
+  min-height: 154px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-page);
+  color: var(--text);
+  padding: 15px;
+  outline: none;
+  line-height: 1.6;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.promptPanel textarea:focus {
+  border-color: var(--accent);
+  background: var(--bg-surface);
+}
+
+.promptPanel textarea:disabled {
+  background: var(--bg-muted);
+  color: var(--text-faint);
+}
+
+.promptActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.trustNote,
+.promptEmptyHint,
+.promptErrorHint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.promptErrorHint {
+  color: var(--danger);
+}
+
+.trustNote code {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-muted);
+  padding: 1px 5px;
+}
+
+.promptCta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.kbd {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.rejectionCard {
+  margin-top: 14px;
+  border: 1px solid rgba(163, 59, 47, 0.26);
+  border-radius: var(--radius-lg);
+  background: #fff8f4;
+  padding: 14px;
+}
+
+.rejectionHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rejectionBadge {
+  border: 1px solid rgba(163, 59, 47, 0.28);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  padding: 3px 7px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rejectionCard h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.rejectionCard p {
+  margin: 8px 0 0;
+  color: var(--text-soft);
+}
+
+.rejectionExamplesLabel {
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rejectionExamples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.rejectionExample {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  padding: 8px 10px;
+  color: var(--text-soft);
+  text-align: left;
+}
+
+.exampleGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.exampleCard {
+  display: flex;
+  min-height: 128px;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  padding: 13px;
+  text-align: left;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease,
+    transform 80ms ease;
+}
+
+.exampleCard:hover:not(:disabled),
+.exampleCard:focus-visible:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.exampleCard:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.exampleCategory {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.exampleTitle {
+  font-weight: 800;
+}
+
+.examplePreview {
+  color: var(--text-soft);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.exampleFootnote {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  color: var(--text-muted);
+  font-size: 12px;
+}

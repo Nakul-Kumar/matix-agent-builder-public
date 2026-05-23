@@ -1,0 +1,111 @@
+@media (max-width: 1180px) {
+  .builderWorkspace {
+    grid-template-columns: 1fr;
+  }
+
+  .previewCanvas,
+  .resultsView {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .appShell {
+    padding: 16px;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .topbarStatus,
+  .statusPill {
+    width: 100%;
+  }
+
+  .statusPill {
+    justify-content: flex-start;
+  }
+
+  .hero h1 {
+    max-width: 12ch;
+    font-size: clamp(38px, 12vw, 58px);
+  }
+
+  .sectionIntro {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sectionIntro p {
+    text-align: left;
+  }
+
+  .exampleGrid,
+  .runtimeTabs,
+  .blueprintGrid,
+  .scoreLedger,
+  .canvasChecklist {
+    grid-template-columns: 1fr;
+  }
+
+  .exportBar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .exportControls,
+  .exportControls button {
+    width: 100%;
+  }
+
+  .sourceRow,
+  .linkList a {
+    grid-template-columns: 1fr;
+  }
+
+  .sourceRow p {
+    grid-column: auto;
+  }
+
+  .artifactRow {
+    grid-template-columns: 1fr;
+  }
+
+  .artifactAside {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .feedback {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .promptCta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .promptCta .primaryButton {
+    width: 100%;
+  }
+
+  .hero,
+  .promptPanel,
+  .exampleRail,
+  .resultsView,
+  .previewCanvas,
+  .feedback {
+    padding: 14px;
+  }
+
+  .canvasEmpty {
+    min-height: 360px;
+    padding: 18px;
+  }
+}
