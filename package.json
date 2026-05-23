@@ -10,6 +10,7 @@
     "start": "tsx server/index.ts",
     "mcp": "tsx mcp/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "scan:copy": "node scripts/scan-ui-copy.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "scan:assets": "node scripts/scan-built-assets.mjs",
     "check:release": "node scripts/check-release-readiness.mjs",

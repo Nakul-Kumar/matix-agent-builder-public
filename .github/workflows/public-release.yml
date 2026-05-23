@@ -31,6 +31,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: UI copy scan
+        run: npm run scan:copy
+
       - name: Secret scan
         run: npm run scan:secrets
 

@@ -13,9 +13,9 @@ browser-exposed provider keys.
 
 ### `.github/workflows/public-release.yml`
 
-Public repo CI gate for install, build, secret scan, built-asset scan,
-dependency audit, and release-readiness checks. Optional workflow dispatch can
-run live smoke tests.
+Public repo CI gate for install, build, UI copy scan, secret scan,
+built-asset scan, dependency audit, and release-readiness checks. Optional
+workflow dispatch can run live smoke tests.
 
 ### `.gitignore`
 
@@ -121,6 +121,11 @@ rate limiting are present before public release.
 Scans production build output for provider strings, private backend paths, and
 direct marketplace/source-directory URLs.
 
+### `scripts/scan-ui-copy.mjs`
+
+Scans `src/` for non-ASCII UI punctuation and inflated public-preview claims
+that should not ship in the visible interface.
+
 ### `scripts/scan-secrets.mjs`
 
 Scans source files for forbidden secret-shaped strings.
@@ -139,29 +144,133 @@ React entrypoint. Mounts `App` into `#root`.
 
 ### `src/App.tsx`
 
-Main public page. It owns:
+Main public page orchestrator. It owns:
 
-- prompt textarea
-- build button
-- three runtime placards
-- source status rail
-- calibration policy rail
-- license, score, setup, warning, and credential rendering
-- safe export action
-- feedback form
-- public footer links
+- public API health state
+- prompt, rejection, preview, export, inspect, and feedback state
+- same-origin preview/export/feedback calls
+- composition of the public builder surface
 
 It calls only helpers from `src/lib/publicApi.ts`.
 
 ### `src/styles.css`
 
-Global visual system for the public page: dark technical layout, prompt box,
-placards, scores, chips, links, footer, and responsive behavior.
+Global style import hub. It imports the split style files from `src/styles/`.
 
 ### `src/types.ts`
 
 Shared TypeScript types for public preview payloads, runtime placards,
 artifacts, artifact licenses, calibration, and source links.
+
+## `src/components/`
+
+Focused React components for the public builder UI.
+
+### `src/components/AppShell.tsx`
+
+Top bar, brand mark, backend status pill, footer, and legal links.
+
+### `src/components/BackendBanner.tsx`
+
+Unavailable or unconfigured backend banners.
+
+### `src/components/BlueprintGrid.tsx`
+
+Runtime blueprint canvas and inspector rows for skills, MCPs, tools, files,
+credential notes, rationale, and warnings.
+
+### `src/components/BlueprintsSection.tsx`
+
+Runtime tab section and example JSON export controls.
+
+### `src/components/EvalPlanSection.tsx`
+
+Deduplicated eval steps rendered across returned runtime placards.
+
+### `src/components/ExamplePromptRail.tsx`
+
+Builder-first example prompt cards.
+
+### `src/components/FeedbackForm.tsx`
+
+Bottom feedback form shown after a preview is generated.
+
+### `src/components/HeroSection.tsx`
+
+Small editorial intro for the builder workspace.
+
+### `src/components/PromptComposer.tsx`
+
+Prompt textarea, local prompt rejection display, and preview action.
+
+### `src/components/ResultCard.tsx`
+
+Small generic card primitive retained for future surfaces.
+
+### `src/components/ResultsView.tsx`
+
+Right-side preview canvas, loading state, and generated runtime preview view.
+
+### `src/components/RuntimeTabs.tsx`
+
+Accessible Codex, Claude Code, and OpenClaw runtime tabs.
+
+### `src/components/SourceLinksSection.tsx`
+
+Sanitized external source evidence links.
+
+### `src/components/SourceStatusSection.tsx`
+
+Backend-reported source directory status rows.
+
+## `src/data/`
+
+Static visible copy and public links.
+
+### `src/data/publicBuilderContent.ts`
+
+Legal links, runtime labels, runtime descriptions, sample prompt, and example
+prompt cards.
+
+## `src/styles/`
+
+Split CSS modules imported by `src/styles.css`.
+
+### `src/styles/tokens.css`
+
+Color, radius, shadow, and font tokens for the editorial builder aesthetic.
+
+### `src/styles/base.css`
+
+Global element defaults, buttons, focus states, and reduced motion handling.
+
+### `src/styles/layout.css`
+
+Application shell, top bar, builder workspace grid, banners, and footer.
+
+### `src/styles/hero.css`
+
+Compact builder intro section.
+
+### `src/styles/prompt.css`
+
+Prompt composer, local rejection, and example prompt card styles.
+
+### `src/styles/results.css`
+
+Preview canvas, source status, eval plan, and source evidence styles.
+
+### `src/styles/blueprints.css`
+
+Runtime tabs, export row, blueprint canvas, inspector, and artifact rows.
+
+### `src/styles/feedback.css`
+
+Post-preview feedback form.
+
+### `src/styles/responsive.css`
+
+Desktop-to-mobile layout behavior and overflow controls.
 
 ## `src/lib/`
 
@@ -176,6 +285,11 @@ Fetch helpers for the same-origin public API:
 - feedback
 
 Important: it does not call any model-provider API directly.
+
+### `src/lib/format.ts`
+
+Small display-formatting helpers for scores, backend model labels, timestamps,
+safe external hrefs, and source-link domains.
 
 ## `mcp/`
 

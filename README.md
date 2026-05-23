@@ -41,10 +41,10 @@ dev server with HMR. Vite proxies `/api` to the BFF as configured in
 `vite.config.ts`.
 
 ```bash
-# Terminal 1 — public BFF on port 8787 (restarts on server file changes)
+# Terminal 1 - public BFF on port 8787 (restarts on server file changes)
 npm run dev
 
-# Terminal 2 — Vite dev server on port 5173 (HMR; proxies /api to the BFF)
+# Terminal 2 - Vite dev server on port 5173 (HMR; proxies /api to the BFF)
 npm run dev:web
 
 # Open http://localhost:5173
@@ -105,6 +105,7 @@ in this repo or in browser-exposed variables.
 ```bash
 npm run typecheck
 npm run build
+npm run scan:copy
 npm run scan:secrets
 npm run scan:assets
 npm run check:release
@@ -120,6 +121,7 @@ npm run smoke:live
 ## Public Release Checklist
 
 - `npm run build` passes.
+- `npm run scan:copy` passes.
 - `npm run scan:secrets` passes.
 - `npm run scan:assets` passes after build.
 - `npm run check:release` passes.

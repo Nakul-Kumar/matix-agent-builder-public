@@ -97,7 +97,18 @@ for (const topic of [
 requireAny("SECURITY.md", ["security@matix.dev", "GitHub Security Advisories"], "a vulnerability reporting channel");
 requireIncludes("SECURITY.md", "rate limiting");
 
-const app = requireFile("src/App.tsx");
+const app = [
+  requireFile("src/App.tsx"),
+  existsSync(rel("src/components/AppShell.tsx"))
+    ? read("src/components/AppShell.tsx")
+    : "",
+  existsSync(rel("src/components/FeedbackForm.tsx"))
+    ? read("src/components/FeedbackForm.tsx")
+    : "",
+  existsSync(rel("src/data/publicBuilderContent.ts"))
+    ? read("src/data/publicBuilderContent.ts")
+    : "",
+].join("\n");
 for (const label of ["Privacy", "Terms", "Security", "GitHub"]) {
   if (app && !app.includes(label)) {
     failures.push(`src/App.tsx footer must link ${label}`);
@@ -115,7 +126,7 @@ if (server && (!server.includes("RATE_LIMIT_WINDOW_MS") || !server.includes("429
 requireFile(".github/workflows/public-release.yml");
 
 const pkg = JSON.parse(requireFile("package.json") || "{}");
-for (const scriptName of ["check:release", "scan:assets", "smoke:live"]) {
+for (const scriptName of ["check:release", "scan:assets", "scan:copy", "smoke:live"]) {
   if (!pkg.scripts?.[scriptName]) {
     failures.push(`package.json must define npm run ${scriptName}`);
   }
