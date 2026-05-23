@@ -5,9 +5,7 @@
 }
 
 .runtimeTab {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  gap: var(--space-3);
+  display: flex;
   align-items: center;
   min-height: 76px;
   border: 1px solid var(--border);
