@@ -11,9 +11,6 @@ body {
   min-height: 100vh;
   margin: 0;
   background-color: var(--bg-page);
-  background-image: var(--bg-grain);
-  background-attachment: fixed;
-  background-size: 240px 240px;
   color: var(--text);
   font-family: var(--font-sans);
   font-size: var(--text-base);

@@ -1,0 +1,162 @@
+.pageDecoration {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 1;
+}
+
+.pageDecoration svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pageDecoration::before,
+.pageDecoration::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 140px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pageDecoration::before {
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--bg-page) 0%,
+    rgba(236, 230, 213, 0.85) 30%,
+    rgba(236, 230, 213, 0) 100%
+  );
+}
+
+.pageDecoration::after {
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    var(--bg-page) 0%,
+    rgba(236, 230, 213, 0.85) 30%,
+    rgba(236, 230, 213, 0) 100%
+  );
+}
+
+.pageDecoShapes,
+.pageDecoLines {
+  position: absolute;
+  inset: 0;
+}
+
+.pageDecoShape {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes pageDecoDrift {
+    0% {
+      transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+    25% {
+      transform: translate(4px, -3px) scale(1.015) rotate(0.6deg);
+    }
+    50% {
+      transform: translate(-3px, 5px) scale(0.99) rotate(-0.8deg);
+    }
+    75% {
+      transform: translate(5px, 3px) scale(1.01) rotate(0.4deg);
+    }
+    100% {
+      transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+  }
+
+  .pageDecoShape {
+    will-change: transform;
+    animation-name: pageDecoDrift;
+    animation-iteration-count: infinite;
+    animation-direction: normal;
+    animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
+  }
+
+  .pageDecoA {
+    animation-duration: 18s;
+    animation-delay: 0s;
+  }
+  .pageDecoB {
+    animation-duration: 22s;
+    animation-delay: -7s;
+  }
+  .pageDecoC {
+    animation-duration: 16s;
+    animation-delay: -3s;
+  }
+  .pageDecoD {
+    animation-duration: 24s;
+    animation-delay: -11s;
+  }
+  .pageDecoE {
+    animation-duration: 20s;
+    animation-delay: -5s;
+  }
+  .pageDecoF {
+    animation-duration: 14s;
+    animation-delay: -2s;
+  }
+}
+
+.pageDecoration .pageDecoA,
+.pageDecoration .pageDecoD {
+  opacity: 0.4;
+}
+
+.pageDecoration .pageDecoB,
+.pageDecoration .pageDecoE {
+  opacity: 0.36;
+}
+
+.pageDecoration .pageDecoC,
+.pageDecoration .pageDecoF {
+  opacity: 0.31;
+}
+
+.pageDecoLines g {
+  opacity: 0.35 !important;
+}
+
+.appShell {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 1279px) {
+  .pageDecoration .pageDecoF,
+  .pageDecoration .pageDecoLine3 {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .pageDecoration .pageDecoC,
+  .pageDecoration .pageDecoLine1 {
+    display: none;
+  }
+  .pageDecoration .pageDecoShape {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 767px) {
+  .pageDecoration .pageDecoB,
+  .pageDecoration .pageDecoE,
+  .pageDecoration .pageDecoLine2 {
+    display: none;
+  }
+  .pageDecoration .pageDecoA,
+  .pageDecoration .pageDecoD {
+    opacity: 0.4;
+  }
+}

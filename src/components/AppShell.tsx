@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { legalLinks, repoUrl } from "../data/publicBuilderContent";
 import type { BackendStatus } from "../types";
+import { PageDecoration } from "./PageDecoration";
 
 function backendLabel(backend: BackendStatus): string {
   if (backend.state === "checking") return "Connecting";
@@ -23,8 +24,10 @@ export function AppShell({
   children: ReactNode;
 }) {
   return (
-    <main className="appShell">
-      <header className="topbar">
+    <>
+      <PageDecoration />
+      <main className="appShell">
+        <header className="topbar">
         <a className="brandRow" href="/" aria-label="Matix Agent Builder home">
           <span className="mark" aria-hidden="true">
             M
@@ -77,7 +80,8 @@ export function AppShell({
             </a>
           ))}
         </nav>
-      </footer>
-    </main>
+        </footer>
+      </main>
+    </>
   );
 }
