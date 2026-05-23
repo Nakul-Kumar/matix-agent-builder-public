@@ -4,6 +4,12 @@ import { runtimeLabels, type PlatformKey } from "../data/publicBuilderContent";
 import { formatScore, pretty } from "../lib/format";
 import type { RuntimePlacard } from "../types";
 
+const platformGlyph: Record<PlatformKey, string> = {
+  codex: "C",
+  claude_code: "A",
+  openclaw: "O",
+};
+
 export function RuntimeTabs({
   activeRuntime,
   onActiveRuntimeChange,
@@ -53,13 +59,18 @@ export function RuntimeTabs({
             tabIndex={active ? 0 : -1}
             type="button"
           >
-            <span className="runtimeTabName">
-              {runtimeLabels[placard.platform] ?? placard.label}
+            <span className="runtimeTabGlyph" aria-hidden="true">
+              {platformGlyph[placard.platform] ?? "*"}
             </span>
-            <span className="runtimeTabMeta">
-              <span>{pretty(placard.status)}</span>
-              <span>trust {formatScore(placard.scores.trust)}</span>
-              <span>match {formatScore(placard.scores.match)}</span>
+            <span className="runtimeTabBody">
+              <span className="runtimeTabName">
+                {runtimeLabels[placard.platform] ?? placard.label}
+              </span>
+              <span className="runtimeTabMeta">
+                <span>{pretty(placard.status)}</span>
+                <span>trust {formatScore(placard.scores.trust)}</span>
+                <span>match {formatScore(placard.scores.match)}</span>
+              </span>
             </span>
           </button>
         );

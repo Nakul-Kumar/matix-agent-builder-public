@@ -6,6 +6,53 @@ import { EvalPlanSection } from "./EvalPlanSection";
 import { SourceLinksSection } from "./SourceLinksSection";
 import { SourceStatusSection } from "./SourceStatusSection";
 
+function TileIcon({ kind }: { kind: "files" | "sources" | "eval" }) {
+  if (kind === "files") {
+    return (
+      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path
+          d="M3 2.5h6L13 6v7.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1Z"
+          stroke="currentColor"
+          strokeWidth="1.2"
+        />
+        <path d="M9 2.5V6h4" stroke="currentColor" strokeWidth="1.2" />
+      </svg>
+    );
+  }
+  if (kind === "sources") {
+    return (
+      <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path
+          d="M6.5 9.5 9.5 6.5M5 8 3.5 9.5a2.12 2.12 0 1 0 3 3L8 11M11 8l1.5-1.5a2.12 2.12 0 1 0-3-3L8 5"
+          stroke="currentColor"
+          strokeWidth="1.2"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <rect
+        x="2.5"
+        y="2.5"
+        width="11"
+        height="11"
+        rx="1.5"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
+      <path
+        d="m5.5 8 2 2 3.5-4"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function EmptyCanvas() {
   return (
     <aside className="previewCanvas" id="results" aria-label="Preview canvas">
@@ -13,14 +60,57 @@ function EmptyCanvas() {
         <span className="eyebrow">Preview canvas</span>
         <h2>Your runtime draft will appear here.</h2>
         <p>
-          Write an agent request, preview it, then inspect the runtime files,
-          sources, eval steps, and example JSON export.
+          Write an agent request on the left, then click{" "}
+          <strong>Preview agent</strong>. This canvas fills with the runtime
+          files, sources, and eval steps the backend drafts for you.
         </p>
-        <div className="canvasChecklist" aria-label="Preview steps">
-          <span>Prompt</span>
-          <span>Preview</span>
-          <span>Inspect</span>
-          <span>Download JSON</span>
+        <div className="canvasPreviewTiles" aria-hidden="true">
+          <div className="canvasTile">
+            <span className="canvasTileLabel">
+              <TileIcon kind="files" />
+              Files
+            </span>
+            <strong>Runtime files</strong>
+            <p>AGENTS.md, MCP configs, skill folders per platform.</p>
+            <div className="canvasMockLines">
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+          <div className="canvasTile">
+            <span className="canvasTileLabel">
+              <TileIcon kind="sources" />
+              Sources
+            </span>
+            <strong>Where each piece came from</strong>
+            <p>Skills, MCPs, and runtime docs with license attribution.</p>
+            <div className="canvasMockLines">
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+          <div className="canvasTile">
+            <span className="canvasTileLabel">
+              <TileIcon kind="eval" />
+              Eval plan
+            </span>
+            <strong>What to test before shipping</strong>
+            <p>Concrete checks per skill so you know it works.</p>
+            <div className="canvasMockLines">
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+        </div>
+        <div className="canvasFooter">
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.2" />
+            <path d="M8 5v3.5l2 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+          </svg>
+          Typical preview runs in 2-4 seconds.
         </div>
       </div>
     </aside>
@@ -35,11 +125,11 @@ function LoadingCanvas() {
       className="previewCanvas"
       id="results"
     >
-      <div className="canvasEmpty">
-        <span className="eyebrow">Backend preview</span>
-        <h2>Preparing runtime previews...</h2>
-        <p>Matix is requesting the public backend and waiting for a draft.</p>
-        <div className="skeletonStack" aria-hidden="true">
+      <div className="canvasLoading">
+        <span className="eyebrow">Drafting</span>
+        <h2>Drafting your agent...</h2>
+        <p>Matix is talking to the public backend and shaping the runtime.</p>
+        <div className="shimmerStack" aria-hidden="true">
           <span />
           <span />
           <span />
