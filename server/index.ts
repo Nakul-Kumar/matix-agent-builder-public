@@ -22,8 +22,11 @@ const gemini = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
 interface PlacardArtifactSummary {
   artifact_ref?: string;
+  artifact_kind?: string;
   name?: string;
   description?: string;
+  license?: { source?: string; url?: string | null };
+  source_links?: Array<{ url?: string }>;
 }
 interface PlacardSummary {
   platform?: string;
@@ -55,6 +58,48 @@ interface ExportShape {
   ok?: boolean;
   files?: Record<string, string>;
   manifest?: ExportManifest;
+}
+
+// Runtime built-in tool docs URLs per platform. The cockpit hardcodes the
+// OpenAI URL for every platform; on Claude Code and OpenClaw exports/previews
+// that's the wrong source (clicking "Runtime built-in" license should land
+// you on the actual platform's tool docs, not OpenAI's). The BFF rewrites
+// these on the way through.
+const OPENAI_RUNTIME_URL = "https://developers.openai.com/api/docs/guides/tools";
+const RUNTIME_DOCS_BY_PLATFORM: Record<string, string> = {
+  codex: OPENAI_RUNTIME_URL,
+  claude_code: "https://code.claude.com/docs/en/tools-reference",
+  openclaw: "https://documentation.openclaw.ai/clawhub/http-api",
+};
+
+interface ArtifactWithLinks {
+  artifact_kind?: string;
+  license?: { source?: string; url?: string | null };
+  source_links?: Array<{ url?: string }>;
+}
+
+function rewriteRuntimeLinksForPlatform(
+  artifact: ArtifactWithLinks,
+  platform: string | undefined,
+): boolean {
+  if (!platform) return false;
+  const targetUrl = RUNTIME_DOCS_BY_PLATFORM[platform];
+  if (!targetUrl || targetUrl === OPENAI_RUNTIME_URL) return false;
+  let changed = false;
+  if (
+    artifact.license?.source === "runtime" &&
+    artifact.license.url === OPENAI_RUNTIME_URL
+  ) {
+    artifact.license.url = targetUrl;
+    changed = true;
+  }
+  for (const link of artifact.source_links ?? []) {
+    if (link.url === OPENAI_RUNTIME_URL) {
+      link.url = targetUrl;
+      changed = true;
+    }
+  }
+  return changed;
 }
 
 async function refineWithGemini(
@@ -337,7 +382,6 @@ app.use("/api/public", async (req, res) => {
     // Optionally refine the /agent-builder/preview response via OpenRouter.
     const contentType = response.headers.get("content-type") || "application/json";
     if (
-      gemini &&
       response.ok &&
       req.method === "POST" &&
       publicPath === "/agent-builder/preview" &&
@@ -345,20 +389,36 @@ app.use("/api/public", async (req, res) => {
     ) {
       try {
         const cockpitJson = JSON.parse(text) as CockpitPreviewShape & Record<string, unknown>;
+        let mutated = false;
+        // Always: rewrite runtime built-in license/source URLs per placard
+        // platform (the cockpit hardcodes OpenAI's docs for every platform;
+        // Claude Code and OpenClaw placards need their own URLs).
+        for (const placard of cockpitJson.placards ?? []) {
+          const ps = placard.platform;
+          const items: ArtifactWithLinks[] = [
+            ...(placard.skills ?? []),
+            ...(placard.mcps ?? []),
+            ...(placard.tools ?? []),
+          ];
+          for (const a of items) {
+            if (rewriteRuntimeLinksForPlatform(a, ps)) mutated = true;
+          }
+        }
+        // Optional: Gemini refinement (only if a key is configured).
         const promptInput = (req.body as { prompt?: unknown })?.prompt;
-        if (typeof promptInput === "string") {
+        if (gemini && typeof promptInput === "string") {
           const refinement = await refineWithGemini(promptInput, cockpitJson);
           if (refinement) {
             cockpitJson.refinement = refinement;
-            outText = JSON.stringify(cockpitJson);
+            mutated = true;
           }
         }
+        if (mutated) outText = JSON.stringify(cockpitJson);
       } catch {
         // Non-JSON or unexpected shape; fall through with the original body.
       }
     }
     if (
-      gemini &&
       response.ok &&
       req.method === "POST" &&
       publicPath === "/agent-builder/export" &&
@@ -366,9 +426,32 @@ app.use("/api/public", async (req, res) => {
     ) {
       try {
         const exportJson = JSON.parse(text) as ExportShape & Record<string, unknown>;
+        let mutated = false;
+        const platform = exportJson.manifest?.platform;
+        // Always: rewrite runtime built-in license URLs based on the export
+        // platform, and patch any inline reference in LICENSES.md.
+        for (const a of exportJson.manifest?.selected_artifacts ?? []) {
+          if (rewriteRuntimeLinksForPlatform(a as ArtifactWithLinks, platform)) {
+            mutated = true;
+          }
+        }
+        if (
+          mutated &&
+          typeof exportJson.files?.["LICENSES.md"] === "string" &&
+          platform &&
+          RUNTIME_DOCS_BY_PLATFORM[platform] &&
+          RUNTIME_DOCS_BY_PLATFORM[platform] !== OPENAI_RUNTIME_URL
+        ) {
+          exportJson.files["LICENSES.md"] = exportJson.files["LICENSES.md"].replace(
+            /https:\/\/developers\.openai\.com\/api\/docs\/guides\/tools/g,
+            RUNTIME_DOCS_BY_PLATFORM[platform],
+          );
+        }
+        // Optional: Gemini rewrite of the primary instructions file.
         const promptInput = (req.body as { prompt?: unknown })?.prompt;
         const instructionsPath = exportJson.manifest?.file_manifest?.instructions;
         if (
+          gemini &&
           typeof promptInput === "string" &&
           typeof instructionsPath === "string" &&
           exportJson.files &&
@@ -376,7 +459,7 @@ app.use("/api/public", async (req, res) => {
         ) {
           const rewritten = await rewriteInstructionsWithGemini(
             promptInput,
-            exportJson.manifest?.platform,
+            platform,
             exportJson.files[instructionsPath],
             exportJson.manifest?.selected_artifacts ?? [],
           );
@@ -391,9 +474,10 @@ app.use("/api/public", async (req, res) => {
                 generated_at: new Date().toISOString(),
               },
             };
-            outText = JSON.stringify(exportJson);
+            mutated = true;
           }
         }
+        if (mutated) outText = JSON.stringify(exportJson);
       } catch {
         // Non-JSON or unexpected shape; fall through with the original body.
       }
