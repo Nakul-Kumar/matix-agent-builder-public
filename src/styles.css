@@ -1476,28 +1476,6 @@ textarea[data-busy="true"] {
   gap: 18px;
 }
 
-.modelStripRow--fallback {
-  padding-top: 12px;
-  border-top: 1px dashed var(--border-hairline, #D8CCB4);
-}
-
-.modelStripRow--fallback .modelStripBadge {
-  font-size: 9px;
-  padding: 3px 8px;
-  letter-spacing: 0.14em;
-}
-
-.modelStripRow--fallback .modelStripValue {
-  font-size: 13px;
-  font-weight: 400;
-  color: var(--text-muted, #7A6F5A);
-}
-
-.modelStripRow--fallback .modelStripCaption {
-  font-size: 11px;
-  color: var(--text-faint, #877B62);
-}
-
 .modelStripBadge {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -1513,12 +1491,6 @@ textarea[data-busy="true"] {
 .modelStripBadge--recommended {
   background: var(--accent-brick, #A24A26);
   color: #FBF6E8;
-}
-
-.modelStripBadge--fallback {
-  background: transparent;
-  color: var(--text-muted, #7A6F5A);
-  border: 1px solid var(--border-hairline, #D8CCB4);
 }
 
 .modelStripValue {

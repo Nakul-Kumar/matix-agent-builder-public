@@ -132,36 +132,7 @@ function SourceStatusSection({
   );
   if (filtered.length === 0) return null;
 
-  const recommended = preview.model;
-  const recKey = `${recommended.provider.toLowerCase()}/${recommended.name.toLowerCase()}`;
-  const teacher = preview.calibration?.teacher;
-  const students = preview.calibration?.students ?? [];
-  type Fallback = { provider: string; model: string; status: string };
-  let fallback: Fallback | null = null;
-  const seen = new Set<string>([recKey]);
-  if (teacher) {
-    const key = `${teacher.provider.toLowerCase()}/${teacher.model.toLowerCase()}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      fallback = {
-        provider: teacher.provider,
-        model: teacher.model,
-        status: "SHADOW ONLY",
-      };
-    }
-  }
-  if (!fallback) {
-    for (const s of students) {
-      const key = `${s.provider.toLowerCase()}/${s.model.toLowerCase()}`;
-      if (seen.has(key)) continue;
-      fallback = {
-        provider: s.provider,
-        model: s.model,
-        status: s.public_eligible ? "FALLBACK" : "SHADOW ONLY",
-      };
-      break;
-    }
-  }
+  const recommended = { provider: "gemini", name: "gemini-2.5-flash" };
 
   return (
     <section className="resultSection">
@@ -191,28 +162,13 @@ function SourceStatusSection({
       <div className="modelStrip">
         <div className="modelStripRow modelStripRow--recommended">
           <span className="modelStripBadge modelStripBadge--recommended">
-            Recommended
+            Model
           </span>
           <span className="modelStripValue modelStripValue--primary">
-            {recommended.provider.toLowerCase()} / {recommended.name.toLowerCase()}
+            {recommended.provider} / {recommended.name}
           </span>
           <span className="modelStripCaption">Used to build your agent</span>
         </div>
-        {fallback && (
-          <div className="modelStripRow modelStripRow--fallback">
-            <span className="modelStripBadge modelStripBadge--fallback">
-              Fallback
-            </span>
-            <span className="modelStripValue">
-              {fallback.provider.toLowerCase()} / {fallback.model.toLowerCase()}
-            </span>
-            <span className="modelStripCaption">
-              {fallback.status === "SHADOW ONLY"
-                ? "Runs in shadow for evaluation only"
-                : "Used if the recommended model is unavailable"}
-            </span>
-          </div>
-        )}
       </div>
     </section>
   );
@@ -1477,9 +1433,7 @@ export default function App() {
             <p className="resultKicker">BACKEND-APPROVED PREVIEW</p>
             <h2 className="resultPrompt">{preview.normalized_prompt}</h2>
             <p className="resultMetaLine">
-              {preview.model.provider.toUpperCase()} / {preview.model.name.toUpperCase()}
-              {" · "}
-              {pretty(preview.selection_source ?? preview.model.status).toUpperCase()}
+              GEMINI / GEMINI-2.5-FLASH
               {" · "}
               {new Date(preview.generated_at)
                 .toLocaleString("en-GB", {
