@@ -104,6 +104,32 @@ Exports should include, when supported by the backend:
 Exports must use placeholders only and should explain optional credentials,
 manual review, and license obligations.
 
+#### Optional Gemini rewrite of the primary instructions file
+
+When the BFF has `GEMINI_API_KEY` configured, the export response's primary
+instructions file (the one `manifest.file_manifest.instructions` points at --
+`codex-home/AGENTS.md` for Codex, etc.) is rewritten by Gemini to reflect
+the user's actual prompt, name the artifacts that are actually present in
+the bundle, and flag obvious capability gaps. When this happens, the
+manifest gains a `gemini_instructions` provenance object:
+
+```json
+{
+  "manifest": {
+    "gemini_instructions": {
+      "provider": "google",
+      "model": "gemini-3.5-flash",
+      "applied_to": "codex-home/AGENTS.md",
+      "generated_at": "2026-05-23T03:30:00.000Z"
+    }
+  }
+}
+```
+
+If the rewrite fails for any reason (no key configured, Gemini error,
+non-JSON-shaped export body), the field is absent and the cockpit's
+original instructions file is returned untouched.
+
 ### `POST /api/public/agent-builder/feedback`
 
 Stores public feedback.
