@@ -4,11 +4,17 @@ import path from "node:path";
 const root = process.cwd();
 const dist = path.join(root, "dist");
 const findings = [];
+// Substrings that should never appear in the public client bundle.
+// Provider brand names (OPENAI/GEMINI/ANTHROPIC) used to be in this list as
+// a proxy for "API config leaked into the bundle"; they were removed because
+// the UI legitimately renders model labels like "GEMINI / GEMINI-2.5-FLASH"
+// or "OpenAI / Codex CLI". Real leaks are still caught more precisely by the
+// key-shape patterns and the URL/route checks below.
 const forbidden = [
-  "OPEN" + "AI",
-  "GEM" + "INI",
-  "ANTH" + "ROPIC",
   "api.google",
+  "openai.com/v1",
+  "api.anthropic.com",
+  "generativelanguage.googleapis.com",
   "/api/backend",
   "https://cockpit",
   "registry.modelcontextprotocol",
@@ -17,10 +23,16 @@ const forbidden = [
 ];
 
 // Loose substrings like "sk-" or "AIza" false-positive on CSS tokens
-// such as `mask-image`. Match the full key shape instead.
+// such as `mask-image`. Match the full key shape instead. The env-var
+// assignment patterns catch real KEY=value pairs while leaving bare
+// references like `process.env.GEMINI_API_KEY` alone.
 const forbiddenPatterns = [
   /\bsk-[A-Za-z0-9_-]{20,}/,
   /\bAIza[A-Za-z0-9_-]{20,}/,
+  /\bGEMINI_API_KEY\s*[=:]\s*\S/,
+  /\bOPENAI_API_KEY\s*[=:]\s*\S/,
+  /\bANTHROPIC_API_KEY\s*[=:]\s*\S/,
+  /\bOPENROUTER_API_KEY\s*[=:]\s*\S/,
 ];
 
 function walk(dir) {

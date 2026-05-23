@@ -20,6 +20,7 @@ const forbiddenPatterns = [
   /\bGEMINI_API_KEY\s*[=:]\s*\S/,
   /\bOPENAI_API_KEY\s*[=:]\s*\S/,
   /\bANTHROPIC_API_KEY\s*[=:]\s*\S/,
+  /\bOPENROUTER_API_KEY\s*[=:]\s*\S/,
   /\bVITE_GEMINI_API_KEY\s*[=:]\s*\S/,
   /\bVITE_OPENAI_API_KEY\s*[=:]\s*\S/,
   /\bVITE_ANTHROPIC_API_KEY\s*[=:]\s*\S/,
