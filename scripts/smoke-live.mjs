@@ -1,8 +1,12 @@
-const apiBase = (process.env.MATIX_PUBLIC_API_BASE || "https://cockpit.76.13.118.9.sslip.io/api/v1/public").replace(/\/$/, "");
+const apiBase = (process.env.MATIX_PUBLIC_API_BASE || "").replace(/\/$/, "");
 
 function fail(message) {
   console.error(message);
   process.exit(1);
+}
+
+if (!apiBase) {
+  fail("MATIX_PUBLIC_API_BASE is required for live smoke");
 }
 
 function canonical(value) {

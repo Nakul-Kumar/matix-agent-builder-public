@@ -8,8 +8,14 @@ folder so Replit, Codex, and future contributors know what each part owns.
 ### `.env.example`
 
 Documents non-secret environment variables. `MATIX_PUBLIC_API_BASE` points the
-public server at the deployed public API. It intentionally warns against
-browser-exposed provider keys.
+public server at a compatible public API. It intentionally warns against
+browser-exposed provider keys and uses placeholder hosts only.
+
+### `.replit`
+
+Optional Replit workflow/deployment metadata. It starts the public BFF on port
+5000 after a production build. Public API targets should be configured in
+Replit Secrets or environment, not committed here.
 
 ### `.github/workflows/public-release.yml`
 
@@ -89,6 +95,32 @@ TypeScript configuration for the frontend and public server code.
 Vite config for React. During local development it proxies `/api` to the local
 public server on port `8787`.
 
+## `docs/`
+
+Design and QA notes for the public surface. These are historical product
+notes, not runtime requirements.
+
+### `docs/design-notes.md`
+
+Explains the visual references and design-token decisions behind the current
+public preview.
+
+### `docs/ux-audit.md`
+
+Manual UX audit notes from the public preview states.
+
+## `public/`
+
+Static assets copied into the Vite build.
+
+### `public/brand-mark.png`
+
+Brand mark used by the public page.
+
+### `public/favicon.png`
+
+Browser tab icon.
+
 ## `server/`
 
 Small public backend-for-frontend. It is not the private cockpit backend.
@@ -129,6 +161,14 @@ Scans source files for forbidden secret-shaped strings.
 
 Runs a live preview/export smoke test against the configured public backend.
 
+### `scripts/scan-ui-copy.mjs`
+
+Checks public UI copy for banned phrasing and overclaiming patterns.
+
+### `scripts/post-merge.sh`
+
+Optional Replit post-merge helper.
+
 ## `src/`
 
 React public site.
@@ -155,8 +195,17 @@ It calls only helpers from `src/lib/publicApi.ts`.
 
 ### `src/styles.css`
 
-Global visual system for the public page: dark technical layout, prompt box,
-placards, scores, chips, links, footer, and responsive behavior.
+Top-level stylesheet entry that imports the component and token styles.
+
+### `src/components/`
+
+Componentized public UI: shell, hero, prompt composer, backend banner, result
+views, source/status sections, blueprint grids, feedback, and page decoration.
+
+### `src/styles/`
+
+CSS modules grouped by purpose: tokens, base layout, prompt area, blueprints,
+results, feedback, decoration, and responsive behavior.
 
 ### `src/types.ts`
 

@@ -9,10 +9,25 @@ export safe example files; it is not allowed to register agents, launch
 runtimes, read private cockpit rows, or hold provider credentials in browser
 code.
 
-Important scope: this repo is a render-only UI/BFF. Recommendation logic,
-source search, scoring, license metadata, credential status, model routing, and
-exports are served by the public backend unless you implement your own
-compatible API.
+## Project Goal
+
+Matix is exploring a narrow control problem: before teams let AI agents touch
+repositories, credentials, budgets, or production workflows, they need a
+reviewable layer that can describe what an agent will do, which runtime it
+fits, what tools it needs, what risks are visible, and which parts still need
+human approval.
+
+This repo is the inspectable public edge of that thesis. It takes a plain
+English agent request, renders backend-approved runtime blueprints, and exports
+example bundles with placeholder configuration. The startup angle is not
+"agents that run everything." It is trust before execution: make the plan,
+sources, warnings, and setup surface visible before any private runtime is
+allowed to act.
+
+Important scope: this repo is a render-only UI/BFF plus MCP shim.
+Recommendation logic, source search, scoring metadata, license metadata,
+credential status, model routing, and export content are served by the public
+backend unless you implement your own compatible API.
 
 ## What It Does
 
@@ -27,6 +42,46 @@ compatible API.
 Current public wording should stay precise: this is a public preview, not a
 production-grade hosted agent platform. Do not claim Gemini calibration or live
 GPT-5.5 reranking unless the live response shows that selection source.
+
+## What Lives Outside This Repo
+
+The public repo does not contain the private cockpit, registry database,
+protected recommendation pipeline, source crawlers, agent launch system, or
+credential store. Those systems are deliberately kept behind a public API
+contract. This separation is the point: the browser can inspect and export
+public-safe examples, while private runtime and credential decisions stay
+server-side.
+
+For reviewers: judge this repository as a public product surface, API contract,
+security boundary, and packaging layer. Do not read it as proof that the full
+Matix platform is open sourced or production complete.
+
+## Research Angle
+
+This preview is a small experiment in agent governance UX:
+
+- Can a user understand why a runtime was recommended before accepting it?
+- Can source links, license notes, credential status, and warnings be shown in
+  the same flow as the generated files?
+- Can public export bundles stay useful while never including real secrets,
+  launch roots, auth files, or private cockpit rows?
+- Can the browser remain a safe display surface while model/provider work stays
+  behind a same-origin BFF?
+
+The current implementation is intentionally conservative. It favors explicit
+metadata, placeholder configuration, route allowlists, and release scans over
+fully automated agent launch.
+
+## Honest Limitations
+
+- This repo does not launch, register, schedule, or operate agents.
+- Exported bundles are examples, not secure-by-default deployment packages.
+- Recommendation quality depends on the backend configured through
+  `MATIX_PUBLIC_API_BASE`.
+- Hosted demo status can change; durable docs should describe the contract, not
+  one temporary provider configuration.
+- Security scans here are lightweight repo gates, not a formal third-party
+  audit.
 
 ## Clone And Run
 
@@ -59,7 +114,7 @@ npm run start
 # Open http://localhost:8787
 ```
 
-Set `MATIX_PUBLIC_API_BASE` in your environment to the deployed public API
+Set `MATIX_PUBLIC_API_BASE` in your environment to a compatible public API
 base:
 
 ```text

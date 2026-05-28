@@ -6,20 +6,15 @@
  * any MCP-aware client (Claude Code, Cursor, ChatGPT desktop, etc.) can ask
  * for agent blueprints and safe example bundles by name.
  *
- * Transport: stdio. The server forwards each call to MATIX_PUBLIC_API_BASE,
- * which defaults to the publicly hosted cockpit. No provider keys live here.
+ * Transport: stdio. The server forwards each call to MATIX_PUBLIC_API_BASE.
+ * No provider keys live here.
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-const DEFAULT_API_BASE = "https://cockpit.76.13.118.9.sslip.io/api/v1/public";
-
-const API_BASE = (process.env.MATIX_PUBLIC_API_BASE || DEFAULT_API_BASE).replace(
-  /\/$/,
-  "",
-);
+const API_BASE = (process.env.MATIX_PUBLIC_API_BASE || "").replace(/\/$/, "");
 
 const SERVER_NAME = "matix-agent-builder";
 const SERVER_VERSION = "0.1.0";
@@ -33,6 +28,9 @@ async function callApi(
   pathname: string,
   init: { method: "GET" | "POST"; body?: unknown },
 ): Promise<unknown> {
+  if (!API_BASE) {
+    throw new Error("Set MATIX_PUBLIC_API_BASE to a compatible /api/v1/public backend");
+  }
   const url = `${API_BASE}${pathname}`;
   const response = await fetch(url, {
     method: init.method,
@@ -181,9 +179,8 @@ server.registerTool(
       "Generate a public-safe agent blueprint preview from a natural-language " +
       "description. Returns three runtime placards (Codex, Claude Code, OpenClaw) " +
       "with recommended skills, MCPs, tools, source links, scores, license labels, " +
-      "credential status, and setup hints. Backed by the Matix cockpit; outputs " +
-      "are deterministic-fallback today and gain calibrated model reranking once " +
-      "the upstream provider key is configured.",
+      "credential status, and setup hints. Backend selection behavior is " +
+      "deployment-specific and is reflected in the returned metadata.",
     inputSchema: {
       prompt: z
         .string()
@@ -289,7 +286,7 @@ server.registerTool(
     title: "Registry summary",
     description:
       "Get a summary of every skill currently in the public registry with its " +
-      "trust score. Useful for browsing the catalog without submitting a prompt.",
+      "scoring metadata. Useful for browsing the catalog without submitting a prompt.",
     inputSchema: {},
   },
   async () => {
@@ -306,5 +303,5 @@ const transport = new StdioServerTransport();
 await server.connect(transport);
 // stderr only — stdout is reserved for the JSON-RPC stream.
 console.error(
-  `[${SERVER_NAME}] listening on stdio (API base: ${API_BASE})`,
+  `[${SERVER_NAME}] listening on stdio (API base: ${API_BASE || "not configured"})`,
 );

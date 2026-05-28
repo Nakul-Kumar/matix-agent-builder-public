@@ -5,8 +5,9 @@ backend so any MCP-aware client (Claude Code, Cursor, ChatGPT desktop, etc.)
 can ask for agent blueprints and safe example bundles by name.
 
 The server is a thin stdio shim. It forwards each tool call to
-`MATIX_PUBLIC_API_BASE` (defaults to the publicly hosted cockpit) and returns
-the response. No provider keys live in this process.
+`MATIX_PUBLIC_API_BASE` and returns the response. No provider keys live in this
+process. Unlike the web BFF, the MCP server talks directly to the configured
+public API base, so set the environment variable before running it.
 
 ## Tools
 
@@ -15,7 +16,7 @@ the response. No provider keys live in this process.
 | `build_agent_preview` | Generate a 3-platform agent blueprint preview from a prompt. Optional `refine: true` parameter uses MCP sampling to ask the calling client's LLM to review/filter the candidates and attach a `refinement` field. |
 | `export_agent_bundle` | Generate a safe example export bundle for one platform (`codex`, `claude_code`, or `openclaw`). |
 | `list_runtimes` | List the runtime templates the public backend supports. |
-| `registry_summary` | Get a summary of skills in the public registry with trust scores. |
+| `registry_summary` | Get a summary of skills in the public registry with scoring metadata. |
 
 All tools return JSON serialized as a single text block.
 
@@ -37,10 +38,10 @@ npm ci
 npm run mcp     # or:  npx tsx mcp/index.ts
 ```
 
-You should see this on stderr:
+With `MATIX_PUBLIC_API_BASE` set, you should see this on stderr:
 
 ```
-[matix-agent-builder] listening on stdio (API base: https://cockpit.76.13.118.9.sslip.io/api/v1/public)
+[matix-agent-builder] listening on stdio (API base: https://your-cockpit-domain.example/api/v1/public)
 ```
 
 Stdout is reserved for the JSON-RPC stream. The server stays attached to the
@@ -50,7 +51,7 @@ parent process; the MCP client handles lifecycle.
 
 | Env var | Default | Purpose |
 |---|---|---|
-| `MATIX_PUBLIC_API_BASE` | the public test cockpit URL | The `/api/v1/public` base the tools forward to. |
+| `MATIX_PUBLIC_API_BASE` | none | The compatible `/api/v1/public` base the tools forward to. |
 
 ## Wire it into Claude Code
 
@@ -66,7 +67,7 @@ Add to `~/.claude/mcp_servers.json` (or your project-local equivalent):
         "/absolute/path/to/matix-agent-builder-public/mcp/index.ts"
       ],
       "env": {
-        "MATIX_PUBLIC_API_BASE": "https://cockpit.76.13.118.9.sslip.io/api/v1/public"
+        "MATIX_PUBLIC_API_BASE": "https://your-cockpit-domain.example/api/v1/public"
       }
     }
   }
@@ -105,9 +106,9 @@ npx @modelcontextprotocol/inspector npx tsx mcp/index.ts
 
 ## Notes
 
-- The cockpit currently runs a deterministic capability-matching fallback
-  because the OpenAI provider key is not yet configured upstream. Tool
-  responses are well-formed but the recommendation model is not live.
+- Hosted backend behavior is deployment-specific. Durable client docs should
+  describe returned fields such as `selection_source`, `score_breakdown`, and
+  `warnings` rather than assuming a specific live provider is configured.
 - The MCP server is a thin shim — it forwards calls directly to the
   configured `MATIX_PUBLIC_API_BASE` without re-validating the prompt.
   If you want the same prompt validation as the web UI's BFF (greetings

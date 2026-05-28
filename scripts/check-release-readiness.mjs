@@ -97,14 +97,19 @@ for (const topic of [
 requireAny("SECURITY.md", ["security@matix.dev", "GitHub Security Advisories"], "a vulnerability reporting channel");
 requireIncludes("SECURITY.md", "rate limiting");
 
-const app = requireFile("src/App.tsx");
+const app = [
+  requireFile("src/App.tsx"),
+  requireFile("src/components/AppShell.tsx"),
+  requireFile("src/components/FeedbackForm.tsx"),
+  requireFile("src/data/publicBuilderContent.ts"),
+].join("\n");
 for (const label of ["Privacy", "Terms", "Security", "GitHub"]) {
   if (app && !app.includes(label)) {
-    failures.push(`src/App.tsx footer must link ${label}`);
+    failures.push(`public UI must link ${label}`);
   }
 }
 if (app && !app.includes("feedback may be stored")) {
-  failures.push("src/App.tsx feedback copy must reference privacy handling");
+  failures.push("public UI feedback copy must reference privacy handling");
 }
 
 const server = requireFile("server/index.ts");

@@ -12,10 +12,9 @@ const dist = path.resolve(root, "dist");
 // Optional Gemini rerank via the official Google Gen AI SDK (Google AI Studio).
 // When GEMINI_API_KEY is set, the BFF passes the cockpit's deterministic
 // candidates through Gemini and attaches a `refinement` field to the preview
-// response. Without the key, the BFF behaves as a pure proxy. Google AI Studio
-// offers a generous free tier (~10 RPM / 250 RPD on gemini-3.5-flash) so this
-// path stays free for typical demo traffic. Errors fall through silently with
-// a `[gemini rerank]` warning on stderr; the client always gets a valid response.
+// response. Without the key, the BFF behaves as a pure proxy. Errors fall
+// through silently with a `[gemini rerank]` warning on stderr; the client
+// always gets a valid response.
 const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 const geminiApiKey = process.env.GEMINI_API_KEY || "";
 const gemini = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
