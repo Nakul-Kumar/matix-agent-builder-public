@@ -379,7 +379,7 @@ app.use("/api/public", async (req, res) => {
     });
     const text = await response.text();
     let outText = text;
-    // Optionally refine the /agent-builder/preview response via OpenRouter.
+    // Optionally refine the /agent-builder/preview response via Gemini.
     const contentType = response.headers.get("content-type") || "application/json";
     if (
       response.ok &&
