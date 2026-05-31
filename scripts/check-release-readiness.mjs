@@ -97,14 +97,21 @@ for (const topic of [
 requireAny("SECURITY.md", ["security@matix.dev", "GitHub Security Advisories"], "a vulnerability reporting channel");
 requireIncludes("SECURITY.md", "rate limiting");
 
-const app = requireFile("src/App.tsx");
+// Footer links live in the shared content module and are rendered by AppShell;
+// the feedback privacy notice lives in the FeedbackForm component.
+const footerContent = requireFile("src/data/publicBuilderContent.ts");
 for (const label of ["Privacy", "Terms", "Security", "GitHub"]) {
-  if (app && !app.includes(label)) {
-    failures.push(`src/App.tsx footer must link ${label}`);
+  if (footerContent && !footerContent.includes(label)) {
+    failures.push(`src/data/publicBuilderContent.ts footer links must include ${label}`);
   }
 }
-if (app && !app.includes("feedback may be stored")) {
-  failures.push("src/App.tsx feedback copy must reference privacy handling");
+const appShell = requireFile("src/components/AppShell.tsx");
+if (appShell && !appShell.includes("legalLinks")) {
+  failures.push("src/components/AppShell.tsx footer must render legalLinks");
+}
+const feedbackForm = requireFile("src/components/FeedbackForm.tsx");
+if (feedbackForm && !feedbackForm.includes("feedback may be stored")) {
+  failures.push("src/components/FeedbackForm.tsx copy must reference privacy handling");
 }
 
 const server = requireFile("server/index.ts");
