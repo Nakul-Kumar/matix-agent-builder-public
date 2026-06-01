@@ -5,7 +5,7 @@ import { PageDecoration } from "./PageDecoration";
 
 function backendLabel(backend: BackendStatus): string {
   if (backend.state === "checking") return "Connecting";
-  if (backend.state === "ready") return `Backend / ${backend.env}`;
+  if (backend.state === "ready") return "Backend";
   if (backend.state === "not_configured") return "Backend not configured";
   return "Backend unreachable";
 }

@@ -20,6 +20,7 @@ export function SourceStatusSection({
     const label = status.label.trim();
     if (/^search:/i.test(label)) return false;
     if (/pulse\s*mcp/i.test(`${status.source_id} ${label}`)) return false;
+    if (/mcp\s*market/i.test(`${status.source_id} ${label}`)) return false;
     return true;
   });
 

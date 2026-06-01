@@ -1,7 +1,38 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { runtimeDescriptions, runtimeLabels } from "../data/publicBuilderContent";
 import { formatScore, pretty, safeExternalHref } from "../lib/format";
 import type { PublicArtifact, RuntimePlacard } from "../types";
+
+function InfoHint({
+  children,
+  label,
+}: {
+  children: ReactNode;
+  label: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <button
+      type="button"
+      className={`infoHint${open ? " isOpen" : ""}`}
+      aria-label={label}
+      aria-expanded={open}
+      onClick={(event) => {
+        event.stopPropagation();
+        setOpen((value) => !value);
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpen(false);
+      }}
+      onBlur={() => setOpen(false)}
+    >
+      ?
+      <span className="infoTip" role="tooltip">
+        {children}
+      </span>
+    </button>
+  );
+}
 
 function ArtifactRow({
   artifact,
@@ -78,15 +109,42 @@ export function BlueprintGrid({ placard }: { placard: RuntimePlacard }) {
         <div className="scoreLedger" aria-label="Runtime scores">
           <span>
             <strong>{formatScore(placard.scores.trust)}</strong>
-            trust
+            <span className="scoreCaption">
+              trust
+              <InfoHint label="How the trust score is calculated">
+                Trust (0-100) reflects how confident the backend is in this
+                runtime's source data. It blends the provenance of each source
+                (official registry vs. mirror), how clearly the artifacts are
+                licensed, and how consistently the sources agree with one
+                another. Higher means more verifiable, better-attested sources.
+              </InfoHint>
+            </span>
           </span>
           <span>
             <strong>{formatScore(placard.scores.match)}</strong>
-            match
+            <span className="scoreCaption">
+              match
+              <InfoHint label="How the match score is calculated">
+                Match (0-100) measures how well this runtime's selected skills
+                and tools fit your agent request. It compares your prompt's
+                intent against each artifact's capabilities and weights the
+                overlap, so a higher score means the blueprint covers more of
+                what you asked for.
+              </InfoHint>
+            </span>
           </span>
           <span>
             <strong>{formatScore(placard.scores.performance)}</strong>
-            quality
+            <span className="scoreCaption">
+              quality
+              <InfoHint label="How the quality score is calculated">
+                Quality (0-100) gauges the overall health of the selected
+                artifacts: maintenance signals, documentation completeness, and
+                whether they pass the runtime's eval checks. Higher means the
+                blueprint is built from better-maintained, more reliable
+                components.
+              </InfoHint>
+            </span>
           </span>
           <span>
             <strong>{pretty(placard.memory_mode)}</strong>

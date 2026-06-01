@@ -1,8 +1,42 @@
-import type { PlatformKey } from "../data/publicBuilderContent";
+import { useState } from "react";
+import { runtimeLabels, type PlatformKey } from "../data/publicBuilderContent";
 import { pretty } from "../lib/format";
 import type { PublicPreview, RuntimePlacard } from "../types";
 import { BlueprintGrid } from "./BlueprintGrid";
 import { RuntimeTabs } from "./RuntimeTabs";
+
+function HowToUseHint({ toolName }: { toolName: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className={`howToUse${open ? " isOpen" : ""}`}>
+      <button
+        type="button"
+        className="howToUseTrigger"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setOpen(false);
+        }}
+        onBlur={() => setOpen(false)}
+      >
+        <span className="howToUseMark" aria-hidden="true">
+          ?
+        </span>
+        How to use this?
+      </button>
+      <span className="howToUsePopover" role="tooltip">
+        <strong>New to this?</strong> Download the example JSON, then hand it to{" "}
+        {toolName}. Open your {toolName} session, share the file (or paste its
+        contents), and ask it to scaffold the agent from this blueprint.
+        <span className="howToUseWarn">
+          Heads up: this is an example starting point, not finished code. Review
+          every skill, tool, file, and permission yourself before you run
+          anything you haven&apos;t checked.
+        </span>
+      </span>
+    </span>
+  );
+}
 
 export function BlueprintsSection({
   activeRuntime,
@@ -61,6 +95,7 @@ export function BlueprintsSection({
           )}
         </p>
         <div className="exportControls">
+          <HowToUseHint toolName={runtimeLabels[activePlacard.platform]} />
           <button
             className="secondaryButton"
             disabled={inspectingPlatform === activePlacard.platform}

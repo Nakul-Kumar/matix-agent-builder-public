@@ -1,6 +1,7 @@
 import express, { type Request } from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { timingSafeEqual } from "node:crypto";
 import { GoogleGenAI } from "@google/genai";
 
 const app = express();
@@ -296,6 +297,58 @@ const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX || 60);
 const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 let rateLimitSweeps = 0;
 
+// In-memory request/latency metrics surfaced at /api/metrics. These are
+// per-instance and reset on restart -- intended for lightweight post-launch
+// monitoring, not durable analytics.
+interface RouteMetric {
+  requests: number;
+  ok: number;
+  errors: number;
+  rejected: number;
+  upstreamLatencyMsTotal: number;
+  upstreamLatencySamples: number;
+  upstreamLatencyMaxMs: number;
+}
+const metricsStartedAt = Date.now();
+const routeMetrics = new Map<string, RouteMetric>();
+let rateLimitedCount = 0;
+
+// `ok` = upstream returned 2xx; `error` = upstream non-2xx or unreachable;
+// `rejected` = request refused locally before forwarding (invalid prompt,
+// upstream not configured). `requests` = ok + error + rejected. Rate-limited
+// requests are tracked separately in the global `rateLimitedCount`.
+type RouteOutcomeKind = "ok" | "error" | "rejected";
+
+function recordRouteMetric(
+  publicPath: string,
+  outcome: { kind: RouteOutcomeKind; latencyMs: number | null },
+): void {
+  let metric = routeMetrics.get(publicPath);
+  if (!metric) {
+    metric = {
+      requests: 0,
+      ok: 0,
+      errors: 0,
+      rejected: 0,
+      upstreamLatencyMsTotal: 0,
+      upstreamLatencySamples: 0,
+      upstreamLatencyMaxMs: 0,
+    };
+    routeMetrics.set(publicPath, metric);
+  }
+  metric.requests += 1;
+  if (outcome.kind === "ok") metric.ok += 1;
+  else if (outcome.kind === "error") metric.errors += 1;
+  else metric.rejected += 1;
+  if (outcome.latencyMs !== null) {
+    metric.upstreamLatencyMsTotal += outcome.latencyMs;
+    metric.upstreamLatencySamples += 1;
+    if (outcome.latencyMs > metric.upstreamLatencyMaxMs) {
+      metric.upstreamLatencyMaxMs = outcome.latencyMs;
+    }
+  }
+}
+
 function publicRateLimitKey(req: Request, publicPath: string): string {
   // Use req.ip rather than the raw X-Forwarded-For. With `trust proxy` set,
   // req.ip is the client IP attested by the trusted proxy; the leftmost XFF
@@ -358,6 +411,29 @@ app.use(express.json({ limit: "32kb" }));
 app.set("trust proxy", 1);
 
 const isProduction = process.env.NODE_ENV === "production";
+const metricsToken = process.env.METRICS_TOKEN || "";
+
+// Constant-time comparison for the metrics shared secret.
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  if (ab.length !== bb.length) return false;
+  return timingSafeEqual(ab, bb);
+}
+
+// Gate operational telemetry. When METRICS_TOKEN is set, a matching bearer
+// token (Authorization: Bearer <token> or X-Metrics-Token) is required in all
+// environments. When it is unset, metrics are available only outside
+// production, so the endpoint is never exposed by default on a live deploy.
+function metricsAccessAllowed(req: Request): boolean {
+  if (metricsToken) {
+    const header = req.get("authorization") || "";
+    const provided =
+      header.replace(/^Bearer\s+/i, "") || req.get("x-metrics-token") || "";
+    return safeEqual(provided, metricsToken);
+  }
+  return !isProduction;
+}
 
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -399,6 +475,57 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+app.get("/api/metrics", (req, res) => {
+  if (!metricsAccessAllowed(req)) {
+    res.status(404).json({ error: "not_found" });
+    return;
+  }
+  const routes: Record<string, unknown> = {};
+  let totalRequests = 0;
+  let totalOk = 0;
+  let totalErrors = 0;
+  let totalRejected = 0;
+  let latencyTotal = 0;
+  let latencySamples = 0;
+  for (const [routePath, m] of routeMetrics.entries()) {
+    routes[routePath] = {
+      requests: m.requests,
+      ok: m.ok,
+      errors: m.errors,
+      rejected: m.rejected,
+      avg_upstream_latency_ms: m.upstreamLatencySamples
+        ? Math.round(m.upstreamLatencyMsTotal / m.upstreamLatencySamples)
+        : null,
+      max_upstream_latency_ms: m.upstreamLatencyMaxMs || null,
+    };
+    totalRequests += m.requests;
+    totalOk += m.ok;
+    totalErrors += m.errors;
+    totalRejected += m.rejected;
+    latencyTotal += m.upstreamLatencyMsTotal;
+    latencySamples += m.upstreamLatencySamples;
+  }
+  res.setHeader("Cache-Control", "no-store");
+  res.json({
+    ok: true,
+    app: "matix-agent-builder-public",
+    uptime_seconds: Math.round((Date.now() - metricsStartedAt) / 1000),
+    preview_count: routeMetrics.get("/agent-builder/preview")?.requests ?? 0,
+    export_count: routeMetrics.get("/agent-builder/export")?.requests ?? 0,
+    rate_limited: rateLimitedCount,
+    totals: {
+      requests: totalRequests,
+      ok: totalOk,
+      errors: totalErrors,
+      rejected: totalRejected,
+      avg_upstream_latency_ms: latencySamples
+        ? Math.round(latencyTotal / latencySamples)
+        : null,
+    },
+    routes,
+  });
+});
+
 app.use("/api/public", async (req, res) => {
   const publicPath = req.originalUrl.replace(/^\/api\/public/, "").split("?")[0] || "/";
   if (!allowedPublicRoutes.has(publicPath)) {
@@ -408,11 +535,13 @@ app.use("/api/public", async (req, res) => {
   if (req.method === "POST" && PROMPT_VALIDATED_PATHS.has(publicPath)) {
     const promptError = validatePromptInput((req.body as { prompt?: unknown })?.prompt);
     if (promptError) {
+      recordRouteMetric(publicPath, { kind: "rejected", latencyMs: null });
       res.status(422).json({ error: "invalid_prompt", detail: promptError });
       return;
     }
   }
   if (!apiBase) {
+    recordRouteMetric(publicPath, { kind: "rejected", latencyMs: null });
     res.status(503).json({
       error: "public_api_not_configured",
       detail: "Set MATIX_PUBLIC_API_BASE to the deployed /api/public backend.",
@@ -421,6 +550,7 @@ app.use("/api/public", async (req, res) => {
   }
   const rateLimit = checkPublicRateLimit(req, publicPath);
   if (rateLimit.limited) {
+    rateLimitedCount += 1;
     res.setHeader("Retry-After", String(rateLimit.retryAfterSeconds));
     res.status(429).json({
       error: "rate_limited",
@@ -436,6 +566,7 @@ app.use("/api/public", async (req, res) => {
     () => upstreamController.abort(),
     UPSTREAM_TIMEOUT_MS,
   );
+  const upstreamStartedAt = Date.now();
   try {
     const response = await fetch(upstream, {
       method: req.method,
@@ -449,6 +580,10 @@ app.use("/api/public", async (req, res) => {
     });
     const text = await response.text();
     clearTimeout(upstreamTimer);
+    recordRouteMetric(publicPath, {
+      kind: response.ok ? "ok" : "error",
+      latencyMs: Date.now() - upstreamStartedAt,
+    });
     let outText = text;
     // Optionally refine the /agent-builder/preview response via Gemini.
     const contentType = response.headers.get("content-type") || "application/json";
@@ -562,6 +697,10 @@ app.use("/api/public", async (req, res) => {
     res.send(outText);
   } catch {
     clearTimeout(upstreamTimer);
+    recordRouteMetric(publicPath, {
+      kind: "error",
+      latencyMs: Date.now() - upstreamStartedAt,
+    });
     res.status(502).json({ error: "public_api_unreachable" });
   }
 });
