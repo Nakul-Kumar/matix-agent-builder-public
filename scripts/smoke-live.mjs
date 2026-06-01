@@ -1,9 +1,15 @@
-const apiBase = (process.env.MATIX_PUBLIC_API_BASE || "https://cockpit.76.13.118.9.sslip.io/api/v1/public").replace(/\/$/, "");
-
 function fail(message) {
   console.error(message);
   process.exit(1);
 }
+
+if (!process.env.MATIX_PUBLIC_API_BASE) {
+  fail(
+    "MATIX_PUBLIC_API_BASE is not set. Set it to the deployed public backend " +
+      "base, e.g. https://your-cockpit-domain.example/api/v1/public",
+  );
+}
+const apiBase = process.env.MATIX_PUBLIC_API_BASE.replace(/\/$/, "");
 
 function canonical(value) {
   return String(value || "")

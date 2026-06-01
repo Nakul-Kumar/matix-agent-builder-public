@@ -43,7 +43,8 @@ build = ["npm", "run", "build"]
 [userenv]
 
 [userenv.shared]
-MATIX_PUBLIC_API_BASE = "https://cockpit.76.13.118.9.sslip.io/api/v1/public"
+# MATIX_PUBLIC_API_BASE is provided via Replit Secrets (Deployments → Secrets),
+# not committed here, so the backend URL stays out of this public repo.
 
 [postMerge]
 path = "scripts/post-merge.sh"
