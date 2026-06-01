@@ -219,9 +219,14 @@
   justify-content: center;
   width: 14px;
   height: 14px;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
   border-radius: 50%;
   border: 1px solid var(--border);
+  background: transparent;
   color: var(--text-muted);
+  font-family: inherit;
   font-size: 9px;
   font-weight: 600;
   line-height: 1;
@@ -288,8 +293,7 @@
 }
 
 .infoHint:hover .infoTip,
-.infoHint:focus .infoTip,
-.infoHint:focus-visible .infoTip {
+.infoHint.isOpen .infoTip {
   opacity: 1;
   visibility: visible;
 }
