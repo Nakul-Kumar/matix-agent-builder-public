@@ -22,9 +22,18 @@ Prompts are sent to the backend to produce recommendation bundles. Feedback is
 used to improve recommendation quality, interface clarity, source coverage,
 and export setup instructions.
 
-When model reranking is enabled, a prompt and backend-built candidate metadata
-may be processed by model/provider processing services. The public UI does not
-call those services directly; processing is owned by the backend.
+This public server includes an optional refinement step. When the operator
+configures `GEMINI_API_KEY`, the server itself sends your prompt and the
+backend-built candidate metadata to Google's Gemini API (Google AI Studio) to
+refine recommendations and to rewrite the primary instructions file in exported
+bundles. In that configuration your prompt is processed by Google under Google's
+terms (https://ai.google.dev/terms). When that key is not configured, the server
+is a pure proxy and your prompt is not sent to Google. Separately, the backend
+may also apply model/provider processing services to the prompt and candidate
+metadata.
+
+TODO(human): confirm a Google AI Studio data processing agreement (DPA) is in
+place and have counsel review this notice before any commercial launch.
 
 ## Retention
 
@@ -36,8 +45,9 @@ to protect the service.
 ## Sharing
 
 We do not sell prompt or feedback data. Data may be processed by infrastructure
-providers, model providers, logging services, or security services when needed
-to operate the public preview.
+providers, model providers (including Google / Google AI Studio when Gemini
+refinement is enabled), logging services, or security services when needed to
+operate the public preview.
 
 Recommended skills, tools, MCPs, and source links are informational. Visiting
 third-party links is governed by those sites' privacy policies.

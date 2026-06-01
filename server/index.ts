@@ -20,6 +20,32 @@ const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash";
 const geminiApiKey = process.env.GEMINI_API_KEY || "";
 const gemini = geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 
+// Outbound-call timeouts. A hung upstream or model call must not pin a request
+// open indefinitely (billable + soft-DoS under autoscale).
+const UPSTREAM_TIMEOUT_MS = Number(process.env.UPSTREAM_TIMEOUT_MS || 10_000);
+const GEMINI_TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS || 15_000);
+
+// Reject `promise` if it does not settle within `ms`. Used to bound the Gemini
+// calls; callers already treat a rejection as "skip refinement" and fall back.
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`${label} timed out after ${ms}ms`)),
+      ms,
+    );
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
 interface PlacardArtifactSummary {
   artifact_ref?: string;
   artifact_kind?: string;
@@ -141,11 +167,15 @@ As a senior practitioner, decide which artifacts genuinely fit the user's goal a
   "missing_capabilities": [short capability strings the bundle is missing]
 }`;
   try {
-    const result = await gemini.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: reviewPrompt,
-      config: { responseMimeType: "application/json" },
-    });
+    const result = await withTimeout(
+      gemini.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: reviewPrompt,
+        config: { responseMimeType: "application/json" },
+      }),
+      GEMINI_TIMEOUT_MS,
+      "[gemini rerank]",
+    );
     const text = result.text;
     if (!text) return null;
     const parsed = JSON.parse(text) as Record<string, unknown>;
@@ -213,17 +243,37 @@ REWRITE TASK:
 Return only the rewritten markdown.`;
 
   try {
-    const result = await gemini.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: rewritePrompt,
-    });
-    const text = result.text;
-    if (!text) return null;
+    const result = await withTimeout(
+      gemini.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: rewritePrompt,
+      }),
+      GEMINI_TIMEOUT_MS,
+      "[gemini rewrite]",
+    );
+    const raw = result.text;
+    if (!raw) return null;
     // Strip accidental code fences wrapping the entire output.
-    return text
+    const cleaned = raw
       .replace(/^```(?:markdown|md)?\s*\n?/i, "")
       .replace(/\n?```\s*$/i, "")
       .trim();
+    // Validate before letting machine-authored text replace the deterministic,
+    // source-vetted instructions file. The prompt is attacker-influenceable, so
+    // fall back to the original on anything suspicious: empty, oversized, or not
+    // markdown-ish prose. Returning null makes the caller keep the cockpit file.
+    const MAX_INSTRUCTIONS_CHARS = 20_000;
+    if (
+      cleaned.length < 40 ||
+      cleaned.length > MAX_INSTRUCTIONS_CHARS ||
+      !/[A-Za-z]/.test(cleaned)
+    ) {
+      console.warn(
+        "[gemini rewrite] output failed validation; keeping original instructions",
+      );
+      return null;
+    }
+    return cleaned;
   } catch (err) {
     console.warn(
       "[gemini rewrite] instructions rewrite failed:",
@@ -307,15 +357,29 @@ function checkPublicRateLimit(req: Request, publicPath: string) {
 app.use(express.json({ limit: "32kb" }));
 app.set("trust proxy", 1);
 
+const isProduction = process.env.NODE_ENV === "production";
+
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "geolocation=(), camera=(), microphone=()");
+  // HSTS only in production: the platform terminates TLS at the edge, so the
+  // app itself speaks HTTP and we must not pin HSTS during plain-HTTP local dev.
+  if (isProduction) {
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains",
+    );
+  }
   res.setHeader(
     "Content-Security-Policy",
     [
       "default-src 'self'",
       "img-src 'self' data:",
+      // 'unsafe-inline' is required for styles: the bundle ships inline style
+      // rules and the Google Fonts stylesheet injects inline CSS. script-src
+      // stays strict ('self', no unsafe-inline), so JS isolation is unaffected.
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "script-src 'self'",
@@ -367,6 +431,11 @@ app.use("/api/public", async (req, res) => {
   // Browser code talks to this same-origin route; this server performs the
   // only outbound hop and deliberately forwards no cookies or provider keys.
   const upstream = `${apiBase}${req.originalUrl.replace(/^\/api\/public/, "")}`;
+  const upstreamController = new AbortController();
+  const upstreamTimer = setTimeout(
+    () => upstreamController.abort(),
+    UPSTREAM_TIMEOUT_MS,
+  );
   try {
     const response = await fetch(upstream, {
       method: req.method,
@@ -376,8 +445,10 @@ app.use("/api/public", async (req, res) => {
       },
       body: req.method === "GET" || req.method === "HEAD" ? undefined : JSON.stringify(req.body ?? {}),
       redirect: "manual",
+      signal: upstreamController.signal,
     });
     const text = await response.text();
+    clearTimeout(upstreamTimer);
     let outText = text;
     // Optionally refine the /agent-builder/preview response via Gemini.
     const contentType = response.headers.get("content-type") || "application/json";
@@ -464,7 +535,10 @@ app.use("/api/public", async (req, res) => {
             exportJson.manifest?.selected_artifacts ?? [],
           );
           if (rewritten) {
-            exportJson.files[instructionsPath] = rewritten;
+            // Mark the file as machine-rewritten so a downstream consumer knows
+            // it is not the deterministic, source-vetted instructions text.
+            const banner = `<!-- NOTE: This instructions file was rewritten by an automated model (${GEMINI_MODEL}) from the user's prompt. Review before use; it is not the deterministic, source-vetted text. -->\n\n`;
+            exportJson.files[instructionsPath] = banner + rewritten;
             exportJson.manifest = {
               ...(exportJson.manifest ?? {}),
               gemini_instructions: {
@@ -487,6 +561,7 @@ app.use("/api/public", async (req, res) => {
     res.type(contentType);
     res.send(outText);
   } catch {
+    clearTimeout(upstreamTimer);
     res.status(502).json({ error: "public_api_unreachable" });
   }
 });

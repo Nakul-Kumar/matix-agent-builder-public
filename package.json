@@ -2,6 +2,7 @@
   "name": "matix-agent-builder-public",
   "version": "0.1.0",
   "private": true,
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "dev": "tsx watch server/index.ts",
