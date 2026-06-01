@@ -24,6 +24,9 @@ const API_BASE = (process.env.MATIX_PUBLIC_API_BASE || DEFAULT_API_BASE).replace
 const SERVER_NAME = "matix-agent-builder";
 const SERVER_VERSION = "0.1.0";
 
+// Bound the outbound call so a hung backend cannot pin a tool invocation open.
+const MCP_TIMEOUT_MS = Number(process.env.MCP_TIMEOUT_MS || 15_000);
+
 type ToolContent = {
   content: Array<{ type: "text"; text: string }>;
   isError?: boolean;
@@ -34,33 +37,40 @@ async function callApi(
   init: { method: "GET" | "POST"; body?: unknown },
 ): Promise<unknown> {
   const url = `${API_BASE}${pathname}`;
-  const response = await fetch(url, {
-    method: init.method,
-    headers: {
-      "content-type": "application/json",
-      accept: "application/json",
-    },
-    body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
-  });
-  const text = await response.text();
-  let parsed: unknown;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), MCP_TIMEOUT_MS);
   try {
-    parsed = text ? JSON.parse(text) : {};
-  } catch {
-    throw new Error(
-      `Matix backend returned non-JSON (HTTP ${response.status}): ${text.slice(0, 200)}`,
-    );
+    const response = await fetch(url, {
+      method: init.method,
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+      body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
+      signal: controller.signal,
+    });
+    const text = await response.text();
+    let parsed: unknown;
+    try {
+      parsed = text ? JSON.parse(text) : {};
+    } catch {
+      throw new Error(
+        `Matix backend returned non-JSON (HTTP ${response.status}): ${text.slice(0, 200)}`,
+      );
+    }
+    if (!response.ok) {
+      const detail =
+        typeof parsed === "object" && parsed !== null && "detail" in parsed
+          ? (parsed as { detail: unknown }).detail
+          : parsed;
+      const detailText =
+        typeof detail === "string" ? detail : JSON.stringify(detail);
+      throw new Error(`Matix backend ${response.status}: ${detailText}`);
+    }
+    return parsed;
+  } finally {
+    clearTimeout(timer);
   }
-  if (!response.ok) {
-    const detail =
-      typeof parsed === "object" && parsed !== null && "detail" in parsed
-        ? (parsed as { detail: unknown }).detail
-        : parsed;
-    const detailText =
-      typeof detail === "string" ? detail : JSON.stringify(detail);
-    throw new Error(`Matix backend ${response.status}: ${detailText}`);
-  }
-  return parsed;
 }
 
 function asJsonContent(value: unknown): ToolContent {

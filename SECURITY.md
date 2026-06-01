@@ -44,10 +44,14 @@ secrets must never use that path.
 - applies lightweight rate limiting to public API calls
 - adds security headers
 - never forwards cookies or private cockpit auth
-- does not know model-provider keys
+- holds no provider keys by default
 
-Provider keys belong only in the deployed backend that implements
-`/api/public/agent-builder/preview`.
+The only optional exception is `GEMINI_API_KEY`: when the operator sets it, the
+server uses Google's Gemini API to refine previews and rewrite exported
+instructions. That key is read only inside the server process and is never
+exposed to the browser or written into exports. All other provider keys (OpenAI,
+Anthropic, database URLs, cockpit auth) belong only in the deployed backend that
+implements `/api/public/agent-builder/preview`.
 
 ## Public API Abuse Protection
 
@@ -55,6 +59,13 @@ The public BFF includes per-route rate limiting with configurable window and
 request count. This is a first-line public-preview control, not a substitute
 for upstream CDN, WAF, bot filtering, backend quotas, or provider-side spend
 limits.
+
+Deployment note: the in-process limiter stores counters in memory per instance.
+On a multi-instance / autoscale deployment it does NOT coordinate across
+instances (the effective limit is roughly the configured limit times the
+instance count, and counters reset on cold start). Production must enforce limits
+at the edge (CDN/WAF) and/or via backend quotas; treat the in-app limiter as
+defense-in-depth only.
 
 ## Exports
 
