@@ -9,3 +9,6 @@ dist-server/
 # Accidental shell-redirect artifacts (e.g. `git log > tatus`)
 tatus
 status
+
+# Local design/iteration history — not part of the published product
+attached_assets/
