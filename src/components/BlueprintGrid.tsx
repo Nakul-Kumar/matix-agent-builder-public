@@ -85,9 +85,16 @@ export function BlueprintGrid({ placard }: { placard: RuntimePlacard }) {
                 role="note"
                 tabIndex={0}
                 aria-label="How the trust score is calculated"
-                title="Trust (0-100) reflects how confident the backend is in this runtime's source data. It blends the provenance of each source (official registry vs. mirror), how clearly the artifacts are licensed, and how consistently the sources agree with one another. Higher means more verifiable, better-attested sources."
               >
                 ?
+                <span className="infoTip" role="tooltip">
+                  Trust (0-100) reflects how confident the backend is in this
+                  runtime's source data. It blends the provenance of each source
+                  (official registry vs. mirror), how clearly the artifacts are
+                  licensed, and how consistently the sources agree with one
+                  another. Higher means more verifiable, better-attested
+                  sources.
+                </span>
               </span>
             </span>
           </span>
