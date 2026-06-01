@@ -276,6 +276,17 @@
   border-bottom: 1px solid var(--border);
 }
 
+.scoreLedger > span:nth-child(even) .infoTip {
+  left: auto;
+  right: 50%;
+  transform: translateX(22px);
+}
+
+.scoreLedger > span:nth-child(even) .infoTip::after {
+  left: auto;
+  right: 22px;
+}
+
 .infoHint:hover .infoTip,
 .infoHint:focus .infoTip,
 .infoHint:focus-visible .infoTip {

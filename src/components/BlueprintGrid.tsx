@@ -100,11 +100,45 @@ export function BlueprintGrid({ placard }: { placard: RuntimePlacard }) {
           </span>
           <span>
             <strong>{formatScore(placard.scores.match)}</strong>
-            match
+            <span className="scoreCaption">
+              match
+              <span
+                className="infoHint"
+                role="note"
+                tabIndex={0}
+                aria-label="How the match score is calculated"
+              >
+                ?
+                <span className="infoTip" role="tooltip">
+                  Match (0-100) measures how well this runtime's selected skills
+                  and tools fit your agent request. It compares your prompt's
+                  intent against each artifact's capabilities and weights the
+                  overlap, so a higher score means the blueprint covers more of
+                  what you asked for.
+                </span>
+              </span>
+            </span>
           </span>
           <span>
             <strong>{formatScore(placard.scores.performance)}</strong>
-            quality
+            <span className="scoreCaption">
+              quality
+              <span
+                className="infoHint"
+                role="note"
+                tabIndex={0}
+                aria-label="How the quality score is calculated"
+              >
+                ?
+                <span className="infoTip" role="tooltip">
+                  Quality (0-100) gauges the overall health of the selected
+                  artifacts: maintenance signals, documentation completeness,
+                  and whether they pass the runtime's eval checks. Higher means
+                  the blueprint is built from better-maintained, more reliable
+                  components.
+                </span>
+              </span>
+            </span>
           </span>
           <span>
             <strong>{pretty(placard.memory_mode)}</strong>
