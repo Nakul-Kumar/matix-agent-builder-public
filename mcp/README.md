@@ -5,8 +5,8 @@ backend so any MCP-aware client (Claude Code, Cursor, ChatGPT desktop, etc.)
 can ask for agent blueprints and safe example bundles by name.
 
 The server is a thin stdio shim. It forwards each tool call to
-`MATIX_PUBLIC_API_BASE` (defaults to the publicly hosted cockpit) and returns
-the response. No provider keys live in this process.
+`MATIX_PUBLIC_API_BASE` (required — set it to your public backend base) and
+returns the response. No provider keys live in this process.
 
 ## Tools
 
@@ -34,13 +34,14 @@ spawns the server on demand.
 git clone https://github.com/Nakul-Kumar/matix-agent-builder-public.git
 cd matix-agent-builder-public
 npm ci
+export MATIX_PUBLIC_API_BASE=https://your-cockpit-domain.example/api/v1/public
 npm run mcp     # or:  npx tsx mcp/index.ts
 ```
 
-You should see this on stderr:
+You should see this on stderr (showing whatever base you configured):
 
 ```
-[matix-agent-builder] listening on stdio (API base: https://cockpit.76.13.118.9.sslip.io/api/v1/public)
+[matix-agent-builder] listening on stdio (API base: https://your-cockpit-domain.example/api/v1/public)
 ```
 
 Stdout is reserved for the JSON-RPC stream. The server stays attached to the
@@ -50,7 +51,7 @@ parent process; the MCP client handles lifecycle.
 
 | Env var | Default | Purpose |
 |---|---|---|
-| `MATIX_PUBLIC_API_BASE` | the public test cockpit URL | The `/api/v1/public` base the tools forward to. |
+| `MATIX_PUBLIC_API_BASE` | required (no default) | The `/api/v1/public` base the tools forward to. |
 
 ## Wire it into Claude Code
 
@@ -66,7 +67,7 @@ Add to `~/.claude/mcp_servers.json` (or your project-local equivalent):
         "/absolute/path/to/matix-agent-builder-public/mcp/index.ts"
       ],
       "env": {
-        "MATIX_PUBLIC_API_BASE": "https://cockpit.76.13.118.9.sslip.io/api/v1/public"
+        "MATIX_PUBLIC_API_BASE": "https://your-cockpit-domain.example/api/v1/public"
       }
     }
   }

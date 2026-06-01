@@ -14,12 +14,17 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-const DEFAULT_API_BASE = "https://cockpit.76.13.118.9.sslip.io/api/v1/public";
-
-const API_BASE = (process.env.MATIX_PUBLIC_API_BASE || DEFAULT_API_BASE).replace(
-  /\/$/,
-  "",
-);
+// No baked-in backend URL: the public base must be supplied via environment so
+// infrastructure details stay out of this public repo.
+const API_BASE_RAW = process.env.MATIX_PUBLIC_API_BASE;
+if (!API_BASE_RAW) {
+  console.error(
+    "[matix-agent-builder] MATIX_PUBLIC_API_BASE is not set. Set it to your " +
+      "public backend base, e.g. https://your-domain.example/api/v1/public",
+  );
+  process.exit(1);
+}
+const API_BASE = API_BASE_RAW.replace(/\/$/, "");
 
 const SERVER_NAME = "matix-agent-builder";
 const SERVER_VERSION = "0.1.0";
