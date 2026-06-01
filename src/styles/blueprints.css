@@ -190,7 +190,7 @@
   margin-top: var(--space-6);
 }
 
-.scoreLedger span {
+.scoreLedger > span {
   display: flex;
   min-height: 70px;
   flex-direction: column;
@@ -204,6 +204,37 @@
   font-size: var(--text-xs);
   letter-spacing: 0.02em;
   text-transform: uppercase;
+}
+
+.scoreCaption {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.infoHint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1;
+  text-transform: none;
+  cursor: help;
+  opacity: 0.55;
+  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.infoHint:hover,
+.infoHint:focus-visible {
+  color: var(--text);
+  border-color: var(--text-muted);
+  opacity: 1;
 }
 
 .scoreLedger strong {
