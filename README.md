@@ -31,8 +31,8 @@ GPT-5.5 reranking unless the live response shows that selection source.
 ## Clone And Run
 
 ```bash
-git clone https://github.com/Nakul-Kumar/matix-agent-builder-public.git
-cd matix-agent-builder-public
+git clone https://github.com/Nakul-Kumar/matix-agent-builder.git
+cd matix-agent-builder
 npm ci
 ```
 
@@ -41,10 +41,10 @@ dev server with HMR. Vite proxies `/api` to the BFF as configured in
 `vite.config.ts`.
 
 ```bash
-# Terminal 1 — public BFF on port 8787 (restarts on server file changes)
+# Terminal 1 - public BFF on port 8787 (restarts on server file changes)
 npm run dev
 
-# Terminal 2 — Vite dev server on port 5173 (HMR; proxies /api to the BFF)
+# Terminal 2 - Vite dev server on port 5173 (HMR; proxies /api to the BFF)
 npm run dev:web
 
 # Open http://localhost:5173

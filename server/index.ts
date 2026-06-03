@@ -469,7 +469,7 @@ app.use((_req, res, next) => {
 app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
-    app: "matix-agent-builder-public",
+    app: "matix-agent-builder",
     env: process.env.PUBLIC_APP_ENV || "development",
     upstream_configured: Boolean(apiBase),
   });
@@ -508,7 +508,7 @@ app.get("/api/metrics", (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   res.json({
     ok: true,
-    app: "matix-agent-builder-public",
+    app: "matix-agent-builder",
     uptime_seconds: Math.round((Date.now() - metricsStartedAt) / 1000),
     preview_count: routeMetrics.get("/agent-builder/preview")?.requests ?? 0,
     export_count: routeMetrics.get("/agent-builder/export")?.requests ?? 0,

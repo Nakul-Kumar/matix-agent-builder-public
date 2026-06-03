@@ -15,7 +15,9 @@ Nginx sits in front and terminates TLS.
 - DNS for `matixagents.com` managed at **Hostinger** (see step 7).
 - The cockpit backend URL you want the app to call (`MATIX_PUBLIC_API_BASE`).
 
-Replace `YOUR_VPS_IP` and adjust paths/usernames as needed below.
+The current DNS records point `matixagents.com` at `76.13.118.9` and alias
+`www.matixagents.com` to the apex domain. Adjust paths/usernames as needed
+below.
 
 ---
 
@@ -45,7 +47,7 @@ sudo mkdir -p /opt/matix-agent-builder
 sudo chown matix:matix /opt/matix-agent-builder
 
 # Clone the repo (or copy your files) into /opt/matix-agent-builder
-sudo -u matix git clone https://github.com/Nakul-Kumar/matix-agent-builder-public.git /opt/matix-agent-builder
+sudo -u matix git clone https://github.com/Nakul-Kumar/matix-agent-builder.git /opt/matix-agent-builder
 cd /opt/matix-agent-builder
 ```
 
@@ -69,7 +71,7 @@ MATIX_PUBLIC_API_BASE=https://your-cockpit-domain.example/api/v1/public
 
 # Optional
 PUBLIC_APP_ENV=production
-# GEMINI_API_KEY=your-google-ai-studio-key
+# Optional Gemini API key goes here if you enable refinement.
 # GEMINI_MODEL=gemini-3.5-flash
 # METRICS_TOKEN=choose-a-long-random-string   # enables /api/metrics in prod
 EOF
@@ -114,10 +116,10 @@ sudo nginx -t && sudo systemctl reload nginx
 
 In **hPanel -> Domains -> matixagents.com -> DNS / Nameservers -> DNS Zone editor**:
 
-| Type | Name | Value          | TTL     |
-|------|------|----------------|---------|
-| A    | `www`| `YOUR_VPS_IP`  | default |
-| A    | `@`  | `YOUR_VPS_IP`  | default |
+| Type  | Name  | Value             | TTL     |
+|-------|-------|-------------------|---------|
+| A     | `@`   | `76.13.118.9`     | default |
+| CNAME | `www` | `matixagents.com` | default |
 
 Delete any pre-existing `www` CNAME/A record Hostinger created, or it will
 conflict. Wait for propagation (usually 15-60 min). Check with:
@@ -143,7 +145,7 @@ HTTP->HTTPS redirect. Auto-renewal is installed automatically; verify with:
 sudo certbot renew --dry-run
 ```
 
-Visit **https://www.matixagents.com** — you're live.
+Visit **https://www.matixagents.com** - you are live.
 
 ---
 

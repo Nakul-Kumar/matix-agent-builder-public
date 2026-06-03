@@ -1,6 +1,6 @@
 [Unit]
 Description=Matix Agent Builder (public preview)
-Documentation=https://github.com/Nakul-Kumar/matix-agent-builder-public
+Documentation=https://github.com/Nakul-Kumar/matix-agent-builder
 After=network.target
 
 [Service]

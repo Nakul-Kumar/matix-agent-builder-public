@@ -21,7 +21,7 @@ Returns:
 ```json
 {
   "ok": true,
-  "app": "matix-agent-builder-public",
+  "app": "matix-agent-builder",
   "env": "development",
   "upstream_configured": true
 }

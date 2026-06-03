@@ -1,4 +1,4 @@
-# Matix Agent Builder — MCP Server
+# Matix Agent Builder MCP Server
 
 A Model Context Protocol server that wraps the public Matix agent-builder
 backend so any MCP-aware client (Claude Code, Cursor, ChatGPT desktop, etc.)
@@ -15,7 +15,7 @@ returns the response. No provider keys live in this process.
 | `build_agent_preview` | Generate a 3-platform agent blueprint preview from a prompt. Optional `refine: true` parameter uses MCP sampling to ask the calling client's LLM to review/filter the candidates and attach a `refinement` field. |
 | `export_agent_bundle` | Generate a safe example export bundle for one platform (`codex`, `claude_code`, or `openclaw`). |
 | `list_runtimes` | List the runtime templates the public backend supports. |
-| `registry_summary` | Get a summary of skills in the public registry with trust scores. |
+| `registry_summary` | Get a summary of skills in the public registry with scoring metadata. |
 
 All tools return JSON serialized as a single text block.
 
@@ -31,8 +31,8 @@ The server runs over stdio. Clone, install once, and the MCP-aware client
 spawns the server on demand.
 
 ```bash
-git clone https://github.com/Nakul-Kumar/matix-agent-builder-public.git
-cd matix-agent-builder-public
+git clone https://github.com/Nakul-Kumar/matix-agent-builder.git
+cd matix-agent-builder
 npm ci
 export MATIX_PUBLIC_API_BASE=https://your-cockpit-domain.example/api/v1/public
 npm run mcp     # or:  npx tsx mcp/index.ts
@@ -64,7 +64,7 @@ Add to `~/.claude/mcp_servers.json` (or your project-local equivalent):
       "command": "npx",
       "args": [
         "tsx",
-        "/absolute/path/to/matix-agent-builder-public/mcp/index.ts"
+        "/absolute/path/to/matix-agent-builder/mcp/index.ts"
       ],
       "env": {
         "MATIX_PUBLIC_API_BASE": "https://your-cockpit-domain.example/api/v1/public"
@@ -90,7 +90,7 @@ Add to Cursor's MCP settings (`File → Preferences → Cursor Settings → MCP`
     "command": "npx",
     "args": [
       "tsx",
-      "/absolute/path/to/matix-agent-builder-public/mcp/index.ts"
+      "/absolute/path/to/matix-agent-builder/mcp/index.ts"
     ]
   }
 }
@@ -109,7 +109,7 @@ npx @modelcontextprotocol/inspector npx tsx mcp/index.ts
 - The cockpit currently runs a deterministic capability-matching fallback
   because the OpenAI provider key is not yet configured upstream. Tool
   responses are well-formed but the recommendation model is not live.
-- The MCP server is a thin shim — it forwards calls directly to the
+- The MCP server is a thin shim. It forwards calls directly to the
   configured `MATIX_PUBLIC_API_BASE` without re-validating the prompt.
   If you want the same prompt validation as the web UI's BFF (greetings
   and off-topic prompts rejected with HTTP 422), point
