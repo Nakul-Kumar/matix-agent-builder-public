@@ -12,3 +12,6 @@ status
 
 # Local design/iteration history — not part of the published product
 attached_assets/
+
+# Local agent memory — not part of the published product
+.agents/

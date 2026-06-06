@@ -1,7 +1,7 @@
 import type { RuntimePlacard } from "../types";
 
 export const repoUrl =
-  "https://github.com/Nakul-Kumar/matix-agent-builder";
+  "https://github.com/Nakul-Kumar/matix-agent-builder-public";
 
 export const legalLinks = [
   { label: "Privacy", href: `${repoUrl}/blob/main/PRIVACY.md` },

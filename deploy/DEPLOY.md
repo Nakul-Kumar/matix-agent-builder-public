@@ -15,7 +15,7 @@ Nginx sits in front and terminates TLS.
 - DNS for `matixagents.com` managed at **Hostinger** (see step 7).
 - The cockpit backend URL you want the app to call (`MATIX_PUBLIC_API_BASE`).
 
-The current DNS records point `matixagents.com` at `76.13.118.9` and alias
+The current DNS records point `matixagents.com` at `<your-vps-public-ip>` and alias
 `www.matixagents.com` to the apex domain. Adjust paths/usernames as needed
 below.
 
@@ -47,7 +47,7 @@ sudo mkdir -p /opt/matix-agent-builder
 sudo chown matix:matix /opt/matix-agent-builder
 
 # Clone the repo (or copy your files) into /opt/matix-agent-builder
-sudo -u matix git clone https://github.com/Nakul-Kumar/matix-agent-builder.git /opt/matix-agent-builder
+sudo -u matix git clone https://github.com/Nakul-Kumar/matix-agent-builder-public.git /opt/matix-agent-builder
 cd /opt/matix-agent-builder
 ```
 
@@ -118,7 +118,7 @@ In **hPanel -> Domains -> matixagents.com -> DNS / Nameservers -> DNS Zone edito
 
 | Type  | Name  | Value             | TTL     |
 |-------|-------|-------------------|---------|
-| A     | `@`   | `76.13.118.9`     | default |
+| A     | `@`   | `<your-vps-public-ip>`     | default |
 | CNAME | `www` | `matixagents.com` | default |
 
 Delete any pre-existing `www` CNAME/A record Hostinger created, or it will

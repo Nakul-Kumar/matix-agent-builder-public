@@ -165,7 +165,11 @@ Return strict JSON only (no markdown, no preamble, no trailing text):
       ],
       maxTokens: 800,
     });
-    const content = result.content;
+    // Per the MCP spec, SamplingMessage.content may be a single block OR an
+    // array of blocks; handle both so valid array-form responses aren't dropped.
+    const content = Array.isArray(result.content)
+      ? result.content[0]
+      : result.content;
     if (content?.type === "text") {
       try {
         const parsed = JSON.parse(content.text) as Record<string, unknown>;
