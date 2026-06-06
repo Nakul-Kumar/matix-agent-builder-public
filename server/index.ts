@@ -154,7 +154,7 @@ async function refineWithGemini(
   }));
   const reviewPrompt = `You are reviewing agent-builder recommendations.
 
-User goal: "${prompt}"
+User goal: ${JSON.stringify(prompt)}
 
 Deterministic recommender produced these candidates:
 ${JSON.stringify(candidates, null, 2)}
@@ -215,7 +215,7 @@ async function rewriteInstructionsWithGemini(
   const rewritePrompt = `You are rewriting the primary instructions file that the ${platform ?? "agent"} runtime will read to build an AI agent from this bundle. Your output must be valid markdown only and will REPLACE the current file's content directly. Do not include code fences around the whole output, no preamble, no surrounding commentary.
 
 USER'S STATED GOAL:
-"${prompt}"
+${JSON.stringify(prompt)}
 
 WHAT THIS BUNDLE PROVIDES (do not invent items not listed; do not remove items that ARE listed):
 
@@ -415,10 +415,17 @@ const metricsToken = process.env.METRICS_TOKEN || "";
 
 // Constant-time comparison for the metrics shared secret.
 function safeEqual(a: string, b: string): boolean {
+  // Constant-time compare WITHOUT an early length-mismatch return (which would
+  // leak the token length via timing). Pad both inputs to equal width, run the
+  // timing-safe comparison, then AND in the exact-length check.
   const ab = Buffer.from(a);
   const bb = Buffer.from(b);
-  if (ab.length !== bb.length) return false;
-  return timingSafeEqual(ab, bb);
+  const width = Math.max(ab.length, bb.length, 1);
+  const pa = Buffer.alloc(width);
+  const pb = Buffer.alloc(width);
+  ab.copy(pa);
+  bb.copy(pb);
+  return timingSafeEqual(pa, pb) && ab.length === bb.length;
 }
 
 // Gate operational telemetry. When METRICS_TOKEN is set, a matching bearer
@@ -529,6 +536,9 @@ app.get("/api/metrics", (req, res) => {
 app.use("/api/public", async (req, res) => {
   const publicPath = req.originalUrl.replace(/^\/api\/public/, "").split("?")[0] || "/";
   if (!allowedPublicRoutes.has(publicPath)) {
+    // Record under a FIXED key (not the attacker-controlled path) so hitting
+    // random routes can't grow the metrics map unboundedly.
+    recordRouteMetric("(not_allowlisted)", { kind: "rejected", latencyMs: null });
     res.status(404).json({ error: "public_route_not_available" });
     return;
   }
@@ -544,13 +554,16 @@ app.use("/api/public", async (req, res) => {
     recordRouteMetric(publicPath, { kind: "rejected", latencyMs: null });
     res.status(503).json({
       error: "public_api_not_configured",
-      detail: "Set MATIX_PUBLIC_API_BASE to the deployed /api/public backend.",
+      detail: isProduction
+        ? "Service temporarily unavailable."
+        : "Set MATIX_PUBLIC_API_BASE to the deployed /api/public backend.",
     });
     return;
   }
   const rateLimit = checkPublicRateLimit(req, publicPath);
   if (rateLimit.limited) {
     rateLimitedCount += 1;
+    recordRouteMetric(publicPath, { kind: "rejected", latencyMs: null });
     res.setHeader("Retry-After", String(rateLimit.retryAfterSeconds));
     res.status(429).json({
       error: "rate_limited",

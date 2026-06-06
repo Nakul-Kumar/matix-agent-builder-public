@@ -61,22 +61,6 @@ const AGENT_NOUNS = [
   "apis",
 ];
 
-const AGENT_VERBS = [
-  "build",
-  "create",
-  "make",
-  "design",
-  "generate",
-  "spin up",
-  "set up",
-  "scaffold",
-  "ship",
-  "need",
-  "want",
-  "prototype",
-  "draft",
-];
-
 const CONVERSATIONAL_PATTERNS: RegExp[] = [
   /^(hi|hello|hey|yo|sup|hola|howdy)[\s!,.?]*$/i,
   /^(good\s+(morning|afternoon|evening|night))[\s!,.?]*$/i,
@@ -156,14 +140,16 @@ export function classifyPrompt(rawPrompt: string): PromptVerdict {
     if (re.test(stripped)) return "off_topic";
   }
 
-  if (words <= 2) return "off_topic";
-
+  // A clear agent noun (or "agent for/that/to/..." phrasing) is enough signal
+  // even in a short prompt, so check it BEFORE the short-prompt guard. Otherwise
+  // valid requests like "make agent" or "agent-builder" (<=2 words) would be
+  // wrongly rejected as off_topic.
   const hasAgentNoun = containsAny(stripped, AGENT_NOUNS);
-  const hasAgentVerb = containsAny(stripped, AGENT_VERBS);
+  const agentForPhrase = /\bagent\s+(for|that|to|which|who)\b/i.test(stripped);
 
-  if (hasAgentNoun && hasAgentVerb) return "agent";
-  if (hasAgentNoun) return "agent";
-  if (/\bagent\s+(for|that|to|which|who)\b/i.test(stripped)) return "agent";
+  if (hasAgentNoun || agentForPhrase) return "agent";
+
+  if (words <= 2) return "off_topic";
 
   return "ambiguous";
 }

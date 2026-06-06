@@ -31,8 +31,8 @@ GPT-5.5 reranking unless the live response shows that selection source.
 ## Clone And Run
 
 ```bash
-git clone https://github.com/Nakul-Kumar/matix-agent-builder.git
-cd matix-agent-builder
+git clone https://github.com/Nakul-Kumar/matix-agent-builder-public.git
+cd matix-agent-builder-public
 npm ci
 ```
 
@@ -137,4 +137,8 @@ npm run smoke:live
   responsibilities.
 - [CONTRIBUTING.md](./CONTRIBUTING.md) explains contribution checks.
 - [FILE_INDEX.md](./FILE_INDEX.md) indexes every tracked file and folder.
+- [deploy/DEPLOY.md](./deploy/DEPLOY.md) is a self-hosting guide (Ubuntu +
+  systemd + Nginx + Let's Encrypt); the systemd unit and Nginx config live in
+  `deploy/`.
+- [docs/](./docs/) holds design notes and the UX audit.
 - [LICENSE](./LICENSE) is Apache-2.0.

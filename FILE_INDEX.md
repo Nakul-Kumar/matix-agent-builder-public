@@ -196,3 +196,24 @@ provider keys.
 
 Install/use/wire-up instructions for the MCP server, including config
 snippets for Claude Code and Cursor.
+
+## `deploy/`
+
+Self-hosting artifacts for running the BFF outside Replit.
+
+- `DEPLOY.md` — step-by-step Ubuntu deployment (systemd + Nginx + Let's Encrypt).
+- `matix-agent-builder.service` — systemd unit (sets `PORT=5000`, reads secrets
+  from an `EnvironmentFile`).
+- `nginx-matixagents.conf` — Nginx reverse-proxy config (`:80` → `127.0.0.1:5000`).
+
+## `docs/`
+
+Design and review notes (not part of the shipped product).
+
+- `design-notes.md` — design rationale.
+- `ux-audit.md` — UX audit notes.
+
+## `.github/`
+
+- `workflows/public-release.yml` — CI: build, secret/asset scans, dependency
+  audit, and the release-readiness check on every push/PR to `main`.

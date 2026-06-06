@@ -156,8 +156,15 @@ export default function App() {
         type: "application/json",
       });
       const url = URL.createObjectURL(blob);
-      window.open(url, "_blank", "noopener,noreferrer");
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      const win = window.open(url, "_blank", "noopener,noreferrer");
+      // If the popup was blocked (win is null), revoke immediately so the
+      // object URL doesn't linger in memory; otherwise give the new tab a brief
+      // window to load before releasing it.
+      if (!win) {
+        URL.revokeObjectURL(url);
+      } else {
+        setTimeout(() => URL.revokeObjectURL(url), 10_000);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Inspect failed");
     } finally {
@@ -209,6 +216,7 @@ export default function App() {
       });
       setFeedback("");
       setFeedbackEmail("");
+      setRating(5);
       setFeedbackSent(true);
     } catch (err) {
       setFeedbackError(err instanceof Error ? err.message : "Feedback failed");

@@ -31,8 +31,8 @@ The server runs over stdio. Clone, install once, and the MCP-aware client
 spawns the server on demand.
 
 ```bash
-git clone https://github.com/Nakul-Kumar/matix-agent-builder.git
-cd matix-agent-builder
+git clone https://github.com/Nakul-Kumar/matix-agent-builder-public.git
+cd matix-agent-builder-public
 npm ci
 export MATIX_PUBLIC_API_BASE=https://your-cockpit-domain.example/api/v1/public
 npm run mcp     # or:  npx tsx mcp/index.ts

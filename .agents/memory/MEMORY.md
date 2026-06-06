@@ -1,1 +1,0 @@
-- [Domain & DNS](domain-dns.md) — matixagents.com is registered/managed at Hostinger; deployed app links via custom domain in Replit Deployments.

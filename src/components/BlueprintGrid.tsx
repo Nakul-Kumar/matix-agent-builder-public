@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { runtimeDescriptions, runtimeLabels } from "../data/publicBuilderContent";
 import { formatScore, pretty, safeExternalHref } from "../lib/format";
 import type { PublicArtifact, RuntimePlacard } from "../types";
@@ -11,12 +11,14 @@ function InfoHint({
   label: string;
 }) {
   const [open, setOpen] = useState(false);
+  const tipId = useId();
   return (
     <button
       type="button"
       className={`infoHint${open ? " isOpen" : ""}`}
       aria-label={label}
       aria-expanded={open}
+      aria-describedby={open ? tipId : undefined}
       onClick={(event) => {
         event.stopPropagation();
         setOpen((value) => !value);
@@ -27,7 +29,7 @@ function InfoHint({
       onBlur={() => setOpen(false)}
     >
       ?
-      <span className="infoTip" role="tooltip">
+      <span className="infoTip" id={tipId} role="tooltip">
         {children}
       </span>
     </button>
@@ -214,6 +216,11 @@ export function BlueprintGrid({ placard }: { placard: RuntimePlacard }) {
                 </li>
               ))}
             </ul>
+            {whySelected.length > 6 && (
+              <p className="truncationNote">
+                +{whySelected.length - 6} more not shown
+              </p>
+            )}
           </DetailBlock>
         )}
 
@@ -234,9 +241,16 @@ export function BlueprintGrid({ placard }: { placard: RuntimePlacard }) {
           <DetailBlock count={warnings.length} title="Warnings">
             <ul className="warningList">
               {warnings.slice(0, 8).map((warning, index) => (
-                <li key={`${placard.platform}-warning-${index}`}>{warning}</li>
+                <li key={`${placard.platform}-warning-${index}-${warning.slice(0, 24)}`}>
+                  {warning}
+                </li>
               ))}
             </ul>
+            {warnings.length > 8 && (
+              <p className="truncationNote">
+                +{warnings.length - 8} more not shown
+              </p>
+            )}
           </DetailBlock>
         )}
       </aside>

@@ -8,7 +8,9 @@ export function formatScore(value?: number): string {
 }
 
 export function formatModel(provider?: string, name?: string): string {
-  const parts = [provider, name].filter(Boolean);
+  const parts = [provider, name].filter(
+    (p): p is string => typeof p === "string" && p.trim().length > 0,
+  );
   return parts.length ? parts.join(" / ") : "model reported by backend";
 }
 
