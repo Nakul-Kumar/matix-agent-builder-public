@@ -144,8 +144,6 @@ function ModelRunNotice({ preview }: { preview: PublicPreview }) {
     preview.selection_source ||
     preview.model_trace_summary?.selection_source ||
     preview.model.status;
-  const fallbackReason =
-    preview.fallback_reason || preview.model_trace_summary?.reranker_reason;
 
   return (
     <div className="modelRunNotice" aria-label="Model routing status">
@@ -159,7 +157,6 @@ function ModelRunNotice({ preview }: { preview: PublicPreview }) {
       <span>
         Status: <strong>{pretty(preview.model.status)}</strong>
       </span>
-      {fallbackReason ? <p>{fallbackReason}</p> : null}
     </div>
   );
 }

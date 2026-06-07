@@ -130,6 +130,27 @@ function rewriteRuntimeLinksForPlatform(
   return changed;
 }
 
+function removePublicPreviewInternalReasons(
+  preview: Record<string, unknown>,
+): boolean {
+  let changed = false;
+  if ("fallback_reason" in preview) {
+    delete preview.fallback_reason;
+    changed = true;
+  }
+
+  const trace = preview.model_trace_summary;
+  if (trace && typeof trace === "object" && !Array.isArray(trace)) {
+    const traceRecord = trace as Record<string, unknown>;
+    if ("reranker_reason" in traceRecord) {
+      delete traceRecord.reranker_reason;
+      changed = true;
+    }
+  }
+
+  return changed;
+}
+
 async function refineWithGemini(
   prompt: string,
   cockpit: CockpitPreviewShape,
@@ -643,6 +664,7 @@ app.use("/api/public", async (req, res) => {
       try {
         const cockpitJson = JSON.parse(text) as CockpitPreviewShape & Record<string, unknown>;
         let mutated = false;
+        if (removePublicPreviewInternalReasons(cockpitJson)) mutated = true;
         // Always: rewrite runtime built-in license/source URLs per placard
         // platform (the cockpit hardcodes OpenAI's docs for every platform;
         // Claude Code and OpenClaw placards need their own URLs).
