@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { mkdtemp, readFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import os from "node:os";
+import path from "node:path";
 import { test } from "node:test";
 
 function freePort() {
@@ -163,6 +166,125 @@ test("preview responses do not expose internal fallback auth reasons", async () 
       JSON.stringify(body),
       /MATIX_PUBLIC_RERANK_ENABLED|OpenAI\/Codex API auth|AgentRecommendationCoreV2/,
     );
+  } finally {
+    await server.stop();
+    await upstream.stop();
+  }
+});
+
+test("private analytics log records actions and reportable feedback", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "matix-analytics-"));
+  const analyticsLog = path.join(tmp, "analytics.jsonl");
+  const upstream = await startJsonUpstream(({ url }) => {
+    if (url?.includes("/registry-summary")) {
+      return { ok: true, indexed_skills: 10 };
+    }
+    if (url?.includes("/preview")) {
+      return {
+        ok: true,
+        prompt_hash: "hash-preview",
+        normalized_prompt: "Build a support agent",
+        generated_at: "2026-06-07T00:00:00.000Z",
+        model: { provider: "openai", name: "gpt-5.5", status: "deterministic_fallback" },
+        selection_source: "deterministic_fallback",
+        placards: [{ platform: "codex", skills: [], mcps: [], tools: [] }],
+        source_statuses: [],
+        source_policy: {
+          browser_provider_calls: false,
+          secrets_included: false,
+          allowed_source_hosts: [],
+        },
+      };
+    }
+    if (url?.includes("/export")) {
+      return {
+        ok: true,
+        files: {},
+        manifest: { platform: "codex" },
+      };
+    }
+    if (url?.includes("/feedback")) {
+      return { ok: true, feedback_id: "pfb_test", stored: false };
+    }
+    return { ok: true };
+  });
+  const server = await startServer({
+    MATIX_PUBLIC_API_BASE: upstream.baseUrl,
+    MATIX_ANALYTICS_LOG: analyticsLog,
+  });
+  try {
+    const base = `http://127.0.0.1:${server.port}`;
+    const click = await fetch(`${base}/api/analytics/event`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        event_name: "preview_click",
+        metadata: { prompt_length: 21 },
+      }),
+    });
+    assert.equal(click.status, 202);
+
+    await fetch(`${base}/api/public/registry-summary`);
+    await fetch(`${base}/api/public/agent-builder/preview`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ prompt: "Build a support agent for Zendesk tickets." }),
+    });
+    await fetch(`${base}/api/public/agent-builder/export`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        prompt: "Build a support agent for Zendesk tickets.",
+        platform: "codex",
+      }),
+    });
+    await fetch(`${base}/api/public/agent-builder/feedback`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        prompt_hash: "hash-preview",
+        rating: 4,
+        feedback: "Useful bundle, but add Zendesk auth notes.",
+        email: "user@example.com",
+        platform: "codex",
+        did_export: true,
+      }),
+    });
+
+    const lines = (await readFile(analyticsLog, "utf8")).trim().split("\n");
+    const events = lines.map((line) => JSON.parse(line));
+    assert.deepEqual(
+      events.map((event) => event.event_type).sort(),
+      ["client_click", "export", "feedback", "preview", "registry_summary"].sort(),
+    );
+    const feedback = events.find((event) => event.event_type === "feedback");
+    assert.equal(feedback.rating, 4);
+    assert.equal(feedback.feedback, "Useful bundle, but add Zendesk auth notes.");
+    assert.equal(feedback.contact_email, "user@example.com");
+
+    const report = spawn(
+      process.execPath,
+      ["scripts/report-analytics.mjs", "--file", analyticsLog, "--json"],
+      { cwd: process.cwd(), stdio: ["ignore", "pipe", "pipe"] },
+    );
+    let stdout = "";
+    let stderr = "";
+    report.stdout.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+    report.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+    const [code] = await once(report, "exit");
+    assert.equal(code, 0, stderr);
+    const summary = JSON.parse(stdout);
+    assert.equal(summary.counts.preview, 1);
+    assert.equal(summary.counts.export, 1);
+    assert.equal(summary.counts.feedback, 1);
+    assert.equal(summary.counts.registry_summary, 1);
+    assert.equal(summary.clicks.preview_click, 1);
+    assert.equal(summary.feedback[0].rating, 4);
+    assert.match(summary.feedback[0].feedback, /Zendesk auth/);
   } finally {
     await server.stop();
     await upstream.stop();

@@ -102,6 +102,7 @@ Owns:
 - public route allowlist
 - public API rate limiting
 - prompt and feedback metadata validation
+- private analytics JSONL recording
 - same-origin proxy to `MATIX_PUBLIC_API_BASE`
 - static production serving
 
@@ -125,6 +126,12 @@ direct marketplace/source-directory URLs.
 ### `scripts/scan-secrets.mjs`
 
 Scans source files for forbidden secret-shaped strings.
+
+### `scripts/report-analytics.mjs`
+
+Reads the private analytics JSONL log and summarizes preview prompts, exports,
+feedback submits, registry calls, click events, recent prompts, and feedback
+ratings/messages.
 
 ### `scripts/smoke-live.mjs`
 

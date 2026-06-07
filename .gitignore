@@ -5,6 +5,7 @@ dist-server/
 .env.*
 !.env.example
 *.log
+.data/
 
 # Accidental shell-redirect artifacts (e.g. `git log > tatus`)
 tatus

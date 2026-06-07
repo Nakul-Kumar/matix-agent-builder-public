@@ -88,3 +88,17 @@ export function sendFeedback(input: {
     body: JSON.stringify(input),
   });
 }
+
+export function trackPublicEvent(
+  eventName: string,
+  metadata: Record<string, string | number | boolean> = {},
+): void {
+  void fetch("/api/analytics/event", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ event_name: eventName, metadata }),
+    keepalive: true,
+  }).catch(() => {
+    // Analytics must never interrupt the public builder flow.
+  });
+}

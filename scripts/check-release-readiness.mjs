@@ -59,6 +59,7 @@ for (const file of requiredRootFiles) {
 }
 requireFile("docs/data-inventory.md");
 requireFile("tests/public-server-hardening.test.mjs");
+requireFile("scripts/report-analytics.mjs");
 const staleRepoName = "matix-agent-builder" + "-public";
 for (const file of [
   "README.md",
@@ -155,7 +156,7 @@ if (server && (!server.includes("RATE_LIMIT_WINDOW_MS") || !server.includes("429
 requireFile(".github/workflows/public-release.yml");
 
 const pkg = JSON.parse(requireFile("package.json") || "{}");
-for (const scriptName of ["test", "check:release", "scan:assets", "smoke:live"]) {
+for (const scriptName of ["test", "check:release", "scan:assets", "smoke:live", "report:analytics"]) {
   if (!pkg.scripts?.[scriptName]) {
     failures.push(`package.json must define npm run ${scriptName}`);
   }

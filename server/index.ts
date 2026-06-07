@@ -1,7 +1,8 @@
 import express, { type Request } from "express";
+import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { GoogleGenAI } from "@google/genai";
 
 const app = express();
@@ -466,6 +467,14 @@ app.set("trust proxy", 1);
 
 const isProduction = process.env.NODE_ENV === "production";
 const metricsToken = process.env.METRICS_TOKEN || "";
+const analyticsEnabled = process.env.MATIX_ANALYTICS_ENABLED !== "false";
+const analyticsLogPath =
+  process.env.MATIX_ANALYTICS_LOG ||
+  path.join(
+    process.env.STATE_DIRECTORY ||
+      (isProduction ? "/var/lib/matix-agent-builder" : path.join(root, ".data")),
+    "analytics.jsonl",
+  );
 
 // Constant-time comparison for the metrics shared secret.
 function safeEqual(a: string, b: string): boolean {
@@ -494,6 +503,119 @@ function metricsAccessAllowed(req: Request): boolean {
     return safeEqual(provided, metricsToken);
   }
   return !isProduction;
+}
+
+function hashAnalyticsValue(value: unknown): string | null {
+  if (value == null || value === "") return null;
+  return createHash("sha256").update(String(value)).digest("hex").slice(0, 32);
+}
+
+function textValue(value: unknown, maxLength: number): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, maxLength);
+}
+
+function boolValue(value: unknown): boolean | null {
+  return typeof value === "boolean" ? value : null;
+}
+
+function numberValue(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function analyticsRequestFields(req: Request): Record<string, unknown> {
+  return {
+    ts: new Date().toISOString(),
+    surface: "matix-agent-builder-public",
+    method: req.method,
+    client_ip_hash: hashAnalyticsValue(req.ip),
+    user_agent_hash: hashAnalyticsValue(req.get("user-agent")),
+  };
+}
+
+async function appendAnalyticsEvent(event: Record<string, unknown>): Promise<void> {
+  if (!analyticsEnabled) return;
+  try {
+    await mkdir(path.dirname(analyticsLogPath), { recursive: true });
+    await appendFile(analyticsLogPath, `${JSON.stringify(event)}\n`, {
+      encoding: "utf8",
+      mode: 0o600,
+    });
+  } catch (err) {
+    console.warn(
+      "[analytics] failed to append event:",
+      err instanceof Error ? err.message : String(err),
+    );
+  }
+}
+
+function safeJsonObject(text: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function promptHashFromText(prompt: string | null): string | null {
+  return prompt ? hashAnalyticsValue(prompt) : null;
+}
+
+function analyticsTypeForPublicPath(publicPath: string): string | null {
+  if (publicPath === "/registry-summary") return "registry_summary";
+  if (publicPath === "/agent-builder/preview") return "preview";
+  if (publicPath === "/agent-builder/export") return "export";
+  if (publicPath === "/agent-builder/feedback") return "feedback";
+  return null;
+}
+
+async function recordPublicProxyAnalytics(
+  req: Request,
+  publicPath: string,
+  status: number,
+  ok: boolean,
+  responseJson: Record<string, unknown> | null,
+): Promise<void> {
+  const eventType = analyticsTypeForPublicPath(publicPath);
+  if (!eventType) return;
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const promptText = textValue(body.prompt, 1000);
+  const event: Record<string, unknown> = {
+    ...analyticsRequestFields(req),
+    event_type: eventType,
+    route: publicPath,
+    status,
+    ok,
+  };
+
+  if (eventType === "preview") {
+    event.prompt_hash =
+      textValue(responseJson?.prompt_hash, 128) || promptHashFromText(promptText);
+    event.prompt_text = promptText;
+    event.selection_source = textValue(responseJson?.selection_source, 64);
+  } else if (eventType === "export") {
+    event.prompt_hash = promptHashFromText(promptText);
+    event.prompt_text = promptText;
+    event.selected_platform = textValue(body.platform, 48);
+  } else if (eventType === "feedback") {
+    event.prompt_hash = textValue(body.prompt_hash, 128) || promptHashFromText(promptText);
+    event.prompt_text = promptText;
+    event.selected_platform = textValue(body.platform, 48);
+    event.rating = numberValue(body.rating);
+    event.feedback = textValue(body.feedback, 2000);
+    event.contact_email = textValue(body.email, 254);
+    event.did_export = boolValue(body.did_export);
+    event.feedback_id = textValue(responseJson?.feedback_id, 128);
+    event.backend_stored = boolValue(responseJson?.stored);
+  }
+
+  await appendAnalyticsEvent(event);
 }
 
 app.use((_req, res, next) => {
@@ -588,6 +710,49 @@ app.get("/api/metrics", (req, res) => {
     },
     routes,
   });
+});
+
+const allowedClientAnalyticsEvents = new Set([
+  "preview_click",
+  "export_click",
+  "inspect_click",
+  "feedback_submit_click",
+  "example_prompt_click",
+  "runtime_tab_click",
+]);
+
+app.post("/api/analytics/event", async (req, res) => {
+  const rateLimit = checkPublicRateLimit(req, "/analytics/event");
+  if (rateLimit.limited) {
+    res.setHeader("Retry-After", String(rateLimit.retryAfterSeconds));
+    res.status(429).json({
+      error: "rate_limited",
+      detail: "Too many analytics events. Please wait and retry.",
+    });
+    return;
+  }
+
+  const eventName = textValue((req.body as { event_name?: unknown })?.event_name, 64);
+  const metadata = (req.body as { metadata?: unknown })?.metadata;
+  if (!eventName || !allowedClientAnalyticsEvents.has(eventName)) {
+    res.status(422).json({ error: "invalid_event" });
+    return;
+  }
+  if (!validateFeedbackMetadata(metadata)) {
+    res.status(422).json({ error: "invalid_metadata" });
+    return;
+  }
+
+  await appendAnalyticsEvent({
+    ...analyticsRequestFields(req),
+    event_type: "client_click",
+    event_name: eventName,
+    route: "/api/analytics/event",
+    status: 202,
+    ok: true,
+    metadata: metadata ?? {},
+  });
+  res.status(202).json({ ok: true });
 });
 
 app.use("/api/public", async (req, res) => {
@@ -773,6 +938,16 @@ app.use("/api/public", async (req, res) => {
         // Non-JSON or unexpected shape; fall through with the original body.
       }
     }
+    const responseJson = contentType.includes("application/json")
+      ? safeJsonObject(outText)
+      : null;
+    await recordPublicProxyAnalytics(
+      req,
+      publicPath,
+      response.status,
+      response.ok,
+      responseJson,
+    );
     res.status(response.status);
     res.setHeader("Cache-Control", response.headers.get("cache-control") || "no-store");
     res.type(contentType);

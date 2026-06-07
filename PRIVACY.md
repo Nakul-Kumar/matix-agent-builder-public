@@ -9,6 +9,8 @@ submitting prompts or feedback.
 - The prompt you submit to build an agent preview.
 - The generated preview/export metadata returned by the backend.
 - Feedback text, rating, export status, and optional email if you provide it.
+- Lightweight click/action events such as preview, export, inspect, feedback
+  submit, and example-prompt selections.
 - Basic request metadata such as timestamp, route, user agent, and network
   address information used for abuse prevention, rate limiting, debugging, and
   service reliability.
@@ -16,9 +18,10 @@ submitting prompts or feedback.
 The browser does not receive or store provider keys. Browser code calls only
 same-origin public routes.
 
-This public repository does not include the upstream Postgres database. The
-current compatible backend may store prompt/event/feedback rows in the tables
-listed in [docs/data-inventory.md](./docs/data-inventory.md).
+This public repository stores server-side analytics in a private JSONL file
+when deployed with systemd. The current compatible backend may also store
+prompt/event/feedback rows in the tables listed in
+[docs/data-inventory.md](./docs/data-inventory.md).
 
 ## How Data Is Used
 
@@ -43,13 +46,13 @@ prompt.
 
 ## Retention
 
-Target retention for raw public prompts, feedback messages, and optional email
-is 30 days. This public UI/BFF repo does not enforce deletion in the upstream
-database; the compatible backend or database operator must enforce that
-retention window before making production retention claims. Aggregated quality
-metrics may be retained longer when they do not directly identify a specific
-visitor. Security or abuse records may be retained longer when needed to
-protect the service.
+Target retention for raw public prompts, feedback messages, optional email,
+and private analytics logs is 30 days. This public UI/BFF repo does not enforce
+deletion in the upstream database; the compatible backend or database operator
+must enforce that retention window before making production retention claims.
+Aggregated quality metrics may be retained longer when they do not directly
+identify a specific visitor. Security or abuse records may be retained longer
+when needed to protect the service.
 
 ## Sharing
 

@@ -36,6 +36,34 @@ Lightweight per-instance operational metrics. In production this route returns
 
 Metrics are in-memory only and reset on restart.
 
+### `POST /api/analytics/event`
+
+BFF-only lightweight click tracking. This route is not proxied to the cockpit
+backend. It appends a private JSONL event to `MATIX_ANALYTICS_LOG`.
+
+Allowed `event_name` values:
+
+- `preview_click`
+- `export_click`
+- `inspect_click`
+- `feedback_submit_click`
+- `example_prompt_click`
+- `runtime_tab_click`
+
+Request:
+
+```json
+{
+  "event_name": "preview_click",
+  "metadata": {
+    "prompt_length": 123
+  }
+}
+```
+
+Metadata is optional and must follow the same primitive metadata limits as
+feedback metadata. The response is `202` with `{ "ok": true }`.
+
 ### `GET /api/public/registry-summary`
 
 Public-safe registry summary. Used for top-level proof and cache warmup.

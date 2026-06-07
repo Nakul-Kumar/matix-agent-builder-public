@@ -15,6 +15,7 @@
     "scan:copy": "node scripts/scan-ui-copy.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "scan:assets": "node scripts/scan-built-assets.mjs",
+    "report:analytics": "node scripts/report-analytics.mjs",
     "check:release": "node scripts/check-release-readiness.mjs",
     "smoke:live": "node scripts/smoke-live.mjs"
   },

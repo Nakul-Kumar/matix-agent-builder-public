@@ -111,6 +111,10 @@ in this repo or in browser-exposed variables.
 - Browser storage: no intentional local storage, session storage, IndexedDB, or
   cookies.
 - BFF storage: only in-memory rate-limit buckets and request metrics.
+- Private analytics log: server-side JSONL at
+  `/var/lib/matix-agent-builder/analytics.jsonl` on the VPS when systemd is
+  used. It records preview/export/feedback/registry events and lightweight
+  click pings.
 - Upstream storage: the compatible backend may store public prompt hashes, raw
   prompts, recommendation events/items, feedback, and optional contact email.
 - Prompt/body limits: the BFF accepts JSON bodies up to `32kb`; preview/export
@@ -163,6 +167,7 @@ npm test
 npm run build
 npm run scan:secrets
 npm run scan:assets
+npm run report:analytics
 npm run check:release
 npm audit --omit=dev
 ```
@@ -172,6 +177,17 @@ Optional live backend smoke:
 ```bash
 npm run smoke:live
 ```
+
+Operator stats on the VPS:
+
+```bash
+cd /opt/matix-agent-builder
+npm run report:analytics -- --since 24h
+```
+
+The report reads `/var/lib/matix-agent-builder/analytics.jsonl` and summarizes
+preview prompts, exports, feedback submits, registry calls, click events,
+recent prompt text, and feedback rating/message/email fields.
 
 ## Public Release Checklist
 

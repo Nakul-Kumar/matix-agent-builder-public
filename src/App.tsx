@@ -13,6 +13,7 @@ import {
   previewAgent,
   PromptRejectedError,
   sendFeedback,
+  trackPublicEvent,
 } from "./lib/publicApi";
 import {
   classifyPrompt,
@@ -93,6 +94,7 @@ export default function App() {
   }
 
   function useExamplePrompt(next: string) {
+    trackPublicEvent("example_prompt_click", { prompt_length: next.length });
     updatePrompt(next);
     requestAnimationFrame(() => {
       promptRef.current?.focus();
@@ -101,6 +103,10 @@ export default function App() {
 
   async function build() {
     if (backend.state !== "ready" || busy) return;
+    trackPublicEvent("preview_click", {
+      prompt_length: prompt.trim().length,
+      local_verdict: verdict,
+    });
     if (verdict !== "agent") {
       setError(null);
       setPreview(null);
@@ -148,6 +154,10 @@ export default function App() {
 
   async function handleInspect(platform: string) {
     if (inspectingPlatform) return;
+    trackPublicEvent("inspect_click", {
+      platform,
+      prompt_hash: preview?.prompt_hash ?? "",
+    });
     setError(null);
     setInspectingPlatform(platform);
     try {
@@ -174,6 +184,10 @@ export default function App() {
 
   async function handleExport(platform: string) {
     if (exportingPlatform) return;
+    trackPublicEvent("export_click", {
+      platform,
+      prompt_hash: preview?.prompt_hash ?? "",
+    });
     setError(null);
     setExportingPlatform(platform);
     try {
@@ -203,6 +217,12 @@ export default function App() {
 
   async function submitFeedback() {
     if (!feedback.trim() || feedbackBusy) return;
+    trackPublicEvent("feedback_submit_click", {
+      rating,
+      did_export: exportedPlatforms.size > 0,
+      has_email: feedbackEmail.trim().length > 0,
+      prompt_hash: preview?.prompt_hash ?? "",
+    });
     setFeedbackError(null);
     setFeedbackBusy(true);
     try {

@@ -18,6 +18,12 @@ repo handles from what the upstream backend stores.
 ## Public BFF (`server/index.ts`)
 
 - Durable storage: none.
+- Durable analytics log when enabled:
+  - Default production path:
+    `/var/lib/matix-agent-builder/analytics.jsonl`.
+  - Override path: `MATIX_ANALYTICS_LOG`.
+  - Disable: `MATIX_ANALYTICS_ENABLED=false`.
+  - Format: one JSON object per line.
 - In-memory data:
   - `rateBuckets`: per-instance public API rate counters.
   - `routeMetrics`: per-instance request/latency counters for `/api/metrics`.
@@ -34,6 +40,15 @@ repo handles from what the upstream backend stores.
     like agent-building requests.
   - Feedback metadata is limited to 10 primitive keys, key length 64, value
     stringified length 256.
+- Analytics events:
+  - Server action events: `registry_summary`, `preview`, `export`, `feedback`.
+  - Client click events: `preview_click`, `export_click`, `inspect_click`,
+    `feedback_submit_click`, `example_prompt_click`, `runtime_tab_click`.
+  - Prompt text is capped at 1000 characters.
+  - Feedback text is capped at 2000 characters.
+  - Contact email is stored when submitted.
+  - Client IP and user agent are stored only as SHA-256 hashes truncated to 32
+    hex characters.
 
 ## Upstream catalog tables used by the current AgentForge backend
 
@@ -106,6 +121,8 @@ Fixed in this repo:
 - Feedback metadata is bounded before any upstream proxy attempt.
 - Tests cover production headers, private metrics default, and feedback metadata
   rejection.
+- Private BFF analytics JSONL supports one-command operator reports via
+  `npm run report:analytics -- --since 24h`.
 
 Required operational gates:
 

@@ -85,6 +85,15 @@ referrer policy, permissions policy, and a CSP with `script-src 'self'`,
 `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, and
 `frame-ancestors 'none'`.
 
+## Private Analytics
+
+The public BFF can append operator analytics to
+`/var/lib/matix-agent-builder/analytics.jsonl` on systemd deployments. This log
+is not exposed through a public route. It can include prompt text, feedback
+message, optional contact email, action/click events, and hashed client/user
+agent identifiers. Keep the file private, enforce retention operationally, and
+do not commit it to Git.
+
 ## Exports
 
 Exports are starter examples only. They may include example files and

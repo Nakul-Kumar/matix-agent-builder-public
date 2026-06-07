@@ -68,7 +68,8 @@ sudo chown matix:matix /etc/matix-agent-builder.env
 ```
 
 `NODE_ENV=production`, `HOST=127.0.0.1`, and `PORT=5000` are set by the
-systemd unit in this repo.
+systemd unit in this repo. The unit also sets the private analytics log path to
+`/var/lib/matix-agent-builder/analytics.jsonl`.
 
 ## 5. Install and start the systemd service
 
@@ -157,4 +158,5 @@ sudo systemctl status matix-agent-builder
 sudo journalctl -u matix-agent-builder -f
 sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 sudo journalctl -u caddy -f
+npm run report:analytics -- --since 24h
 ```
