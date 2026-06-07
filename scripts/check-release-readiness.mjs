@@ -50,6 +50,8 @@ const requiredRootFiles = [
 for (const file of requiredRootFiles) {
   requireFile(file);
 }
+requireFile("docs/data-inventory.md");
+requireFile("tests/public-server-hardening.test.mjs");
 
 requireIncludes("LICENSE", "Apache License");
 requireIncludes("LICENSE", "Version 2.0");
@@ -58,6 +60,9 @@ requireIncludes("README.md", "public preview");
 requireIncludes("README.md", "MATIX_PUBLIC_API_BASE");
 requireIncludes("README.md", "npm run check:release");
 requireIncludes("README.md", "render-only UI/BFF");
+requireIncludes("README.md", "Credits And Source Attribution");
+requireIncludes("README.md", "docs/data-inventory.md");
+requireIncludes("README.md", "selection_source: deterministic_fallback");
 
 for (const field of [
   "license",
@@ -96,6 +101,18 @@ for (const topic of [
 
 requireAny("SECURITY.md", ["security@matix.dev", "GitHub Security Advisories"], "a vulnerability reporting channel");
 requireIncludes("SECURITY.md", "rate limiting");
+requireIncludes("SECURITY.md", "HOST=127.0.0.1");
+requireIncludes("SECURITY.md", "object-src 'none'");
+
+for (const topic of [
+  "public_agent_builder_events",
+  "public_feedback",
+  "af.skills",
+  "selection_source: deterministic_fallback",
+  "GitHub MCP Server",
+]) {
+  requireIncludes("docs/data-inventory.md", topic);
+}
 
 // Footer links live in the shared content module and are rendered by AppShell;
 // the feedback privacy notice lives in the FeedbackForm component.
@@ -122,7 +139,7 @@ if (server && (!server.includes("RATE_LIMIT_WINDOW_MS") || !server.includes("429
 requireFile(".github/workflows/public-release.yml");
 
 const pkg = JSON.parse(requireFile("package.json") || "{}");
-for (const scriptName of ["check:release", "scan:assets", "smoke:live"]) {
+for (const scriptName of ["test", "check:release", "scan:assets", "smoke:live"]) {
   if (!pkg.scripts?.[scriptName]) {
     failures.push(`package.json must define npm run ${scriptName}`);
   }

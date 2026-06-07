@@ -45,6 +45,10 @@ secrets must never use that path.
 - adds security headers
 - never forwards cookies or private cockpit auth
 - holds no provider keys by default
+- disables Express framework disclosure
+- defaults to `HOST=127.0.0.1`; public VPS traffic should enter through
+  Caddy/Nginx on ports 80/443
+- rejects oversized or unsupported feedback metadata before proxying upstream
 
 The only optional exception is `GEMINI_API_KEY`: when the operator sets it, the
 server uses Google's Gemini API to refine previews and rewrite exported
@@ -60,12 +64,26 @@ request count. This is a first-line public-preview control, not a substitute
 for upstream CDN, WAF, bot filtering, backend quotas, or provider-side spend
 limits.
 
+Default limits are:
+
+- `32kb` JSON request body limit.
+- 60 requests per 60 seconds per route/method/client key.
+- Preview/export prompt validation before upstream forwarding.
+- Feedback metadata limited to 10 primitive keys.
+
 Deployment note: the in-process limiter stores counters in memory per instance.
 On a multi-instance / autoscale deployment it does NOT coordinate across
 instances (the effective limit is roughly the configured limit times the
 instance count, and counters reset on cold start). Production must enforce limits
 at the edge (CDN/WAF) and/or via backend quotas; treat the in-app limiter as
 defense-in-depth only.
+
+## Response Headers
+
+Production responses include HSTS, `X-Content-Type-Options`, `X-Frame-Options`,
+referrer policy, permissions policy, and a CSP with `script-src 'self'`,
+`object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, and
+`frame-ancestors 'none'`.
 
 ## Exports
 

@@ -16,6 +16,10 @@ submitting prompts or feedback.
 The browser does not receive or store provider keys. Browser code calls only
 same-origin public routes.
 
+This public repository does not include the upstream Postgres database. The
+current compatible backend may store prompt/event/feedback rows in the tables
+listed in [docs/data-inventory.md](./docs/data-inventory.md).
+
 ## How Data Is Used
 
 Prompts are sent to the backend to produce recommendation bundles. Feedback is
@@ -32,15 +36,20 @@ is a pure proxy and your prompt is not sent to Google. Separately, the backend
 may also apply model/provider processing services to the prompt and candidate
 metadata.
 
-TODO(human): confirm a Google AI Studio data processing agreement (DPA) is in
-place and have counsel review this notice before any commercial launch.
+The UI displays the backend-reported model target, backend model status, actual
+selection source, and fallback reason when the backend returns them. If a
+response says `deterministic_fallback`, that is the serving mode for that
+prompt.
 
 ## Retention
 
-Default retention for raw public prompts and feedback is 30 days. Aggregated
-quality metrics may be retained longer when they do not directly identify a
-specific visitor. Security or abuse records may be retained longer when needed
-to protect the service.
+Target retention for raw public prompts, feedback messages, and optional email
+is 30 days. This public UI/BFF repo does not enforce deletion in the upstream
+database; the compatible backend or database operator must enforce that
+retention window before making production retention claims. Aggregated quality
+metrics may be retained longer when they do not directly identify a specific
+visitor. Security or abuse records may be retained longer when needed to
+protect the service.
 
 ## Sharing
 

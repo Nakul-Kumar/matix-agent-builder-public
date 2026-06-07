@@ -1,0 +1,16 @@
+{
+    email you@matixagents.com
+}
+
+matixagents.com, www.matixagents.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:5000
+
+    log {
+        output file /var/log/caddy/matix-agent-builder.log {
+            roll_size 100mb
+            roll_keep 10
+            roll_keep_for 720h
+        }
+    }
+}

@@ -9,5 +9,11 @@ by npm. Generated agent exports may reference external skills, tools, MCP
 servers, or templates; those artifacts keep their own licenses and are listed
 in each export's LICENSES.md when provided by the backend.
 
+Public recommendation metadata may link to skills.sh, LLMBase, PulseMCP, MCP
+Market, mcpservers.org, Agent Skills, GitHub MCP Server, Playwright MCP,
+Context7, and other source repositories returned by the compatible backend.
+Those upstream projects are credited through source links and keep their own
+licenses.
+
 No third-party provider key, model credential, marketplace credential, or
 private cockpit credential is included in this public repository.

@@ -8,10 +8,10 @@ render-only UI/BFF for public previews and safe exports.
 ```bash
 npm ci
 
-# Terminal 1 — public BFF on port 8787
+# Terminal 1 - public BFF on port 8787
 npm run dev
 
-# Terminal 2 — Vite dev server on port 5173 (HMR; proxies /api to the BFF)
+# Terminal 2 - Vite dev server on port 5173 (HMR; proxies /api to the BFF)
 npm run dev:web
 ```
 
@@ -37,6 +37,7 @@ Run these before opening a pull request:
 
 ```bash
 npm run typecheck
+npm test
 npm run build
 npm run scan:secrets
 npm run scan:assets

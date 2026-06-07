@@ -222,6 +222,31 @@
   font-size: var(--text-sm);
 }
 
+.modelRunNotice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-page);
+  padding: var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: var(--lh-snug);
+}
+
+.modelRunNotice strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.modelRunNotice p {
+  flex-basis: 100%;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .resultSectionHeader {
   margin-bottom: var(--space-4);
 }

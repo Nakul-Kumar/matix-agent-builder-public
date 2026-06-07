@@ -2,6 +2,7 @@
 
 The browser calls same-origin routes only. The public server forwards those
 requests to `MATIX_PUBLIC_API_BASE` after checking an allowlist and rate limit.
+JSON request bodies are capped at `32kb`.
 
 `MATIX_PUBLIC_API_BASE` should point at a compatible versioned public backend,
 for example:
@@ -27,6 +28,14 @@ Returns:
 }
 ```
 
+### `GET /api/metrics`
+
+Lightweight per-instance operational metrics. In production this route returns
+`404` unless `METRICS_TOKEN` is configured and the caller sends a matching
+`Authorization: Bearer <token>` or `X-Metrics-Token` value.
+
+Metrics are in-memory only and reset on restart.
+
 ### `GET /api/public/registry-summary`
 
 Public-safe registry summary. Used for top-level proof and cache warmup.
@@ -48,13 +57,17 @@ Request:
 }
 ```
 
+Local BFF validation rejects preview prompts that are not strings, are shorter
+than 12 characters, or do not look like agent/assistant/automation/build
+requests.
+
 Response includes:
 
 - `prompt_hash`
 - `normalized_prompt`
 - `generated_at`
 - `model.provider`, `model.name`, and `model.status`
-- `selection_source`
+- `selection_source`, which is the actual serving/source mode for the prompt
 - `calibration` with teacher/student model policy when provided
 - `source_statuses`
 - `source_policy`
@@ -89,6 +102,8 @@ Request:
   "platform": "codex"
 }
 ```
+
+Export prompts use the same local BFF prompt validation as preview prompts.
 
 Exports should include, when supported by the backend:
 
@@ -142,11 +157,18 @@ Request:
   "rating": 5,
   "feedback": "The Codex placard was useful.",
   "platform": "codex",
-  "did_export": true
+  "did_export": true,
+  "metadata": {
+    "page": "results"
+  }
 }
 ```
 
 Feedback does not call a model from the browser.
+
+Feedback metadata is optional and must be a JSON object with at most 10
+primitive string/number/boolean fields. Keys are limited to 64 characters and
+stringified values to 256 characters. Invalid metadata returns `422`.
 
 ## Allowlist
 
@@ -165,7 +187,9 @@ Any other `/api/public/*` path returns `404`.
 The public BFF applies lightweight in-memory rate limiting per route, HTTP
 method, and client network key. Configure with:
 
-- `RATE_LIMIT_WINDOW_MS`
-- `RATE_LIMIT_MAX`
+- `RATE_LIMIT_WINDOW_MS` (default `60000`)
+- `RATE_LIMIT_MAX` (default `60`)
 
 When a client exceeds the limit, the BFF returns `429` with `Retry-After`.
+Production should still enforce edge/backend quotas because the in-app limiter
+is per instance and resets on restart.

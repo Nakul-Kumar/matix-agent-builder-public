@@ -1,43 +1,32 @@
-# Self-hosting on an Ubuntu VPS (systemd + Nginx + Let's Encrypt)
+# Self-hosting on an Ubuntu VPS (systemd + Caddy)
 
-This guide deploys the Matix Agent Builder public preview to your own Ubuntu
-server, served at **www.matixagents.com** with HTTPS.
+This guide deploys the Matix Agent Builder public preview to an Ubuntu VPS,
+served at `matixagents.com` and `www.matixagents.com` with automatic HTTPS.
 
-The app is a Node/Express server that serves a static Vite build and proxies
-`/api/public/*` to your cockpit backend. It listens on `PORT` (default 5000);
-Nginx sits in front and terminates TLS.
-
----
+The app is a Node/Express server that serves the Vite build and proxies only
+the allowlisted `/api/public/*` routes to the cockpit backend. By default the
+Node server binds to `127.0.0.1`; Caddy is the public edge and reverse proxies
+to `127.0.0.1:5000`.
 
 ## 0. Prerequisites
 
-- An Ubuntu VPS (20.04 / 22.04 / 24.04) with `sudo` access and a public IP.
-- DNS for `matixagents.com` managed at **Hostinger** (see step 7).
-- The cockpit backend URL you want the app to call (`MATIX_PUBLIC_API_BASE`).
+- Ubuntu 20.04, 22.04, or 24.04 with `sudo` access and a public IP.
+- DNS for `matixagents.com` pointing at the VPS.
+- A cockpit public backend URL for `MATIX_PUBLIC_API_BASE`.
+- Node.js 20+.
 
-The current DNS records point `matixagents.com` at `<your-vps-public-ip>` and alias
-`www.matixagents.com` to the apex domain. Adjust paths/usernames as needed
-below.
-
----
-
-## 1. Install Node.js 20, Nginx, Certbot
+## 1. Install Node.js, Caddy, and Git
 
 ```bash
 sudo apt update && sudo apt upgrade -y
 
-# Node.js 20 (NodeSource)
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs
+sudo apt install -y nodejs caddy git
 
-# Nginx + Certbot
-sudo apt install -y nginx certbot python3-certbot-nginx git
-
-node -v   # expect v20.x
-which npm  # note this path; the systemd unit assumes /usr/bin/npm
+node -v
+which npm
+caddy version
 ```
-
----
 
 ## 2. Create a service user and fetch the code
 
@@ -46,44 +35,40 @@ sudo useradd --system --create-home --shell /usr/sbin/nologin matix
 sudo mkdir -p /opt/matix-agent-builder
 sudo chown matix:matix /opt/matix-agent-builder
 
-# Clone the repo (or copy your files) into /opt/matix-agent-builder
-sudo -u matix git clone https://github.com/Nakul-Kumar/matix-agent-builder-public.git /opt/matix-agent-builder
+sudo -u matix git clone https://github.com/Nakul-Kumar/matix-agent-builder.git /opt/matix-agent-builder
 cd /opt/matix-agent-builder
 ```
-
----
 
 ## 3. Install dependencies and build
 
 ```bash
 sudo -u matix npm ci
-sudo -u matix npm run build   # produces dist/ (the static frontend)
+sudo -u matix npm run build
 ```
 
----
+## 4. Create the environment file
 
-## 4. Create the environment file (NOT committed to git)
+Do not commit this file. It contains deployment-specific configuration.
 
 ```bash
 sudo tee /etc/matix-agent-builder.env >/dev/null <<'EOF'
-# Required: your cockpit's public BFF target
 MATIX_PUBLIC_API_BASE=https://your-cockpit-domain.example/api/v1/public
-
-# Optional
 PUBLIC_APP_ENV=production
-# Optional Gemini API key goes here if you enable refinement.
+
+# Optional: enables /api/metrics in production when callers send the token.
+# METRICS_TOKEN=choose-a-long-random-string
+
+# Optional: enables Gemini refinement in the BFF. Add the Gemini API key here
+# only when you intentionally enable that path.
 # GEMINI_MODEL=gemini-3.5-flash
-# METRICS_TOKEN=choose-a-long-random-string   # enables /api/metrics in prod
 EOF
 
 sudo chmod 600 /etc/matix-agent-builder.env
 sudo chown matix:matix /etc/matix-agent-builder.env
 ```
 
-> `NODE_ENV=production` and `PORT=5000` are set by the systemd unit, so they are
-> not needed here. `NODE_ENV=production` is what turns on the HSTS header.
-
----
+`NODE_ENV=production`, `HOST=127.0.0.1`, and `PORT=5000` are set by the
+systemd unit in this repo.
 
 ## 5. Install and start the systemd service
 
@@ -93,76 +78,83 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now matix-agent-builder
 
 systemctl status matix-agent-builder --no-pager
-curl -s http://127.0.0.1:5000/api/health   # expect {"ok":true,...}
+curl -s http://127.0.0.1:5000/api/health
 ```
 
-If `ExecStart` fails, run `which npm` and update the path in the unit file, then
-`sudo systemctl daemon-reload && sudo systemctl restart matix-agent-builder`.
+Expected health shape:
 
----
+```json
+{"ok":true,"app":"matix-agent-builder","env":"production","upstream_configured":true}
+```
 
-## 6. Configure Nginx
+If `ExecStart` fails, run `which npm`, update the path in
+`deploy/matix-agent-builder.service`, then run:
 
 ```bash
-sudo cp /opt/matix-agent-builder/deploy/nginx-matixagents.conf /etc/nginx/sites-available/matixagents
-sudo ln -s /etc/nginx/sites-available/matixagents /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default   # optional: drop the default site
-sudo nginx -t && sudo systemctl reload nginx
+sudo systemctl daemon-reload
+sudo systemctl restart matix-agent-builder
 ```
 
----
+## 6. Configure Caddy
 
-## 7. Point DNS at the VPS (Hostinger)
+Edit `deploy/Caddyfile` and replace the global email address with an address
+you control. Then install, validate, and reload:
 
-In **hPanel -> Domains -> matixagents.com -> DNS / Nameservers -> DNS Zone editor**:
+```bash
+sudo cp /opt/matix-agent-builder/deploy/Caddyfile /etc/caddy/Caddyfile
+sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+sudo systemctl reload caddy
+sudo journalctl -u caddy --no-pager | tail -60
+```
 
-| Type  | Name  | Value             | TTL     |
-|-------|-------|-------------------|---------|
-| A     | `@`   | `<your-vps-public-ip>`     | default |
+Caddy handles HTTPS issuance, HTTP-to-HTTPS redirects, and certificate renewal.
+If you need a legacy Nginx deploy instead, the older config remains in
+`deploy/nginx-matixagents.conf`, but the recommended path is Caddy.
+
+## 7. Point DNS at the VPS
+
+In Hostinger hPanel, set:
+
+| Type | Name | Value | TTL |
+| --- | --- | --- | --- |
+| A | `@` | `<your-vps-public-ip>` | default |
 | CNAME | `www` | `matixagents.com` | default |
 
-Delete any pre-existing `www` CNAME/A record Hostinger created, or it will
-conflict. Wait for propagation (usually 15-60 min). Check with:
+Delete conflicting `www` A/CNAME records before waiting for propagation.
 
 ```bash
+dig +short matixagents.com
 dig +short www.matixagents.com
 ```
 
----
-
-## 8. Enable HTTPS with Let's Encrypt
-
-Only run this AFTER DNS resolves to your VPS:
+## 8. Verify the live site
 
 ```bash
-sudo certbot --nginx -d www.matixagents.com -d matixagents.com
+curl -sS -I https://matixagents.com/
+curl -sS https://matixagents.com/api/health
+curl -sS http://127.0.0.1:5000/api/health
+sudo ss -ltnp | grep ':5000'
 ```
 
-Certbot adds the 443 server block, installs the certificate, and sets up the
-HTTP->HTTPS redirect. Auto-renewal is installed automatically; verify with:
-
-```bash
-sudo certbot renew --dry-run
-```
-
-Visit **https://www.matixagents.com** - you are live.
-
----
+The app listener should be `127.0.0.1:5000`, not a public `0.0.0.0:5000`
+socket. Public traffic should enter through ports 80/443 only.
 
 ## Updating after code changes
 
 ```bash
 cd /opt/matix-agent-builder
-sudo -u matix git pull
+sudo -u matix git pull --ff-only origin main
 sudo -u matix npm ci
 sudo -u matix npm run build
 sudo systemctl restart matix-agent-builder
+curl -sS https://matixagents.com/api/health
 ```
 
 ## Useful commands
 
 ```bash
 sudo systemctl status matix-agent-builder
-sudo journalctl -u matix-agent-builder -f   # live app logs
-sudo nginx -t && sudo systemctl reload nginx
+sudo journalctl -u matix-agent-builder -f
+sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+sudo journalctl -u caddy -f
 ```

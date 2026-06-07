@@ -6,6 +6,7 @@ import { GoogleGenAI } from "@google/genai";
 
 const app = express();
 const port = Number(process.env.PORT || 8787);
+const host = process.env.HOST || "127.0.0.1";
 const apiBase = (process.env.MATIX_PUBLIC_API_BASE || "").replace(/\/$/, "");
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dist = path.resolve(root, "dist");
@@ -368,6 +369,24 @@ const PROMPT_VALIDATED_PATHS = new Set([
   "/agent-builder/export",
 ]);
 
+function validateFeedbackMetadata(value: unknown): boolean {
+  if (value == null) return true;
+  if (typeof value !== "object" || Array.isArray(value)) return false;
+  const entries = Object.entries(value as Record<string, unknown>);
+  if (entries.length > 10) return false;
+  return entries.every(([key, entryValue]) => {
+    if (key.length === 0 || key.length > 64) return false;
+    if (
+      typeof entryValue !== "string" &&
+      typeof entryValue !== "number" &&
+      typeof entryValue !== "boolean"
+    ) {
+      return false;
+    }
+    return String(entryValue).length <= 256;
+  });
+}
+
 function validatePromptInput(value: unknown): string | null {
   if (typeof value !== "string") return "Prompt must be a string.";
   const trimmed = value.trim();
@@ -408,6 +427,7 @@ function checkPublicRateLimit(req: Request, publicPath: string) {
 }
 
 app.use(express.json({ limit: "32kb" }));
+app.disable("x-powered-by");
 app.set("trust proxy", 1);
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -467,6 +487,9 @@ app.use((_req, res, next) => {
       "font-src 'self' https://fonts.gstatic.com data:",
       "script-src 'self'",
       "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
       "frame-ancestors 'none'",
     ].join("; "),
   );
@@ -547,6 +570,17 @@ app.use("/api/public", async (req, res) => {
     if (promptError) {
       recordRouteMetric(publicPath, { kind: "rejected", latencyMs: null });
       res.status(422).json({ error: "invalid_prompt", detail: promptError });
+      return;
+    }
+  }
+  if (req.method === "POST" && publicPath === "/agent-builder/feedback") {
+    const metadata = (req.body as { metadata?: unknown })?.metadata;
+    if (!validateFeedbackMetadata(metadata)) {
+      recordRouteMetric(publicPath, { kind: "rejected", latencyMs: null });
+      res.status(422).json({
+        error: "invalid_metadata",
+        detail: "Feedback metadata is too large or uses unsupported values.",
+      });
       return;
     }
   }
@@ -723,6 +757,6 @@ app.get("*splat", (_req, res) => {
   res.sendFile("index.html", { root: dist });
 });
 
-app.listen(port, () => {
-  console.log(`Matix Agent Builder public server listening on ${port}`);
+app.listen(port, host, () => {
+  console.log(`Matix Agent Builder public server listening on ${host}:${port}`);
 });

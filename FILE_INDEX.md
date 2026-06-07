@@ -23,8 +23,8 @@ Keeps local installs, builds, logs, and real env files out of Git.
 
 ### `API.md`
 
-Public API contract for preview, export, templates, registry summary, feedback,
-artifact metadata, calibration, and rate limiting.
+Public API contract for preview, export, templates, registry summary, metrics,
+feedback, artifact metadata, calibration, validation, and rate limiting.
 
 ### `CODE_OF_CONDUCT.md`
 
@@ -50,7 +50,7 @@ Project notice and third-party attribution guidance.
 ### `PRIVACY.md`
 
 Public-preview privacy notice covering prompts, feedback, optional email,
-retention, deletion, and backend/model processing.
+retention ownership, deletion, and backend/model processing.
 
 ### `README.md`
 
@@ -101,6 +101,7 @@ Owns:
 - security headers
 - public route allowlist
 - public API rate limiting
+- prompt and feedback metadata validation
 - same-origin proxy to `MATIX_PUBLIC_API_BASE`
 - static production serving
 
@@ -201,19 +202,29 @@ snippets for Claude Code and Cursor.
 
 Self-hosting artifacts for running the BFF outside Replit.
 
-- `DEPLOY.md` — step-by-step Ubuntu deployment (systemd + Nginx + Let's Encrypt).
-- `matix-agent-builder.service` — systemd unit (sets `PORT=5000`, reads secrets
-  from an `EnvironmentFile`).
-- `nginx-matixagents.conf` — Nginx reverse-proxy config (`:80` → `127.0.0.1:5000`).
+- `DEPLOY.md` - step-by-step Ubuntu deployment (systemd + Caddy).
+- `Caddyfile` - Caddy reverse-proxy config with automatic HTTPS.
+- `matix-agent-builder.service` - systemd unit (sets `HOST=127.0.0.1`,
+  `PORT=5000`, and reads secrets from an `EnvironmentFile`).
+- `nginx-matixagents.conf` - legacy Nginx reverse-proxy config
+  (`:80` -> `127.0.0.1:5000`).
 
 ## `docs/`
 
 Design and review notes (not part of the shipped product).
 
-- `design-notes.md` — design rationale.
-- `ux-audit.md` — UX audit notes.
+- `data-inventory.md` - browser/BFF/backend data stores, upstream source
+  credits, model disclosure, and data-engineering gates.
+- `design-notes.md` - design rationale.
+- `ux-audit.md` - UX audit notes.
+
+## `tests/`
+
+- `public-server-hardening.test.mjs` - Node test suite covering production
+  response headers, private metrics default, localhost binding, and feedback
+  metadata rejection.
 
 ## `.github/`
 
-- `workflows/public-release.yml` — CI: build, secret/asset scans, dependency
+- `workflows/public-release.yml` - CI: build, secret/asset scans, dependency
   audit, and the release-readiness check on every push/PR to `main`.

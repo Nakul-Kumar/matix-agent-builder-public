@@ -10,6 +10,7 @@
     "build": "tsc -p tsconfig.json && vite build",
     "start": "tsx server/index.ts",
     "mcp": "tsx mcp/index.ts",
+    "test": "node --test tests/*.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "scan:copy": "node scripts/scan-ui-copy.mjs",
     "scan:secrets": "node scripts/scan-secrets.mjs",

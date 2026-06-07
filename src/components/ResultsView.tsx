@@ -1,5 +1,5 @@
 import type { PlatformKey } from "../data/publicBuilderContent";
-import { formatGeneratedAt, formatModel } from "../lib/format";
+import { formatGeneratedAt, formatModel, pretty } from "../lib/format";
 import type { PublicPreview } from "../types";
 import { BlueprintsSection } from "./BlueprintsSection";
 import { EvalPlanSection } from "./EvalPlanSection";
@@ -139,6 +139,31 @@ function LoadingCanvas() {
   );
 }
 
+function ModelRunNotice({ preview }: { preview: PublicPreview }) {
+  const selectionSource =
+    preview.selection_source ||
+    preview.model_trace_summary?.selection_source ||
+    preview.model.status;
+  const fallbackReason =
+    preview.fallback_reason || preview.model_trace_summary?.reranker_reason;
+
+  return (
+    <div className="modelRunNotice" aria-label="Model routing status">
+      <span>
+        Actual selection source: <strong>{pretty(selectionSource)}</strong>
+      </span>
+      <span>
+        Model target:{" "}
+        <strong>{formatModel(preview.model.provider, preview.model.name)}</strong>
+      </span>
+      <span>
+        Status: <strong>{pretty(preview.model.status)}</strong>
+      </span>
+      {fallbackReason ? <p>{fallbackReason}</p> : null}
+    </div>
+  );
+}
+
 export function ResultsView({
   activeRuntime,
   busy,
@@ -173,6 +198,7 @@ export function ResultsView({
           {formatGeneratedAt(preview.generated_at)} /{" "}
           {preview.placards.length} runtime drafts
         </p>
+        <ModelRunNotice preview={preview} />
       </header>
 
       <SourceStatusSection
