@@ -34,6 +34,13 @@ function requireAny(file, needles, label) {
   }
 }
 
+function requireNotIncludes(file, text, label = text) {
+  const body = requireFile(file);
+  if (body && body.includes(text)) {
+    failures.push(`${file} must not mention ${label}`);
+  }
+}
+
 const requiredRootFiles = [
   "LICENSE",
   "NOTICE",
@@ -52,6 +59,15 @@ for (const file of requiredRootFiles) {
 }
 requireFile("docs/data-inventory.md");
 requireFile("tests/public-server-hardening.test.mjs");
+const staleRepoName = "matix-agent-builder" + "-public";
+for (const file of [
+  "README.md",
+  "mcp/README.md",
+  "src/data/publicBuilderContent.ts",
+  "deploy/DEPLOY.md",
+]) {
+  requireNotIncludes(file, staleRepoName, "old public repo name");
+}
 
 requireIncludes("LICENSE", "Apache License");
 requireIncludes("LICENSE", "Version 2.0");

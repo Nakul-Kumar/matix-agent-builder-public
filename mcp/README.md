@@ -5,7 +5,7 @@ backend so any MCP-aware client (Claude Code, Cursor, ChatGPT desktop, etc.)
 can ask for agent blueprints and safe example bundles by name.
 
 The server is a thin stdio shim. It forwards each tool call to
-`MATIX_PUBLIC_API_BASE` (required — set it to your public backend base) and
+`MATIX_PUBLIC_API_BASE` (required - set it to your public backend base) and
 returns the response. No provider keys live in this process.
 
 ## Tools
@@ -31,8 +31,8 @@ The server runs over stdio. Clone, install once, and the MCP-aware client
 spawns the server on demand.
 
 ```bash
-git clone https://github.com/Nakul-Kumar/matix-agent-builder-public.git
-cd matix-agent-builder-public
+git clone https://github.com/Nakul-Kumar/matix-agent-builder.git
+cd matix-agent-builder
 npm ci
 export MATIX_PUBLIC_API_BASE=https://your-cockpit-domain.example/api/v1/public
 npm run mcp     # or:  npx tsx mcp/index.ts
