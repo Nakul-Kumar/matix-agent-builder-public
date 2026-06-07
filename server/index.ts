@@ -139,9 +139,22 @@ function removePublicPreviewInternalReasons(
     changed = true;
   }
 
+  const intent = preview.intent;
+  if (intent && typeof intent === "object" && !Array.isArray(intent)) {
+    const intentRecord = intent as Record<string, unknown>;
+    if ("model_status" in intentRecord) {
+      delete intentRecord.model_status;
+      changed = true;
+    }
+  }
+
   const trace = preview.model_trace_summary;
   if (trace && typeof trace === "object" && !Array.isArray(trace)) {
     const traceRecord = trace as Record<string, unknown>;
+    if ("intent_model_status" in traceRecord) {
+      delete traceRecord.intent_model_status;
+      changed = true;
+    }
     if ("reranker_reason" in traceRecord) {
       delete traceRecord.reranker_reason;
       changed = true;

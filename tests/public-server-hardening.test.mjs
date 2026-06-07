@@ -127,8 +127,12 @@ test("preview responses do not expose internal fallback auth reasons", async () 
     },
     selection_source: "deterministic_fallback",
     fallback_reason: internalReason,
+    intent: {
+      model_status: "OpenAI/Codex API auth is missing; used local capability fallback.",
+    },
     model_trace_summary: {
       selection_source: "deterministic_fallback",
+      intent_model_status: "OpenAI/Codex API auth is missing; used local capability fallback.",
       reranker_reason: internalReason,
     },
     placards: [],
@@ -152,7 +156,9 @@ test("preview responses do not expose internal fallback auth reasons", async () 
     const body = await response.json();
     assert.equal(body.selection_source, "deterministic_fallback");
     assert.equal(body.fallback_reason, undefined);
+    assert.equal(body.intent?.model_status, undefined);
     assert.equal(body.model_trace_summary?.reranker_reason, undefined);
+    assert.equal(body.model_trace_summary?.intent_model_status, undefined);
     assert.doesNotMatch(
       JSON.stringify(body),
       /MATIX_PUBLIC_RERANK_ENABLED|OpenAI\/Codex API auth|AgentRecommendationCoreV2/,
